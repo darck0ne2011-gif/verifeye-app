@@ -73,7 +73,13 @@
   "scan": {
     "protection_active": "Protection is active. Go to any video app to scan.",
     "session_expired": "Session expired. Please sign in again.",
-    "network_error": "Network error – is the backend running?"
+    "network_error": "Network error – is the backend running?",
+    "select_models": "Analysis models (1 credit each)",
+    "credits_per_model": "Select models to run. Each selected model uses 1 credit.",
+    "model_deepfake": "Deepfake Detection",
+    "model_genai": "AI Pixel Analysis",
+    "model_metadata": "Metadata Check",
+    "model_quality": "Image Quality"
   },
   "dropzone": {
     "file_ready": "File Ready",

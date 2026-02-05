@@ -1,23 +1,23 @@
 /**
- * Sightengine API client for AI-generated image detection.
- * Uses workflow API with custom workflow ID.
+ * Sightengine API client for image analysis.
+ * Uses standard check.json with dynamic models (deepfake, genai, type, quality).
  * Docs: https://sightengine.com/docs
  */
 
 import axios from 'axios'
 import FormData from 'form-data'
 
-const SIGHTENGINE_URL = 'https://api.sightengine.com/1.0/check-workflow.json'
-const SIGHTENGINE_WORKFLOW = 'wfl_k4LPE9FL9ieoC1A806ES7'
+const SIGHTENGINE_URL = 'https://api.sightengine.com/1.0/check.json'
 
 /**
- * Call Sightengine to detect AI-generated images.
+ * Call Sightengine with selected models.
  * @param {Buffer} buffer - Image file buffer
  * @param {string} mimeType - e.g. image/jpeg
- * @param {string} originalName - Original filename for Content-Disposition
- * @returns {{ aiGenerated: number } | null} - aiGenerated 0-1, or null on error
+ * @param {string} originalName - Original filename
+ * @param {string[]} models - Sightengine model IDs: deepfake, genai, type, quality
+ * @returns {{ aiGenerated?: number, deepfake?: number, quality?: number, type?: object } | null}
  */
-export async function detectAiImage(buffer, mimeType, originalName) {
+export async function detectAiImage(buffer, mimeType, originalName, models = ['genai']) {
   const apiUser = process.env.SIGHTENGINE_USER || process.env.SIGHTENGINE_API_USER
   const apiSecret = process.env.SIGHTENGINE_SECRET || process.env.SIGHTENGINE_API_SECRET
 
@@ -26,13 +26,17 @@ export async function detectAiImage(buffer, mimeType, originalName) {
     return null
   }
 
+  const validModels = ['deepfake', 'genai', 'type', 'quality']
+  const modelsParam = models.filter((m) => validModels.includes(m))
+  if (modelsParam.length === 0) modelsParam.push('genai')
+
   try {
     const form = new FormData()
     form.append('media', buffer, {
       filename: originalName || 'image.jpg',
       contentType: mimeType || 'application/octet-stream',
     })
-    form.append('workflow', SIGHTENGINE_WORKFLOW)
+    form.append('models', modelsParam.join(','))
     form.append('api_user', apiUser)
     form.append('api_secret', apiSecret)
 
@@ -45,17 +49,12 @@ export async function detectAiImage(buffer, mimeType, originalName) {
 
     const data = res.data
 
-    if (data.status !== 'success' || !data.type) {
+    if (data.status !== 'success') {
       console.warn('Sightengine: Unexpected response structure', data)
       return null
     }
 
-    const aiGenerated = Number(data.type.ai_generated)
-    if (Number.isNaN(aiGenerated) || aiGenerated < 0 || aiGenerated > 1) {
-      return null
-    }
-
-    return { aiGenerated }
+    return data
   } catch (err) {
     const status = err.response?.status
     const data = err.response?.data

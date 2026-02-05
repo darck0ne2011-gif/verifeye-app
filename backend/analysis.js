@@ -73,10 +73,26 @@ function formatFileSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
+function computeFakeFromSightengine(data, models) {
+  let maxScore = 0
+  if (data.type) {
+    const ag = Number(data.type.ai_generated)
+    if (!Number.isNaN(ag)) maxScore = Math.max(maxScore, ag)
+    const df = Number(data.type.deepfake)
+    if (!Number.isNaN(df)) maxScore = Math.max(maxScore, df)
+  }
+  if (data.quality && models?.includes('quality')) {
+    const q = Number(data.quality.score)
+    if (!Number.isNaN(q) && q < 0.4) maxScore = Math.max(maxScore, 0.3)
+  }
+  return Math.round(maxScore * 100)
+}
+
 /**
  * Full file analysis: metadata extraction + AI signature detection + fake probability.
+ * @param {string[]} models - Sightengine model IDs: deepfake, genai, type, quality
  */
-export async function analyzeFile(buffer, originalName, mimeType) {
+export async function analyzeFile(buffer, originalName, mimeType, models = ['genai']) {
   const fileSize = buffer?.length || 0
   let score = 20
 
@@ -115,14 +131,14 @@ export async function analyzeFile(buffer, originalName, mimeType) {
 
   let sightengineResult = null
   if (isImage) {
-    sightengineResult = await detectAiImage(buffer, detectedMime, originalName || `image.${ext}`)
+    sightengineResult = await detectAiImage(buffer, detectedMime, originalName || `image.${ext}`, models)
   }
 
   let fakeProbability
   let aiProbability = null
 
   if (sightengineResult != null) {
-    aiProbability = Math.round(sightengineResult.aiGenerated * 100)
+    aiProbability = computeFakeFromSightengine(sightengineResult, models)
     fakeProbability = Math.max(0, Math.min(100, aiProbability))
   } else if (isImage) {
     throw new Error('Sightengine connection error - check API credits')

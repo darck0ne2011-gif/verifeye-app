@@ -263,14 +263,24 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       return res.status(400).json({ success: false, error: 'No file uploaded' })
     }
 
+    const rawModels = req.body?.models || req.body?.modelsString || 'genai'
+    const modelsList = typeof rawModels === 'string' ? rawModels.split(',').map((m) => m.trim()).filter(Boolean) : []
+    const models = modelsList.length ? modelsList : ['genai']
+    const modelsKey = [...models].sort().join(',')
+    const creditsToCharge = models.length
+
+    if (!isElite && getCredits(userId) < creditsToCharge) {
+      return res.status(402).json({ success: false, error: `Need ${creditsToCharge} credits (1 per model). You have ${getCredits(userId)}.` })
+    }
+
     const fileHash = crypto.createHash('sha256').update(file.buffer).digest('hex')
-    const cached = findScanByHash(fileHash)
+    const cached = findScanByHash(fileHash, modelsKey)
 
     if (cached) {
       console.log('--- Global Match found (cache hit) ---')
       if (!isElite) {
         const credits = getCredits(userId)
-        updateCredits(userId, credits - 1)
+        updateCredits(userId, credits - creditsToCharge)
       }
       const updatedUser = findById(userId)
       return res.json({
@@ -288,14 +298,15 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     const analysis = await analyzeFile(
       file.buffer,
       file.originalname,
-      file.mimetype
+      file.mimetype,
+      models
     )
 
-    saveScan(fileHash, analysis)
+    saveScan(fileHash, modelsKey, analysis)
 
     if (!isElite) {
       const credits = getCredits(userId)
-      updateCredits(userId, credits - 1)
+      updateCredits(userId, credits - creditsToCharge)
     }
     const updatedUser = findById(userId)
 

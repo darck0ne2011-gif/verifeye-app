@@ -114,19 +114,20 @@ export function getCredits(userId) {
   return user?.scanCredits ?? 0
 }
 
-/** Find cached scan result by file hash */
-export function findScanByHash(hash) {
+/** Find cached scan result by file hash and models */
+export function findScanByHash(hash, modelsKey = '') {
   const data = load()
-  return data.past_scans?.find((s) => s.hash === hash) ?? null
+  return data.past_scans?.find((s) => s.hash === hash && s.modelsKey === modelsKey) ?? null
 }
 
 /** Save scan result to cache for future lookups */
-export function saveScan(hash, result) {
+export function saveScan(hash, modelsKey, result) {
   const data = load()
   if (!data.past_scans) data.past_scans = []
   const meta = result.metadata ?? {}
   data.past_scans.push({
     hash,
+    modelsKey,
     fakeProbability: result.fakeProbability,
     aiProbability: result.aiProbability ?? result.fakeProbability,
     metadata: { ...meta, mediaCategory: meta.mediaCategory ?? 'image' },

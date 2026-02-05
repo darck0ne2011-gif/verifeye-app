@@ -7,6 +7,7 @@ import DashboardHeader from '../components/DashboardHeader'
 import OverlayButton from '../components/OverlayButton'
 import GlobalAlerts from '../components/GlobalAlerts'
 import DropZone from '../components/DropZone'
+import ModelCheckboxes, { MODEL_IDS } from '../components/ModelCheckboxes'
 import CircularProgressLoader from '../components/CircularProgressLoader'
 import VerdictScreen from '../components/VerdictScreen'
 const MIN_SCAN_DURATION_MS = 3000
@@ -26,6 +27,7 @@ export default function ScanPage({ onSettingsClick }) {
   const [verdictMediaCategory, setVerdictMediaCategory] = useState(null)
   const [uploadError, setUploadError] = useState(null)
   const [scanProgress, setScanProgress] = useState(0)
+  const [selectedModels, setSelectedModels] = useState([MODEL_IDS.genai])
   const fileInputRef = useRef(null)
   const scansCountRef = useRef(scansCount)
   scansCountRef.current = scansCount
@@ -41,7 +43,9 @@ export default function ScanPage({ onSettingsClick }) {
 
   const handleStartScan = useCallback(async () => {
     const file = selectedFile
-    if (!file || scansCountRef.current <= 0) return
+    const models = selectedModels?.length ? selectedModels : [MODEL_IDS.genai]
+    const creditsNeeded = models.length
+    if (!file || scansCountRef.current < creditsNeeded) return
 
     setUploadError(null)
     setView('scanning')
@@ -53,6 +57,7 @@ export default function ScanPage({ onSettingsClick }) {
       try {
         const formData = new FormData()
         formData.append('file', file)
+        formData.append('models', models.join(','))
 
         const res = await fetch(`${API_BASE}/api/analyze`, {
           method: 'POST',
@@ -127,7 +132,7 @@ export default function ScanPage({ onSettingsClick }) {
       score: apiResult.score,
       status: apiResult.score >= 50 ? 'FAKE' : 'REAL',
     })
-  }, [selectedFile, getAuthHeaders, refreshUser, logout, t])
+  }, [selectedFile, selectedModels, getAuthHeaders, refreshUser, logout, t])
 
   const handleBackToScan = useCallback(() => {
     setVerdictVisible(false)
@@ -153,8 +158,10 @@ export default function ScanPage({ onSettingsClick }) {
     fileInputRef.current?.click()
   }, [])
 
-  const overlayDisabled = scansCount <= 0 || (view === 'idle' && !selectedFile)
-  const overlayFaded = view === 'idle' && !selectedFile && scansCount > 0
+  const models = selectedModels?.length ? selectedModels : [MODEL_IDS.genai]
+  const creditsNeeded = models.length
+  const overlayDisabled = scansCount < creditsNeeded || (view === 'idle' && !selectedFile)
+  const overlayFaded = view === 'idle' && !selectedFile && scansCount >= creditsNeeded
 
   return (
     <div className="min-h-screen bg-[#0d0d0d] flex flex-col pb-20">
@@ -201,8 +208,15 @@ export default function ScanPage({ onSettingsClick }) {
         {view === 'idle' && (
           <>
             <div className="w-full max-w-2xl pt-4 shrink-0">
-              <DropZone
+              <ModelCheckboxes
+                selected={selectedModels}
+                onChange={setSelectedModels}
                 disabled={scansCount <= 0}
+              />
+            </div>
+            <div className="w-full max-w-2xl pt-4 shrink-0">
+              <DropZone
+                disabled={scansCount < creditsNeeded}
                 selectedFile={selectedFile}
                 onDrop={(files) => handleFileSelect(files)}
                 onTriggerClick={triggerFileSelect}
