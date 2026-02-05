@@ -7,7 +7,6 @@ import {
   authMiddleware,
   register,
   login,
-  updateCredits,
   changePassword,
   deleteAccount,
 } from './auth.js'
