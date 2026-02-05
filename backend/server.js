@@ -11,7 +11,7 @@ import {
   changePassword,
   deleteAccount,
 } from './auth.js'
-import { findById, getCredits, updatePassword, deleteUser } from './db.js'
+import { findById, getCredits, updatePassword, deleteUser, upgradeUserToElite } from './db.js'
 import { generatePdfBuffer } from './pdfReport.js'
 import {
   getGoogleAuthUrl,
@@ -67,6 +67,29 @@ app.post('/api/auth/register', register)
 app.post('/api/auth/login', login)
 app.post('/api/auth/change-password', authMiddleware, changePassword)
 app.delete('/api/auth/delete-account', authMiddleware, deleteAccount)
+
+// One-time admin route: upgrade inta@test.test to Elite (remove after use)
+app.post('/api/admin/upgrade-elite', (req, res) => {
+  const secret = process.env.UPGRADE_ELITE_SECRET
+  if (!secret || req.headers['x-upgrade-secret'] !== secret) {
+    return res.status(403).json({ success: false, error: 'Unauthorized' })
+  }
+  try {
+    const userId = upgradeUserToElite('inta@test.test')
+    if (!userId) {
+      return res.status(404).json({ success: false, error: 'User not found' })
+    }
+    const user = findById(userId)
+    res.json({
+      success: true,
+      message: 'User upgraded to Elite',
+      user: { id: user.id, email: user.email, subscriptionTier: user.subscriptionTier, scanCredits: user.scanCredits, isPremium: user.isPremium },
+    })
+  } catch (err) {
+    console.error('Upgrade elite error:', err)
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
 
 app.get('/api/auth/google', (req, res) => {
   try {

@@ -126,3 +126,15 @@ export function deleteUser(userId) {
   data.users = data.users.filter((u) => u.id !== userId)
   save(data)
 }
+
+export function upgradeUserToElite(email) {
+  const data = load()
+  const normalized = email.toLowerCase().trim()
+  const user = data.users.find((u) => u.email === normalized)
+  if (!user) return null
+  user.subscriptionTier = 'elite'
+  user.scanCredits = 999999
+  user.isPremium = true
+  save(data)
+  return user.id
+}
