@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import DashboardHeader from '../components/DashboardHeader'
@@ -60,6 +61,7 @@ function formatDate(isoString) {
 const PDF_ALLOWED_TIERS = ['pro', 'elite']
 
 export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
+  const { t } = useTranslation()
   const { user, getAuthHeaders } = useAuth()
   const [history, setHistory] = useState([])
   const [downloadingId, setDownloadingId] = useState(null)
@@ -125,12 +127,12 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
       />
 
       <main className="flex-1 flex flex-col px-4 pt-6 pb-8">
-        <h1 className="text-xl font-bold text-white mb-6">Scan History</h1>
+        <h1 className="text-xl font-bold text-white mb-6">{t('history.title')}</h1>
 
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
             <p className="text-slate-400 text-center">
-              No scans yet. Start by verifying your first file!
+              {t('history.empty')}
             </p>
           </div>
         ) : (
@@ -164,8 +166,8 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
                         ? 'text-cyan-400 hover:bg-slate-700/80'
                         : 'text-amber-500/90 hover:bg-slate-700/80'
                     }`}
-                    aria-label={canDownloadPdf ? 'Download Report' : 'Upgrade to download PDF'}
-                    title={canDownloadPdf ? 'Download Report' : 'Upgrade to Pro or Elite for PDF reports'}
+                    aria-label={canDownloadPdf ? t('history.download_report') : t('history.upgrade_for_pdf')}
+                    title={canDownloadPdf ? t('history.download_report') : t('history.upgrade_pdf_tooltip')}
                   >
                     {downloadingId === item.id ? (
                       <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">

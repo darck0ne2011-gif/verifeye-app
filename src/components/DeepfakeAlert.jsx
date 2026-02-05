@@ -4,20 +4,22 @@ const WarningIcon = () => (
   </svg>
 )
 
-const defaultReason = 'At 0:04, the lighting on the face (98% ElevenLabs match) moves inconsistently with the head\'s movement, a clear sign of digital manipulation.'
+import { useTranslation } from 'react-i18next'
 
-export default function DeepfakeAlert({ probability = 92, reason = defaultReason }) {
+export default function DeepfakeAlert({ probability = 92, reason }) {
+  const { t } = useTranslation()
+  const displayReason = reason ?? t('deepfake.reason_default')
   return (
     <section className="w-full max-w-2xl">
-      <h2 className="text-base font-medium text-white mb-4">Why is this a fake?</h2>
+      <h2 className="text-base font-medium text-white mb-4">{t('deepfake.why_fake')}</h2>
       <div className="flex items-center gap-4 p-4 bg-red-600 rounded-xl">
         <span className="flex items-center justify-center w-12 h-12 rounded-full bg-white/20 text-white flex-shrink-0">
           <WarningIcon />
         </span>
-        <p className="text-white font-bold text-lg">{probability}% PROBABILITY OF DEEPFAKE</p>
+        <p className="text-white font-bold text-lg">{t('deepfake.probability', { value: probability })}</p>
       </div>
       <p className="text-slate-400 text-sm mt-3">
-        Reason: {reason}
+        {t('deepfake.reason', { reason: displayReason })}
       </p>
     </section>
   )

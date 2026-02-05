@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import { addScanToHistory } from '../utils/scanHistory'
@@ -12,6 +13,7 @@ const MIN_SCAN_DURATION_MS = 3000
 const PROGRESS_UPDATE_INTERVAL_MS = 30
 
 export default function ScanPage({ onSettingsClick }) {
+  const { t } = useTranslation()
   const { user, getAuthHeaders, refreshUser, logout } = useAuth()
   const scansCount = user?.scanCredits ?? 0
 
@@ -63,7 +65,7 @@ export default function ScanPage({ onSettingsClick }) {
 
         if (res.status === 401) {
           logout()
-          apiResult = { score: 0, error: 'Session expired. Please sign in again.' }
+          apiResult = { score: 0, error: t('scan.session_expired') }
           return
         }
 
@@ -84,7 +86,7 @@ export default function ScanPage({ onSettingsClick }) {
         console.error(err)
         apiResult = {
           score: 0,
-          error: err.message || 'Network error – is the backend running?',
+          error: err.message || t('scan.network_error'),
         }
       }
     }
@@ -116,7 +118,7 @@ export default function ScanPage({ onSettingsClick }) {
       score: apiResult.score,
       status: apiResult.score >= 50 ? 'FAKE' : 'REAL',
     })
-  }, [selectedFile, getAuthHeaders, refreshUser, logout])
+  }, [selectedFile, getAuthHeaders, refreshUser, logout, t])
 
   const handleBackToScan = useCallback(() => {
     setVerdictVisible(false)
@@ -162,7 +164,7 @@ export default function ScanPage({ onSettingsClick }) {
 
         {view === 'idle' && (
           <p className="mt-6 text-slate-400 text-sm text-center max-w-xs shrink-0">
-            Protecția este activă. Mergi pe orice aplicație video pentru a scana.
+            {t('scan.protection_active')}
           </p>
         )}
 

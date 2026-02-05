@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 const FolderIcon = () => (
   <svg className="w-12 h-12 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -13,6 +14,7 @@ const FileReadyIcon = () => (
 )
 
 export default function DropZone({ onDrop, onTriggerClick, onClearFile, selectedFile, disabled = false }) {
+  const { t } = useTranslation()
   const [isDragOver, setIsDragOver] = useState(false)
 
   const handleDragOver = (e) => {
@@ -42,7 +44,7 @@ export default function DropZone({ onDrop, onTriggerClick, onClearFile, selected
           <span className="text-white text-sm font-medium truncate flex-1">
             {selectedFile.name}
           </span>
-          <span className="text-green-500 text-xs font-medium whitespace-nowrap">File Ready</span>
+          <span className="text-green-500 text-xs font-medium whitespace-nowrap">{t('dropzone.file_ready')}</span>
           <button
             type="button"
             className="text-slate-400 hover:text-white text-xs px-2 py-1"
@@ -51,7 +53,7 @@ export default function DropZone({ onDrop, onTriggerClick, onClearFile, selected
               onClearFile?.()
             }}
           >
-            Change
+            {t('dropzone.change')}
           </button>
         </div>
       )}
@@ -75,8 +77,8 @@ export default function DropZone({ onDrop, onTriggerClick, onClearFile, selected
       >
         <FolderIcon />
         <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <p className="text-white font-medium">Drag & Drop Video, Audio or Photo</p>
-          <p className="text-slate-400 text-sm">or click to browse (YouTube, X, TikTok, Instagram)</p>
+          <p className="text-white font-medium">{t('dropzone.drag_drop')}</p>
+          <p className="text-slate-400 text-sm">{t('dropzone.or_click')}</p>
         </div>
       </div>
     </div>

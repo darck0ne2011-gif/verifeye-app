@@ -1,12 +1,15 @@
+import { useTranslation } from 'react-i18next'
+
 export default function OverlayButton({ onClick, disabled = false, faded = false, mode = 'default' }) {
+  const { t } = useTranslation()
   const isNewScanMode = mode === 'newScan'
   const isDisabled = disabled || faded
   const isInteractive = !isDisabled
 
   const getButtonContent = () => {
-    if (disabled && !faded) return 'Out of Credits'
-    if (isNewScanMode) return 'NEW SEARCH'
-    return 'START SCANNING'
+    if (disabled && !faded) return t('overlay.out_of_credits')
+    if (isNewScanMode) return t('overlay.new_search')
+    return t('overlay.start_scanning')
   }
 
   const getBaseStyles = () => {

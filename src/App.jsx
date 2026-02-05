@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './context/AuthContext'
 import ScanPage from './pages/ScanPage'
 import HistoryPage from './pages/HistoryPage'
@@ -9,7 +10,12 @@ import BottomNav from './components/BottomNav'
 import FloatingScanner from './components/FloatingScanner'
 
 function App() {
+  const { t, i18n } = useTranslation()
   const { user, loading, login, register, oauthError, clearOauthError } = useAuth()
+
+  useEffect(() => {
+    document.title = t('app.title')
+  }, [t, i18n.language])
   const [activeTab, setActiveTab] = useState('home')
   const [showSettings, setShowSettings] = useState(false)
   const [authMode, setAuthMode] = useState('login')

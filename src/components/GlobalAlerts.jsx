@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { API_BASE } from '../config.js'
 
-const FALLBACK_ALERTS = [
-  { id: 'f1', type: 'high_alert', message: 'Video cu Marcel Ciolacu marcat ca FAKE de 1.200 de ori azi.' },
-  { id: 'f2', type: 'verified', message: 'Știre despre taxa auto VERIFICATĂ. Sursa: Guvernul.ro' },
-  { id: 'f3', type: 'high_alert', message: 'Clip viral cu Klaus Iohannis marcat ca FAKE de 890 de ori.' },
-]
+function getFallbackAlerts(t) {
+  return [
+    { id: 'f1', type: 'high_alert', message: t('alerts.fallback_1') },
+    { id: 'f2', type: 'verified', message: t('alerts.fallback_2') },
+    { id: 'f3', type: 'high_alert', message: t('alerts.fallback_3') },
+  ]
+}
 
 const RedAlertIcon = () => (
   <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,6 +50,7 @@ function AlertCard({ alert }) {
 }
 
 export default function GlobalAlerts() {
+  const { t } = useTranslation()
   const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -57,17 +61,17 @@ export default function GlobalAlerts() {
         if (data.success && Array.isArray(data.alerts) && data.alerts.length > 0) {
           setAlerts(data.alerts)
         } else {
-          setAlerts(FALLBACK_ALERTS)
+          setAlerts(getFallbackAlerts(t))
         }
       })
-      .catch(() => setAlerts(FALLBACK_ALERTS))
+      .catch(() => setAlerts(getFallbackAlerts(t)))
       .finally(() => setLoading(false))
-  }, [])
+  }, [t])
 
   if (loading) {
     return (
       <div className="w-full max-w-2xl mt-6 pt-2">
-        <p className="text-slate-500 text-sm">Loading alerts...</p>
+        <p className="text-slate-500 text-sm">{t('alerts.loading')}</p>
       </div>
     )
   }

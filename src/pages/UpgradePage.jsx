@@ -1,55 +1,54 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import DashboardHeader from '../components/DashboardHeader'
 
-const TIERS = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    price: '$0',
-    subtext: 'Free forever',
-    scans: '3 scans per month',
-    features: ['3 scans per month', 'Basic analysis'],
-    cta: 'Current Plan',
-    highlighted: false,
-  },
-  {
-    id: 'quick_boost',
-    name: 'Quick Boost',
-    price: '$4.99',
-    subtext: 'Refill anytime',
-    scans: '10 scans',
-    features: ['10 scans', 'Basic analysis', 'Credits never expire'],
-    cta: 'Get 10 Scans',
-    highlighted: false,
-  },
-  {
-    id: 'pro',
-    name: 'Pro',
-    price: '$29',
-    subtext: '/month',
-    scans: '50 scans',
-    features: ['50 scans per month', 'Forensic PDF Reports', 'Priority analysis'],
-    cta: 'Upgrade to Pro',
-    highlighted: true,
-  },
-  {
-    id: 'elite',
-    name: 'Elite',
-    price: '$149',
-    subtext: '/month',
-    scans: 'Unlimited',
-    features: [
-      'Unlimited scans',
-      'Priority AI Processing',
-      'Forensic PDF Reports',
-    ],
-    cta: 'Go Elite',
-    highlighted: true,
-    elite: true,
-  },
-]
+function getTiers(t) {
+  return [
+    {
+      id: 'starter',
+      name: t('pricing.starter'),
+      price: t('pricing.price_free'),
+      subtext: t('pricing.free_forever'),
+      scans: t('pricing.scans_3'),
+      featureKeys: ['feature_3_scans', 'feature_basic'],
+      cta: t('pricing.current_plan'),
+      highlighted: false,
+    },
+    {
+      id: 'quick_boost',
+      name: t('pricing.quick_boost'),
+      price: t('pricing.price_499'),
+      subtext: t('pricing.refill_anytime'),
+      scans: t('pricing.scans_10'),
+      featureKeys: ['feature_10_scans', 'feature_basic', 'feature_credits_never_expire'],
+      cta: t('pricing.get_10_scans'),
+      highlighted: false,
+    },
+    {
+      id: 'pro',
+      name: t('pricing.pro'),
+      price: t('pricing.price_29'),
+      subtext: t('pricing.per_month'),
+      scans: t('pricing.scans_50'),
+      featureKeys: ['feature_50_scans', 'feature_forensic_pdf', 'feature_priority'],
+      cta: t('pricing.upgrade_pro'),
+      highlighted: true,
+    },
+    {
+      id: 'elite',
+      name: t('pricing.elite'),
+      price: t('pricing.price_149'),
+      subtext: t('pricing.per_month'),
+      scans: t('pricing.unlimited'),
+      featureKeys: ['feature_unlimited', 'feature_ai_processing', 'feature_forensic_pdf'],
+      cta: t('pricing.go_elite'),
+      highlighted: true,
+      elite: true,
+    },
+  ]
+}
 
 const CheckIcon = ({ className = '' }) => (
   <svg className={`w-5 h-5 shrink-0 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +63,9 @@ const StarIcon = ({ className = '' }) => (
 )
 
 export default function UpgradePage({ onSettingsClick }) {
+  const { t } = useTranslation()
   const { user, refreshUser, getAuthHeaders } = useAuth()
+  const TIERS = getTiers(t)
   const [quickBoostLoading, setQuickBoostLoading] = useState(false)
   const scansCount = user?.scanCredits ?? 0
   const currentTier = user?.subscriptionTier ?? 'starter'
@@ -125,9 +126,9 @@ export default function UpgradePage({ onSettingsClick }) {
 
       <main className="flex-1 px-4 pt-6 pb-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mb-2">Choose Your Plan</h1>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('pricing.title')}</h1>
           <p className="text-slate-400 text-sm">
-            Unlock more scans and forensic PDF reports
+            {t('pricing.subtitle')}
           </p>
         </div>
 
@@ -156,7 +157,7 @@ export default function UpgradePage({ onSettingsClick }) {
                 {isElite && (
                   <div className="absolute top-3 right-3 flex items-center gap-1 text-amber-400 text-xs font-medium">
                     <StarIcon className="w-4 h-4" />
-                    Premium
+                    {t('pricing.premium')}
                   </div>
                 )}
 
@@ -189,7 +190,7 @@ export default function UpgradePage({ onSettingsClick }) {
                   </p>
 
                   <ul className="space-y-2.5 mb-6">
-                    {tier.features.map((feature, i) => (
+                    {tier.featureKeys.map((key, i) => (
                       <li
                         key={i}
                         className={`flex items-center gap-2 text-sm ${
@@ -199,7 +200,7 @@ export default function UpgradePage({ onSettingsClick }) {
                         <CheckIcon
                           className={isElite ? 'text-amber-500' : 'text-cyan-500'}
                         />
-                        {feature}
+                        {t(`pricing.${key}`)}
                       </li>
                     ))}
                   </ul>
@@ -209,9 +210,9 @@ export default function UpgradePage({ onSettingsClick }) {
                     className={`mt-auto w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${getButtonClasses(tier)}`}
                   >
                     {quickBoostLoading && tier.id === 'quick_boost'
-                      ? 'Adding...'
+                      ? t('pricing.adding')
                       : (tier.id === 'starter' && currentTier === 'starter') || (tier.id !== 'starter' && currentTier === tier.id)
-                        ? 'Current Plan'
+                        ? t('pricing.current_plan')
                         : tier.cta}
                   </button>
                 </div>
@@ -225,7 +226,7 @@ export default function UpgradePage({ onSettingsClick }) {
         </div>
 
         <p className="text-slate-500 text-xs text-center mt-6">
-          Payment processing coming soon. Contact support for enterprise plans.
+          {t('pricing.payment_coming_soon')}
         </p>
       </main>
     </div>
