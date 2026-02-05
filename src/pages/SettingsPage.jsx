@@ -52,8 +52,22 @@ function setDisplayName(email, name) {
   } catch (_) {}
 }
 
+const LANGUAGE_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'ro', label: 'Română' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'zh', label: '中文' },
+  { value: 'ar', label: 'العربية' },
+  { value: 'pt', label: 'Português' },
+  { value: 'ru', label: 'Русский' },
+  { value: 'id', label: 'Bahasa Indonesia' },
+  { value: 'ban', label: 'Basa Bali' },
+]
+
 export default function SettingsPage({ onBack }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user, logout, refreshUser, getAuthHeaders } = useAuth()
   const TABS = TAB_IDS.map((id) => ({ id, label: t(`settings.${id}`) }))
   const [activeTab, setActiveTab] = useState('profile')
@@ -234,6 +248,20 @@ export default function SettingsPage({ onBack }) {
               <section>
                 <h2 className="text-lg font-semibold text-white mb-4">{t('settings.profile')}</h2>
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-slate-400 text-sm mb-2">{t('settings.language')}</label>
+                    <select
+                      value={i18n.language?.split('-')[0] || 'en'}
+                      onChange={(e) => i18n.changeLanguage(e.target.value)}
+                      className="w-full px-4 py-3 bg-slate-800/60 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    >
+                      {LANGUAGE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value} className="bg-slate-800 text-white">
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label className="block text-slate-400 text-sm mb-2">{t('settings.display_name')}</label>
                     <input

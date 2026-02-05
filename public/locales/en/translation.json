@@ -111,6 +111,7 @@
   "settings": {
     "title": "Settings",
     "profile": "Profile",
+    "language": "Language",
     "security": "Security",
     "subscription": "Subscription",
     "support": "FAQ & Support",
