@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import crypto from 'crypto'
 import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
@@ -10,7 +11,7 @@ import {
   changePassword,
   deleteAccount,
 } from './auth.js'
-import { findById, getCredits, updateCredits, updatePassword, deleteUser, upgradeUserToElite } from './db.js'
+import { findById, getCredits, updateCredits, updatePassword, deleteUser, upgradeUserToElite, findScanByHash, saveScan } from './db.js'
 import { generatePdfBuffer } from './pdfReport.js'
 import {
   getGoogleAuthUrl,
@@ -262,11 +263,29 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       return res.status(400).json({ success: false, error: 'No file uploaded' })
     }
 
+    const fileHash = crypto.createHash('sha256').update(file.buffer).digest('hex')
+    const cached = findScanByHash(fileHash)
+
+    if (cached) {
+      const updatedUser = findById(userId)
+      return res.json({
+        success: true,
+        fakeProbability: cached.fakeProbability,
+        aiProbability: cached.aiProbability ?? cached.fakeProbability,
+        scanCredits: isElite ? 999999 : updatedUser.scanCredits,
+        metadata: cached.metadata,
+        aiSignatures: cached.aiSignatures,
+        cached: true,
+      })
+    }
+
     const analysis = await analyzeFile(
       file.buffer,
       file.originalname,
       file.mimetype
     )
+
+    saveScan(fileHash, analysis)
 
     if (!isElite) {
       const credits = getCredits(userId)

@@ -8,9 +8,11 @@ const dbPath = path.join(__dirname, 'verifeye-data.json')
 function load() {
   try {
     const data = fs.readFileSync(dbPath, 'utf8')
-    return JSON.parse(data)
+    const parsed = JSON.parse(data)
+    if (!Array.isArray(parsed.past_scans)) parsed.past_scans = []
+    return parsed
   } catch {
-    return { users: [], nextId: 1 }
+    return { users: [], past_scans: [], nextId: 1 }
   }
 }
 
@@ -110,6 +112,27 @@ export function updateCredits(userId, credits) {
 export function getCredits(userId) {
   const user = findById(userId)
   return user?.scanCredits ?? 0
+}
+
+/** Find cached scan result by file hash */
+export function findScanByHash(hash) {
+  const data = load()
+  return data.past_scans?.find((s) => s.hash === hash) ?? null
+}
+
+/** Save scan result to cache for future lookups */
+export function saveScan(hash, result) {
+  const data = load()
+  if (!data.past_scans) data.past_scans = []
+  data.past_scans.push({
+    hash,
+    fakeProbability: result.fakeProbability,
+    aiProbability: result.aiProbability ?? result.fakeProbability,
+    metadata: result.metadata ?? {},
+    aiSignatures: result.aiSignatures ?? {},
+    createdAt: new Date().toISOString(),
+  })
+  save(data)
 }
 
 export function updatePassword(userId, hashedPassword) {
