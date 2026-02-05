@@ -1,0 +1,83 @@
+import { useState } from 'react'
+import { useAuth } from './context/AuthContext'
+import ScanPage from './pages/ScanPage'
+import HistoryPage from './pages/HistoryPage'
+import UpgradePage from './pages/UpgradePage'
+import SettingsPage from './pages/SettingsPage'
+import AuthPage from './pages/AuthPage'
+import BottomNav from './components/BottomNav'
+import FloatingScanner from './components/FloatingScanner'
+
+function App() {
+  const { user, loading, login, register, oauthError, clearOauthError } = useAuth()
+  const [activeTab, setActiveTab] = useState('home')
+  const [showSettings, setShowSettings] = useState(false)
+  const [authMode, setAuthMode] = useState('login')
+  const [authError, setAuthError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+
+  const handleAuthSubmit = async (email, password) => {
+    setAuthError('')
+    setAuthLoading(true)
+    try {
+      if (authMode === 'login') {
+        await login(email, password)
+      } else {
+        await register(email, password)
+      }
+    } catch (err) {
+      setAuthError(err.message)
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center">
+        <div className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <AuthPage
+        mode={authMode}
+        onSwitch={() => {
+          setAuthMode((m) => (m === 'login' ? 'register' : 'login'))
+          setAuthError('')
+          clearOauthError()
+        }}
+        onSubmit={handleAuthSubmit}
+        error={authError || oauthError}
+        loading={authLoading}
+      />
+    )
+  }
+
+  if (showSettings) {
+    return <SettingsPage onBack={() => setShowSettings(false)} />
+  }
+
+  return (
+    <>
+      {activeTab === 'home' && (
+        <ScanPage onSettingsClick={() => setShowSettings(true)} />
+      )}
+      {activeTab === 'upgrade' && (
+        <UpgradePage onSettingsClick={() => setShowSettings(true)} />
+      )}
+      {activeTab === 'history' && (
+        <HistoryPage
+          onSettingsClick={() => setShowSettings(true)}
+          onUpgradeClick={() => setActiveTab('upgrade')}
+        />
+      )}
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <FloatingScanner />
+    </>
+  )
+}
+
+export default App

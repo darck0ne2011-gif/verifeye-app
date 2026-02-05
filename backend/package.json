@@ -1,0 +1,23 @@
+{
+  "name": "verifeye-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "VerifEye API server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "apple-signin-auth": "^2.0.0",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "exif-parser": "^0.1.12",
+    "express": "^4.21.0",
+    "file-type": "^19.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "pdfkit": "^0.17.2"
+  }
+}
