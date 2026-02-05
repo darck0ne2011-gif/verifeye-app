@@ -138,3 +138,17 @@ export function upgradeUserToElite(email) {
   save(data)
   return user.id
 }
+
+/** Auto-upgrade andrei@test.test to Elite on login; persists to DB */
+export function ensureAndreiElite(email) {
+  const normalized = (email || '').toLowerCase().trim()
+  if (normalized !== 'andrei@test.test') return null
+  const data = load()
+  const user = data.users.find((u) => u.email === normalized)
+  if (!user) return null
+  user.subscriptionTier = 'elite'
+  user.scanCredits = 9999
+  user.isPremium = true
+  save(data)
+  return user.id
+}

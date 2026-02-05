@@ -1,27 +1,6 @@
 {
   "users": [
     {
-      "id": 1,
-      "email": "andyrac18@hotmail.com",
-      "password": "$2a$10$N9zmvktuHMB/8TiEcFiAUOH09H1SzKban2eu95jsI9RL6Q7KiKpdS",
-      "scanCredits": 42,
-      "createdAt": "2026-02-05T03:54:06.606Z"
-    },
-    {
-      "id": 2,
-      "email": "andyrac17@yahoo.com",
-      "password": "$2a$10$M5VawOALFCFjEfJGkYpgnuYeA9.LNEEGg0ZhtZcLo/gLhe9yIPaUy",
-      "scanCredits": 42,
-      "createdAt": "2026-02-05T03:54:49.967Z"
-    },
-    {
-      "id": 3,
-      "email": "andyrac17@yahoowowol.www",
-      "password": "$2a$10$Pnt1xOmSggwJMepOdzlQ3OZXI6XwpECnCZ58pZloxCj0nV//G3UMe",
-      "scanCredits": 42,
-      "createdAt": "2026-02-05T03:55:52.042Z"
-    },
-    {
       "id": 4,
       "email": "andrei@test.test",
       "password": "$2a$10$OK2XnZMTPcnOe2KDKIkcyubCR4X/q3Br9aErF7M9ymWY0SuXJjYkK",

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import { createUser, findByEmail, findById, findByIdWithPassword, updateCredits, updatePassword, deleteUser } from './db.js'
+import { createUser, findByEmail, findById, findByIdWithPassword, updateCredits, updatePassword, deleteUser, ensureAndreiElite } from './db.js'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'verifeye-dev-secret-change-in-production'
 const JWT_EXPIRY = '7d'
@@ -86,11 +86,24 @@ export async function login(req, res) {
       return res.status(401).json({ success: false, error: 'Invalid email or password' })
     }
 
+    // Auto-upgrade andrei@test.test to Elite on login; persists to verifeye-data.json
+    if (user.email === 'andrei@test.test') {
+      ensureAndreiElite(user.email)
+    }
+
+    const updated = findById(user.id)
     const token = signToken(user.id)
+    const tier = updated.subscriptionTier ?? 'starter'
     res.json({
       success: true,
       token,
-      user: { id: user.id, email: user.email, scanCredits: user.scanCredits },
+      user: {
+        id: updated.id,
+        email: updated.email,
+        scanCredits: tier === 'elite' ? 9999 : (updated.scanCredits ?? 0),
+        subscriptionTier: tier,
+        isPremium: updated.isPremium ?? false,
+      },
     })
   } catch (err) {
     console.error(err)
