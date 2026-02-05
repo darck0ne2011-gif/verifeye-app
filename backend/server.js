@@ -267,6 +267,11 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     const cached = findScanByHash(fileHash)
 
     if (cached) {
+      console.log('--- Global Match found (cache hit) ---')
+      if (!isElite) {
+        const credits = getCredits(userId)
+        updateCredits(userId, credits - 1)
+      }
       const updatedUser = findById(userId)
       return res.json({
         success: true,
