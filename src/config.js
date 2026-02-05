@@ -1,6 +1,6 @@
 /**
  * API base URL for backend requests.
- * - Local dev: '' (uses Vite proxy to /api)
- * - Production: VITE_API_URL or fallback to Render backend
+ * Default: https://verifeye-app.onrender.com
+ * Override: set VITE_API_URL in .env (e.g. "" for local Vite proxy)
  */
-export const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://verifeye-app.onrender.com' : '')
+export const API_BASE = typeof import.meta.env.VITE_API_URL === 'string' ? import.meta.env.VITE_API_URL : 'https://verifeye-app.onrender.com'
