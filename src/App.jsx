@@ -62,20 +62,22 @@ function App() {
 
   return (
     <>
-      {activeTab === 'home' && (
-        <ScanPage onSettingsClick={() => setShowSettings(true)} />
-      )}
-      {activeTab === 'upgrade' && (
-        <UpgradePage onSettingsClick={() => setShowSettings(true)} />
-      )}
-      {activeTab === 'history' && (
-        <HistoryPage
-          onSettingsClick={() => setShowSettings(true)}
-          onUpgradeClick={() => setActiveTab('upgrade')}
-        />
-      )}
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
       <FloatingScanner />
+      <div className="pb-[100px] min-h-[100dvh]">
+        {activeTab === 'home' && (
+          <ScanPage onSettingsClick={() => setShowSettings(true)} />
+        )}
+        {activeTab === 'upgrade' && (
+          <UpgradePage onSettingsClick={() => setShowSettings(true)} />
+        )}
+        {activeTab === 'history' && (
+          <HistoryPage
+            onSettingsClick={() => setShowSettings(true)}
+            onUpgradeClick={() => setActiveTab('upgrade')}
+          />
+        )}
+      </div>
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </>
   )
 }

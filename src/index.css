@@ -3,7 +3,19 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    min-height: 100dvh;
+  }
   body {
     @apply bg-[#0d0d0d] text-gray-100 antialiased;
+    overflow-x: hidden;
   }
+}
+
+/* FAB fixed positioning - escapes layout flow for mobile visibility */
+.fab-root {
+  position: fixed !important;
+  bottom: 100px !important;
+  right: 20px !important;
+  z-index: 9999 !important;
 }

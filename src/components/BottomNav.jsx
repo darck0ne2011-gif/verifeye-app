@@ -24,7 +24,15 @@ export default function BottomNav({ activeTab = 'home', onTabChange }) {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 rounded-t-2xl safe-area-pb z-50">
+    <nav
+      className="bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 z-50"
+      style={{
+        position: 'fixed',
+        bottom: 'env(safe-area-inset-bottom, 0)',
+        left: 0,
+        width: '100%',
+      }}
+    >
       <div className="flex items-center justify-around py-3 px-4">
         {navItems.map(({ id, label, icon: Icon, accent }) => {
           const isActive = activeTab === id

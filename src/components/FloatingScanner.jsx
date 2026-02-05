@@ -76,7 +76,7 @@ const DragHandleIcon = () => (
 )
 
 const MIN_SCAN_DURATION_MS = 2500
-const BOTTOM_NAV_HEIGHT = 88
+const BOTTOM_NAV_HEIGHT = 80
 
 function getDefaultPosition() {
   if (typeof window === 'undefined') return { x: 300, y: BOTTOM_NAV_HEIGHT }
@@ -310,14 +310,7 @@ export default function FloatingScanner() {
 
   return (
     <>
-      <div
-        className="fixed z-50 relative w-14 h-14"
-        style={{
-          left: position.x,
-          bottom: position.y,
-          transition: isSnapping ? 'left 0.3s ease-out' : 'none',
-        }}
-      >
+      <div className="fab-root relative w-14 h-14">
         {(expanded || miniResult) && (
           <div
             className={`absolute bottom-0 flex flex-col gap-2 p-4 rounded-2xl bg-slate-900/90 backdrop-blur-xl border border-slate-700/60 shadow-xl min-w-[220px] fab-menu-enter ${
