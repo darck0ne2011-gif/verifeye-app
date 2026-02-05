@@ -1,5 +1,6 @@
 import exifParser from 'exif-parser'
 import { fileTypeFromBuffer } from 'file-type'
+import { detectAiImage } from './sightengine.js'
 
 // Known AI-generation resolutions (DALL-E, Midjourney, Stable Diffusion, etc.)
 const AI_SUSPICIOUS_RESOLUTIONS = new Set([
@@ -36,19 +37,9 @@ function hasCameraMetadata(exifResult) {
 }
 
 /**
- * Placeholder for Reality Defender or similar deepfake detection API.
- * TODO: Replace with real API call when key is available.
- *
- * Example integration:
- *   const response = await fetch('https://api.realitydefender.com/v1/analyze', {
- *     method: 'POST',
- *     headers: { 'Authorization': `Bearer ${process.env.REALITY_DEFENDER_API_KEY}` },
- *     body: formData,
- *   })
- *   const data = await response.json()
- *   return data.fakeProbability ?? data.score
+ * Metadata-based fallback when Sightengine is unavailable or errors.
  */
-export async function callDeepfakeDetectionAPI(buffer, mimeType, fileSize) {
+function metadataFallbackScore(buffer, mimeType, fileSize) {
   const ext = (mimeType?.split('/')[1] || 'unknown').toLowerCase()
   const sizeMB = fileSize / (1024 * 1024)
 
@@ -122,9 +113,24 @@ export async function analyzeFile(buffer, originalName, mimeType) {
     }
   }
 
-  const apiScore = await callDeepfakeDetectionAPI(buffer, detectedMime, fileSize)
-  score = Math.round((score + apiScore) / 2)
-  const fakeProbability = Math.max(0, Math.min(100, score))
+  let sightengineResult = null
+  if (isImage) {
+    sightengineResult = await detectAiImage(buffer, detectedMime, originalName || `image.${ext}`)
+  }
+
+  let fakeProbability
+  let aiProbability = null
+
+  if (sightengineResult != null) {
+    aiProbability = Math.round(sightengineResult.aiGenerated * 100)
+    fakeProbability = Math.max(0, Math.min(100, aiProbability))
+  } else if (isImage) {
+    throw new Error('Sightengine connection error - check API credits')
+  } else {
+    const fallbackScore = metadataFallbackScore(buffer, detectedMime, fileSize)
+    score = Math.round((score + fallbackScore) / 2)
+    fakeProbability = Math.max(0, Math.min(100, score))
+  }
 
   const metadata = {
     fileType: detectedMime || 'application/octet-stream',
@@ -136,6 +142,7 @@ export async function analyzeFile(buffer, originalName, mimeType) {
 
   return {
     fakeProbability,
+    aiProbability: aiProbability ?? fakeProbability,
     metadata,
     aiSignatures,
   }

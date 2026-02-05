@@ -243,6 +243,7 @@ app.post('/api/purchase-quick-boost', authMiddleware, async (req, res) => {
 })
 
 app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res) => {
+  console.log('--- NEW SCAN REQUEST RECEIVED ---')
   try {
     const userId = req.userId
     const user = findById(userId)
@@ -276,13 +277,16 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     res.json({
       success: true,
       fakeProbability: analysis.fakeProbability,
+      aiProbability: analysis.aiProbability ?? analysis.fakeProbability,
       scanCredits: isElite ? 999999 : updatedUser.scanCredits,
       metadata: analysis.metadata,
       aiSignatures: analysis.aiSignatures,
     })
   } catch (err) {
     console.error(err)
-    res.status(500).json({ success: false, error: err.message })
+    const isSightengineError = /sightengine|api credits|connection error/i.test(err.message || '')
+    const errorMessage = isSightengineError ? 'Sightengine connection error - check API credits' : err.message
+    res.status(500).json({ success: false, error: errorMessage })
   }
 })
 
