@@ -6,7 +6,16 @@
       "password": "$2a$10$OK2XnZMTPcnOe2KDKIkcyubCR4X/q3Br9aErF7M9ymWY0SuXJjYkK",
       "scanCredits": 31,
       "createdAt": "2026-02-05T03:57:34.729Z"
+    },
+    {
+      "id": 5,
+      "email": "inta@test.test",
+      "password": "$2a$10$oPGZAEYisd5RFwdw7h9aR.f9Yri9CVhNGaRH9ArKG7L.PE/2qaUrG",
+      "scanCredits": 9999,
+      "subscriptionTier": "elite",
+      "isPremium": true,
+      "createdAt": "2026-02-05T12:00:00.000Z"
     }
   ],
-  "nextId": 5
+  "nextId": 6
 }

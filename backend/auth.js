@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import { createUser, findByEmail, findById, findByIdWithPassword, updateCredits, updatePassword, deleteUser, ensureAndreiElite } from './db.js'
+import { createUser, findByEmail, findById, findByIdWithPassword, updateCredits, updatePassword, deleteUser, ensureAdminElite, findOrCreateAdminUser } from './db.js'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'verifeye-dev-secret-change-in-production'
 const JWT_EXPIRY = '7d'
@@ -81,14 +81,20 @@ export async function login(req, res) {
       return res.status(400).json({ success: false, error: 'Email and password required' })
     }
 
-    const user = findByEmail(email)
+    let user = findByEmail(email)
+    // Pre-register inta@test.test on first login if missing (only with correct password)
+    if (!user && email.toLowerCase().trim() === 'inta@test.test' && password === '123456') {
+      const hashed = hashPassword(password)
+      const userId = findOrCreateAdminUser(email, hashed)
+      if (userId) user = findByEmail(email)
+    }
     if (!user || !comparePassword(password, user.password)) {
       return res.status(401).json({ success: false, error: 'Invalid email or password' })
     }
 
-    // Auto-upgrade andrei@test.test to Elite on login; persists to verifeye-data.json
-    if (user.email === 'andrei@test.test') {
-      ensureAndreiElite(user.email)
+    // Auto-upgrade admin accounts (andrei@test.test, inta@test.test) to Elite on login
+    if (['andrei@test.test', 'inta@test.test'].includes(user.email)) {
+      ensureAdminElite(user.email)
     }
 
     const updated = findById(user.id)

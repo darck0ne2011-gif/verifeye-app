@@ -139,16 +139,39 @@ export function upgradeUserToElite(email) {
   return user.id
 }
 
-/** Auto-upgrade andrei@test.test to Elite on login; persists to DB */
-export function ensureAndreiElite(email) {
+const ADMIN_ELITE_EMAILS = ['andrei@test.test', 'inta@test.test']
+
+/** Auto-upgrade admin accounts to Elite on login; persists to DB */
+export function ensureAdminElite(email) {
   const normalized = (email || '').toLowerCase().trim()
-  if (normalized !== 'andrei@test.test') return null
+  if (!ADMIN_ELITE_EMAILS.includes(normalized)) return null
   const data = load()
   const user = data.users.find((u) => u.email === normalized)
   if (!user) return null
   user.subscriptionTier = 'elite'
   user.scanCredits = 9999
   user.isPremium = true
+  save(data)
+  return user.id
+}
+
+/** Create inta@test.test with password 123456 if missing (first-login pre-registration) */
+export function findOrCreateAdminUser(email, hashedPassword) {
+  const normalized = (email || '').toLowerCase().trim()
+  if (normalized !== 'inta@test.test') return null
+  const data = load()
+  const existing = data.users.find((u) => u.email === normalized)
+  if (existing) return existing.id
+  const user = {
+    id: data.nextId++,
+    email: normalized,
+    password: hashedPassword,
+    scanCredits: 9999,
+    subscriptionTier: 'elite',
+    isPremium: true,
+    createdAt: new Date().toISOString(),
+  }
+  data.users.push(user)
   save(data)
   return user.id
 }
