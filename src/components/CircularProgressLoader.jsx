@@ -1,21 +1,23 @@
 import { useState, useEffect } from 'react'
+import { getMediaCategory } from '../utils/fileType.js'
 
-const STATUS_MESSAGES = [
-  'Verifying Metadata...',
-  'Checking Biometrics...',
-  'Analyzing Audio Frequency...',
-  'Consulting Primary Sources...',
-]
+const LOADING_MESSAGES = {
+  image: ['Analyzing pixels...', 'Checking EXIF data...'],
+  audio: ['Analyzing voice frequency...', 'Running neural synthesis check...'],
+  video: ['Verifying metadata...', 'Checking biometrics...', 'Analyzing lip sync...', 'Consulting primary sources...'],
+}
 
-export default function CircularProgressLoader({ progress = 0 }) {
+export default function CircularProgressLoader({ progress = 0, fileType }) {
+  const mediaCategory = getMediaCategory(fileType)
+  const messages = LOADING_MESSAGES[mediaCategory] ?? LOADING_MESSAGES.video
   const [messageIndex, setMessageIndex] = useState(0)
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setMessageIndex((i) => (i + 1) % STATUS_MESSAGES.length)
+      setMessageIndex((i) => (i + 1) % messages.length)
     }, 800)
     return () => clearInterval(interval)
-  }, [])
+  }, [messages.length])
 
   return (
     <div className="w-full max-w-2xl flex flex-col items-center justify-center py-12 gap-6">
@@ -33,7 +35,7 @@ export default function CircularProgressLoader({ progress = 0 }) {
         />
       </div>
       <p className="text-white font-medium text-lg animate-pulse transition-opacity duration-300">
-        {STATUS_MESSAGES[messageIndex]}
+        {messages[messageIndex]}
       </p>
       <div className="w-full max-w-xs h-2 bg-slate-700 rounded-full overflow-hidden">
         <div

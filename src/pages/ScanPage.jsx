@@ -23,6 +23,7 @@ export default function ScanPage({ onSettingsClick }) {
   const [deepfakeScore, setDeepfakeScore] = useState(0)
   const [verdictMetadata, setVerdictMetadata] = useState(null)
   const [verdictAiSignatures, setVerdictAiSignatures] = useState(null)
+  const [verdictMediaCategory, setVerdictMediaCategory] = useState(null)
   const [uploadError, setUploadError] = useState(null)
   const [scanProgress, setScanProgress] = useState(0)
   const fileInputRef = useRef(null)
@@ -84,6 +85,7 @@ export default function ScanPage({ onSettingsClick }) {
           score: data.fakeProbability ?? 0,
           metadata: data.metadata ?? null,
           aiSignatures: data.aiSignatures ?? null,
+          mediaCategory: data.mediaCategory ?? data.metadata?.mediaCategory ?? null,
           error: null,
         }
       } catch (err) {
@@ -115,6 +117,7 @@ export default function ScanPage({ onSettingsClick }) {
     setDeepfakeScore(apiResult.score)
     setVerdictMetadata(apiResult.metadata ?? null)
     setVerdictAiSignatures(apiResult.aiSignatures ?? null)
+    setVerdictMediaCategory(apiResult.mediaCategory ?? null)
     if (apiResult.error) setUploadError(apiResult.error)
     setView('verdict')
     setVerdictVisible(true)
@@ -132,6 +135,7 @@ export default function ScanPage({ onSettingsClick }) {
     setScanProgress(0)
     setVerdictMetadata(null)
     setVerdictAiSignatures(null)
+    setVerdictMediaCategory(null)
     setSelectedFile(null)
     setTimeout(() => setView('idle'), 300)
   }, [])
@@ -179,7 +183,7 @@ export default function ScanPage({ onSettingsClick }) {
         <div className="flex-1 w-full max-w-2xl mt-8 flex flex-col items-center gap-4 min-h-0">
           {view === 'scanning' && (
             <div className="w-full animate-fade-in">
-              <CircularProgressLoader progress={scanProgress} />
+              <CircularProgressLoader progress={scanProgress} fileType={selectedFile} />
             </div>
           )}
           {view === 'verdict' && verdictVisible && (
@@ -187,6 +191,7 @@ export default function ScanPage({ onSettingsClick }) {
               score={deepfakeScore}
               metadata={verdictMetadata}
               aiSignatures={verdictAiSignatures}
+              mediaCategory={verdictMediaCategory}
               error={uploadError}
               onBack={handleBackToScan}
             />

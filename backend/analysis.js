@@ -132,8 +132,11 @@ export async function analyzeFile(buffer, originalName, mimeType) {
     fakeProbability = Math.max(0, Math.min(100, score))
   }
 
+  const mediaCategory = /^image\//i.test(detectedMime || '') ? 'image' : /^audio\//i.test(detectedMime || '') ? 'audio' : 'video'
+
   const metadata = {
     fileType: detectedMime || 'application/octet-stream',
+    mediaCategory,
     extension: ext,
     size: fileSize,
     sizeFormatted: formatFileSize(fileSize),

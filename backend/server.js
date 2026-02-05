@@ -280,6 +280,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
         scanCredits: isElite ? 999999 : updatedUser.scanCredits,
         metadata: cached.metadata,
         aiSignatures: cached.aiSignatures,
+        mediaCategory: cached.metadata?.mediaCategory ?? 'image',
         cached: true,
       })
     }
@@ -305,6 +306,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       scanCredits: isElite ? 999999 : updatedUser.scanCredits,
       metadata: analysis.metadata,
       aiSignatures: analysis.aiSignatures,
+      mediaCategory: analysis.metadata?.mediaCategory ?? 'image',
     })
   } catch (err) {
     console.error(err)

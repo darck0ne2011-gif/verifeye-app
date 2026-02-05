@@ -124,11 +124,12 @@ export function findScanByHash(hash) {
 export function saveScan(hash, result) {
   const data = load()
   if (!data.past_scans) data.past_scans = []
+  const meta = result.metadata ?? {}
   data.past_scans.push({
     hash,
     fakeProbability: result.fakeProbability,
     aiProbability: result.aiProbability ?? result.fakeProbability,
-    metadata: result.metadata ?? {},
+    metadata: { ...meta, mediaCategory: meta.mediaCategory ?? 'image' },
     aiSignatures: result.aiSignatures ?? {},
     createdAt: new Date().toISOString(),
   })
