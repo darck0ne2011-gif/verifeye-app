@@ -1,8 +1,9 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import { addScanToHistory } from '../utils/scanHistory'
+import { getLastScanResult, setLastScanResult, clearLastScanResult } from '../utils/lastScanResult'
 import DashboardHeader from '../components/DashboardHeader'
 import OverlayButton from '../components/OverlayButton'
 import GlobalAlerts from '../components/GlobalAlerts'
@@ -31,6 +32,20 @@ export default function ScanPage({ onSettingsClick }) {
   const fileInputRef = useRef(null)
   const scansCountRef = useRef(scansCount)
   scansCountRef.current = scansCount
+
+  useEffect(() => {
+    const saved = getLastScanResult()
+    if (saved) {
+      setDeepfakeScore(saved.score ?? 0)
+      setVerdictMetadata(saved.metadata ?? null)
+      setVerdictAiSignatures(saved.aiSignatures ?? null)
+      setVerdictMediaCategory(saved.mediaCategory ?? null)
+      setVerdictScannedModels(saved.scannedModels ?? null)
+      setUploadError(saved.error ?? null)
+      setView('verdict')
+      setVerdictVisible(true)
+    }
+  }, [])
 
   const handleFileSelect = useCallback((files) => {
     const file = files?.[0]
@@ -129,6 +144,15 @@ export default function ScanPage({ onSettingsClick }) {
     setView('verdict')
     setVerdictVisible(true)
 
+    setLastScanResult({
+      score: apiResult.score,
+      metadata: apiResult.metadata ?? null,
+      aiSignatures: apiResult.aiSignatures ?? null,
+      mediaCategory: apiResult.mediaCategory ?? null,
+      scannedModels: apiResult.scannedModels ?? null,
+      error: apiResult.error ?? null,
+    })
+
     if (!apiResult.error) addScanToHistory({
       fileName: file.name,
       score: apiResult.score,
@@ -137,6 +161,7 @@ export default function ScanPage({ onSettingsClick }) {
   }, [selectedFile, getAuthHeaders, refreshUser, logout, t])
 
   const handleBackToScan = useCallback(() => {
+    clearLastScanResult()
     setVerdictVisible(false)
     setUploadError(null)
     setScanProgress(0)
