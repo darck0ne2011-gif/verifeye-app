@@ -52,18 +52,70 @@ function setDisplayName(email, name) {
   } catch (_) {}
 }
 
-const LANGUAGE_OPTIONS = [
-  { value: 'en', label: 'English' },
-  { value: 'ro', label: 'Română' },
-  { value: 'es', label: 'Español' },
-  { value: 'fr', label: 'Français' },
-  { value: 'de', label: 'Deutsch' },
-  { value: 'zh', label: '中文' },
-  { value: 'ar', label: 'العربية' },
-  { value: 'pt', label: 'Português' },
-  { value: 'ru', label: 'Русский' },
-  { value: 'id', label: 'Bahasa Indonesia' },
-  { value: 'ban', label: 'Basa Bali' },
+const LANGUAGE_GROUPS = [
+  { region: 'English', options: [{ value: 'en', label: 'English' }] },
+  { region: 'Europe', options: [
+    { value: 'ro', label: 'Română' },
+    { value: 'es', label: 'Español' },
+    { value: 'fr', label: 'Français' },
+    { value: 'de', label: 'Deutsch' },
+    { value: 'it', label: 'Italiano' },
+    { value: 'pt', label: 'Português' },
+    { value: 'ru', label: 'Русский' },
+    { value: 'uk', label: 'Українська' },
+    { value: 'nl', label: 'Nederlands' },
+    { value: 'pl', label: 'Polski' },
+    { value: 'el', label: 'Ελληνικά' },
+    { value: 'bg', label: 'Български' },
+    { value: 'cs', label: 'Čeština' },
+    { value: 'da', label: 'Dansk' },
+    { value: 'fi', label: 'Suomi' },
+    { value: 'hu', label: 'Magyar' },
+    { value: 'no', label: 'Norsk' },
+    { value: 'sk', label: 'Slovenčina' },
+    { value: 'sv', label: 'Svenska' },
+    { value: 'az', label: 'Azərbaycan' },
+  ]},
+  { region: 'East Asia', options: [
+    { value: 'zh', label: '中文' },
+    { value: 'ja', label: '日本語' },
+    { value: 'ko', label: '한국어' },
+  ]},
+  { region: 'South Asia', options: [
+    { value: 'hi', label: 'हिन्दी' },
+    { value: 'bn', label: 'বাংলা' },
+    { value: 'pa', label: 'ਪੰਜਾਬੀ' },
+    { value: 'ta', label: 'தமிழ்' },
+    { value: 'te', label: 'తెలుగు' },
+    { value: 'mr', label: 'मराठी' },
+    { value: 'gu', label: 'ગુજરાતી' },
+    { value: 'kn', label: 'ಕನ್ನಡ' },
+    { value: 'ml', label: 'മലയാളം' },
+    { value: 'or', label: 'ଓଡ଼ିଆ' },
+    { value: 'ur', label: 'اردو' },
+  ]},
+  { region: 'Southeast Asia', options: [
+    { value: 'id', label: 'Bahasa Indonesia' },
+    { value: 'ms', label: 'Bahasa Melayu' },
+    { value: 'vi', label: 'Tiếng Việt' },
+    { value: 'th', label: 'ไทย' },
+    { value: 'my', label: 'မြန်မာစာ' },
+    { value: 'jv', label: 'Basa Jawa' },
+    { value: 'ban', label: 'Basa Bali' },
+  ]},
+  { region: 'Middle East', options: [
+    { value: 'ar', label: 'العربية' },
+    { value: 'fa', label: 'فارسی' },
+    { value: 'he', label: 'עברית' },
+    { value: 'tr', label: 'Türkçe' },
+  ]},
+  { region: 'Africa', options: [
+    { value: 'sw', label: 'Kiswahili' },
+    { value: 'yo', label: 'Yorùbá' },
+    { value: 'ig', label: 'Igbo' },
+    { value: 'ha', label: 'Hausa' },
+    { value: 'am', label: 'አማርኛ' },
+  ]},
 ]
 
 export default function SettingsPage({ onBack }) {
@@ -255,10 +307,14 @@ export default function SettingsPage({ onBack }) {
                       onChange={(e) => i18n.changeLanguage(e.target.value)}
                       className="w-full px-4 py-3 bg-slate-800/60 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     >
-                      {LANGUAGE_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value} className="bg-slate-800 text-white">
-                          {opt.label}
-                        </option>
+                      {LANGUAGE_GROUPS.map((group) => (
+                        <optgroup key={group.region} label={group.region} className="bg-slate-800">
+                          {group.options.map((opt) => (
+                            <option key={opt.value} value={opt.value} className="bg-slate-800 text-white">
+                              {opt.label}
+                            </option>
+                          ))}
+                        </optgroup>
                       ))}
                     </select>
                   </div>
