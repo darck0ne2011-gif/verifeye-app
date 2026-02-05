@@ -88,7 +88,15 @@
   },
   "verdict": {
     "view_source": "View Original Source",
-    "api_error": "API error (using fallback): {{error}}"
+    "api_error": "API error (using fallback): {{error}}",
+    "metadata_title": "File Analysis",
+    "file_type": "File Type",
+    "file_size": "File Size",
+    "created_at": "Creation Date",
+    "ai_signatures": "AI Detection Signals",
+    "ai_missing_exif": "Missing EXIF metadata (common in AI-generated images)",
+    "ai_suspicious_resolution": "Suspicious resolution {{res}} (typical of AI tools)",
+    "ai_software_detected": "AI software detected: {{tags}}"
   },
   "deepfake": {
     "why_fake": "Why is this a fake?",

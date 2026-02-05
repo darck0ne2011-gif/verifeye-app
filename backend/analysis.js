@@ -63,30 +63,85 @@ export async function callDeepfakeDetectionAPI(buffer, mimeType, fileSize) {
   return Math.min(95, apiScore + Math.floor(Math.random() * 12))
 }
 
-export async function computeFakeProbability(buffer, originalName, mimeType) {
+// Known AI software tags in EXIF
+const AI_SOFTWARE_TAGS = [
+  'DALL-E', 'Midjourney', 'Stable Diffusion', 'DALL·E', 'Craiyon',
+  'Adobe Firefly', 'Leonardo.AI', 'Runway', 'Kaiber', 'Synthesia',
+  'ElevenLabs', 'Descript', 'RunwayML', 'Replicate',
+]
+
+function detectSoftwareTags(exifResult) {
+  if (!exifResult?.tags?.Software) return []
+  const software = String(exifResult.tags.Software || '').toLowerCase()
+  return AI_SOFTWARE_TAGS.filter((tag) => software.includes(tag.toLowerCase()))
+}
+
+function formatFileSize(bytes) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+/**
+ * Full file analysis: metadata extraction + AI signature detection + fake probability.
+ */
+export async function analyzeFile(buffer, originalName, mimeType) {
   const fileSize = buffer?.length || 0
   let score = 20
 
   const fileType = await fileTypeFromBuffer(buffer).catch(() => null)
   const detectedMime = fileType?.mime || mimeType
+  const ext = (originalName?.split('.').pop() || detectedMime?.split('/')[1] || 'unknown').toLowerCase()
 
   const isImage = /image/i.test(detectedMime || '')
   const exifResult = isImage ? parseExif(buffer) : null
   const dimensions = getImageDimensions(exifResult)
 
+  const aiSignatures = {
+    missingExif: false,
+    suspiciousResolution: null,
+    softwareTags: [],
+  }
+
   if (isImage) {
     if (!hasCameraMetadata(exifResult)) {
       score += 22
+      aiSignatures.missingExif = true
     }
     if (dimensions) {
       const resKey = `${dimensions.width}x${dimensions.height}`
       if (AI_SUSPICIOUS_RESOLUTIONS.has(resKey)) {
         score += 28
+        aiSignatures.suspiciousResolution = resKey
       }
+    }
+    const swTags = detectSoftwareTags(exifResult)
+    if (swTags.length > 0) {
+      score += 15
+      aiSignatures.softwareTags = swTags
     }
   }
 
   const apiScore = await callDeepfakeDetectionAPI(buffer, detectedMime, fileSize)
   score = Math.round((score + apiScore) / 2)
-  return Math.max(0, Math.min(100, score))
+  const fakeProbability = Math.max(0, Math.min(100, score))
+
+  const metadata = {
+    fileType: detectedMime || 'application/octet-stream',
+    extension: ext,
+    size: fileSize,
+    sizeFormatted: formatFileSize(fileSize),
+    createdAt: exifResult?.tags?.DateTimeOriginal || exifResult?.tags?.DateTime || null,
+  }
+
+  return {
+    fakeProbability,
+    metadata,
+    aiSignatures,
+  }
+}
+
+export async function computeFakeProbability(buffer, originalName, mimeType) {
+  const result = await analyzeFile(buffer, originalName, mimeType)
+  return result.fakeProbability
 }

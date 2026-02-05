@@ -160,7 +160,7 @@ export default function FloatingScanner() {
         formData.append('file', file)
 
         const startTime = Date.now()
-        const res = await fetch(`${API_BASE}/api/verify`, {
+        const res = await fetch(`${API_BASE}/api/analyze`, {
           method: 'POST',
           headers: getAuthHeaders(),
           body: formData,

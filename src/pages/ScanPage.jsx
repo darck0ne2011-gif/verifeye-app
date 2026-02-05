@@ -21,6 +21,8 @@ export default function ScanPage({ onSettingsClick }) {
   const [view, setView] = useState('idle')
   const [verdictVisible, setVerdictVisible] = useState(false)
   const [deepfakeScore, setDeepfakeScore] = useState(0)
+  const [verdictMetadata, setVerdictMetadata] = useState(null)
+  const [verdictAiSignatures, setVerdictAiSignatures] = useState(null)
   const [uploadError, setUploadError] = useState(null)
   const [scanProgress, setScanProgress] = useState(0)
   const fileInputRef = useRef(null)
@@ -51,7 +53,7 @@ export default function ScanPage({ onSettingsClick }) {
         const formData = new FormData()
         formData.append('file', file)
 
-        const res = await fetch(`${API_BASE}/api/verify`, {
+        const res = await fetch(`${API_BASE}/api/analyze`, {
           method: 'POST',
           headers: getAuthHeaders(),
           body: formData,
@@ -80,6 +82,8 @@ export default function ScanPage({ onSettingsClick }) {
         refreshUser()
         apiResult = {
           score: data.fakeProbability ?? 0,
+          metadata: data.metadata ?? null,
+          aiSignatures: data.aiSignatures ?? null,
           error: null,
         }
       } catch (err) {
@@ -109,6 +113,8 @@ export default function ScanPage({ onSettingsClick }) {
     setScanProgress(100)
 
     setDeepfakeScore(apiResult.score)
+    setVerdictMetadata(apiResult.metadata ?? null)
+    setVerdictAiSignatures(apiResult.aiSignatures ?? null)
     if (apiResult.error) setUploadError(apiResult.error)
     setView('verdict')
     setVerdictVisible(true)
@@ -124,6 +130,8 @@ export default function ScanPage({ onSettingsClick }) {
     setVerdictVisible(false)
     setUploadError(null)
     setScanProgress(0)
+    setVerdictMetadata(null)
+    setVerdictAiSignatures(null)
     setSelectedFile(null)
     setTimeout(() => setView('idle'), 300)
   }, [])
@@ -177,6 +185,8 @@ export default function ScanPage({ onSettingsClick }) {
           {view === 'verdict' && verdictVisible && (
             <VerdictScreen
               score={deepfakeScore}
+              metadata={verdictMetadata}
+              aiSignatures={verdictAiSignatures}
               error={uploadError}
               onBack={handleBackToScan}
             />

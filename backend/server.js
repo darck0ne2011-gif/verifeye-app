@@ -2,7 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
-import { computeFakeProbability } from './analysis.js'
+import { analyzeFile } from './analysis.js'
 import {
   authMiddleware,
   register,
@@ -11,7 +11,7 @@ import {
   changePassword,
   deleteAccount,
 } from './auth.js'
-import { findById, getCredits, updatePassword, deleteUser, upgradeUserToElite } from './db.js'
+import { findById, getCredits, updateCredits, updatePassword, deleteUser, upgradeUserToElite } from './db.js'
 import { generatePdfBuffer } from './pdfReport.js'
 import {
   getGoogleAuthUrl,
@@ -243,7 +243,7 @@ app.post('/api/purchase-quick-boost', authMiddleware, async (req, res) => {
   }
 })
 
-app.post('/api/verify', authMiddleware, upload.single('file'), async (req, res) => {
+app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res) => {
   try {
     const userId = req.userId
     const user = findById(userId)
@@ -262,7 +262,7 @@ app.post('/api/verify', authMiddleware, upload.single('file'), async (req, res) 
       return res.status(400).json({ success: false, error: 'No file uploaded' })
     }
 
-    const fakeProbability = await computeFakeProbability(
+    const analysis = await analyzeFile(
       file.buffer,
       file.originalname,
       file.mimetype
@@ -276,8 +276,10 @@ app.post('/api/verify', authMiddleware, upload.single('file'), async (req, res) 
 
     res.json({
       success: true,
-      fakeProbability,
+      fakeProbability: analysis.fakeProbability,
       scanCredits: isElite ? 999999 : updatedUser.scanCredits,
+      metadata: analysis.metadata,
+      aiSignatures: analysis.aiSignatures,
     })
   } catch (err) {
     console.error(err)
