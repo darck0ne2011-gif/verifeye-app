@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from './context/AuthContext'
 import ScanPage from './pages/ScanPage'
 import HistoryPage from './pages/HistoryPage'
+import ScanSettingsPage from './pages/ScanSettingsPage'
 import UpgradePage from './pages/UpgradePage'
 import SettingsPage from './pages/SettingsPage'
 import AuthPage from './pages/AuthPage'
@@ -81,6 +82,9 @@ function App() {
             onSettingsClick={() => setShowSettings(true)}
             onUpgradeClick={() => setActiveTab('upgrade')}
           />
+        )}
+        {activeTab === 'scan_settings' && (
+          <ScanSettingsPage onSettingsClick={() => setShowSettings(true)} />
         )}
       </div>
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />

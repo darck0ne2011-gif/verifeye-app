@@ -291,6 +291,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
         metadata: cached.metadata,
         aiSignatures: cached.aiSignatures,
         mediaCategory: cached.metadata?.mediaCategory ?? 'image',
+        scannedModels: cached.scannedModels ?? ['genai'],
         cached: true,
       })
     }
@@ -318,6 +319,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       metadata: analysis.metadata,
       aiSignatures: analysis.aiSignatures,
       mediaCategory: analysis.metadata?.mediaCategory ?? 'image',
+      scannedModels: models,
     })
   } catch (err) {
     console.error(err)

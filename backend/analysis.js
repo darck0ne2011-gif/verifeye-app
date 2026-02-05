@@ -164,6 +164,7 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     aiProbability: aiProbability ?? fakeProbability,
     metadata,
     aiSignatures,
+    scannedModels: models,
   }
 }
 

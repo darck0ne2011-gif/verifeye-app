@@ -2,6 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import { addScanToHistory } from '../utils/scanHistory'
+import { getActiveModels } from '../utils/scanSettings'
 
 const FAB_STORAGE_KEY = 'verifeye_fab_position'
 const FAB_SIZE = 56
@@ -100,8 +101,9 @@ export default function FloatingScanner() {
   const hasDraggedRef = useRef(false)
 
   const scansCount = user?.scanCredits ?? 0
+  const creditsNeeded = getActiveModels().length
   const scansLabel = scansCount >= 999999 ? 'Unlimited' : `${scansCount} Scans left`
-  const hasCredits = scansCount > 0
+  const hasCredits = scansCount >= 999999 || scansCount >= creditsNeeded
 
   const closeMenu = useCallback(() => {
     setExpanded(false)
@@ -158,6 +160,7 @@ export default function FloatingScanner() {
       try {
         const formData = new FormData()
         formData.append('file', file)
+        formData.append('models', getActiveModels().join(','))
 
         const startTime = Date.now()
         const res = await fetch(`${API_BASE}/api/analyze`, {

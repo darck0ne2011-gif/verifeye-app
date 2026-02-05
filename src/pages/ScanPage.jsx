@@ -7,8 +7,8 @@ import DashboardHeader from '../components/DashboardHeader'
 import OverlayButton from '../components/OverlayButton'
 import GlobalAlerts from '../components/GlobalAlerts'
 import DropZone from '../components/DropZone'
-import ModelCheckboxes, { MODEL_IDS } from '../components/ModelCheckboxes'
 import CircularProgressLoader from '../components/CircularProgressLoader'
+import { getActiveModels } from '../utils/scanSettings'
 import VerdictScreen from '../components/VerdictScreen'
 const MIN_SCAN_DURATION_MS = 3000
 const PROGRESS_UPDATE_INTERVAL_MS = 30
@@ -25,9 +25,9 @@ export default function ScanPage({ onSettingsClick }) {
   const [verdictMetadata, setVerdictMetadata] = useState(null)
   const [verdictAiSignatures, setVerdictAiSignatures] = useState(null)
   const [verdictMediaCategory, setVerdictMediaCategory] = useState(null)
+  const [verdictScannedModels, setVerdictScannedModels] = useState(null)
   const [uploadError, setUploadError] = useState(null)
   const [scanProgress, setScanProgress] = useState(0)
-  const [selectedModels, setSelectedModels] = useState([MODEL_IDS.genai])
   const fileInputRef = useRef(null)
   const scansCountRef = useRef(scansCount)
   scansCountRef.current = scansCount
@@ -43,7 +43,7 @@ export default function ScanPage({ onSettingsClick }) {
 
   const handleStartScan = useCallback(async () => {
     const file = selectedFile
-    const models = selectedModels?.length ? selectedModels : [MODEL_IDS.genai]
+    const models = getActiveModels()
     const creditsNeeded = models.length
     if (!file || scansCountRef.current < creditsNeeded) return
 
@@ -91,6 +91,7 @@ export default function ScanPage({ onSettingsClick }) {
           metadata: data.metadata ?? null,
           aiSignatures: data.aiSignatures ?? null,
           mediaCategory: data.mediaCategory ?? data.metadata?.mediaCategory ?? null,
+          scannedModels: data.scannedModels ?? models,
           error: null,
         }
       } catch (err) {
@@ -123,6 +124,7 @@ export default function ScanPage({ onSettingsClick }) {
     setVerdictMetadata(apiResult.metadata ?? null)
     setVerdictAiSignatures(apiResult.aiSignatures ?? null)
     setVerdictMediaCategory(apiResult.mediaCategory ?? null)
+    setVerdictScannedModels(apiResult.scannedModels ?? null)
     if (apiResult.error) setUploadError(apiResult.error)
     setView('verdict')
     setVerdictVisible(true)
@@ -132,7 +134,7 @@ export default function ScanPage({ onSettingsClick }) {
       score: apiResult.score,
       status: apiResult.score >= 50 ? 'FAKE' : 'REAL',
     })
-  }, [selectedFile, selectedModels, getAuthHeaders, refreshUser, logout, t])
+  }, [selectedFile, getAuthHeaders, refreshUser, logout, t])
 
   const handleBackToScan = useCallback(() => {
     setVerdictVisible(false)
@@ -141,6 +143,7 @@ export default function ScanPage({ onSettingsClick }) {
     setVerdictMetadata(null)
     setVerdictAiSignatures(null)
     setVerdictMediaCategory(null)
+    setVerdictScannedModels(null)
     setSelectedFile(null)
     setTimeout(() => setView('idle'), 300)
   }, [])
@@ -148,7 +151,7 @@ export default function ScanPage({ onSettingsClick }) {
   const handleOverlayClick = useCallback(() => {
     if (view === 'verdict') {
       handleBackToScan()
-    } else if (view === 'idle' && selectedFile && scansCountRef.current > 0) {
+    } else if (view === 'idle' && selectedFile && scansCountRef.current >= getActiveModels().length) {
       handleStartScan()
     }
   }, [view, selectedFile, handleBackToScan, handleStartScan])
@@ -158,7 +161,7 @@ export default function ScanPage({ onSettingsClick }) {
     fileInputRef.current?.click()
   }, [])
 
-  const models = selectedModels?.length ? selectedModels : [MODEL_IDS.genai]
+  const models = getActiveModels()
   const creditsNeeded = models.length
   const overlayDisabled = scansCount < creditsNeeded || (view === 'idle' && !selectedFile)
   const overlayFaded = view === 'idle' && !selectedFile && scansCount >= creditsNeeded
@@ -199,6 +202,7 @@ export default function ScanPage({ onSettingsClick }) {
               metadata={verdictMetadata}
               aiSignatures={verdictAiSignatures}
               mediaCategory={verdictMediaCategory}
+              scannedModels={verdictScannedModels}
               error={uploadError}
               onBack={handleBackToScan}
             />
@@ -207,13 +211,6 @@ export default function ScanPage({ onSettingsClick }) {
 
         {view === 'idle' && (
           <>
-            <div className="w-full max-w-2xl pt-4 shrink-0">
-              <ModelCheckboxes
-                selected={selectedModels}
-                onChange={setSelectedModels}
-                disabled={scansCount <= 0}
-              />
-            </div>
             <div className="w-full max-w-2xl pt-4 shrink-0">
               <DropZone
                 disabled={scansCount < creditsNeeded}

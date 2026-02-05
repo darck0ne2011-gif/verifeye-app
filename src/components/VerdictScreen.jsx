@@ -16,7 +16,7 @@ function buildReasonFromAiSignatures(aiSignatures, t) {
   return parts.length ? parts.join('. ') : null
 }
 
-export default function VerdictScreen({ score = 0, metadata, aiSignatures, mediaCategory, error, onBack }) {
+export default function VerdictScreen({ score = 0, metadata, aiSignatures, mediaCategory, scannedModels, error, onBack }) {
   const { t } = useTranslation()
   const isDeepfake = score >= 50
   const reasonFromSignatures = buildReasonFromAiSignatures(aiSignatures, t)
@@ -24,7 +24,7 @@ export default function VerdictScreen({ score = 0, metadata, aiSignatures, media
 
   return (
     <div className="w-full max-w-2xl flex flex-col gap-6 animate-fade-in">
-      <RealTimeAnalysis isComplete fileType={fileType} />
+      <RealTimeAnalysis isComplete fileType={fileType} scannedModels={scannedModels} />
       {metadata && (
         <section className="w-full rounded-xl bg-slate-800/60 border border-slate-600/60 p-4">
           <h3 className="text-sm font-medium text-slate-300 mb-3">{t('verdict.metadata_title')}</h3>

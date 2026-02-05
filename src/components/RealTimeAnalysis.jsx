@@ -1,4 +1,5 @@
 import { getMediaCategory } from '../utils/fileType.js'
+import { MODEL_IDS } from './ModelCheckboxes'
 
 const PersonIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -25,23 +26,38 @@ const CheckIcon = () => (
 )
 
 const IMAGE_ITEMS = [
-  { icon: PixelIcon, title: 'Pixel Integrity', subtitle: 'Analysis complete: No AI generation detected' },
-  { icon: WaveformIcon, title: 'Metadata Analysis', subtitle: 'EXIF and file structure verified' },
+  { modelId: MODEL_IDS.deepfake, icon: PersonIcon, title: 'Deepfake Detection', subtitle: 'Analysis complete: No face swap detected' },
+  { modelId: MODEL_IDS.genai, icon: PixelIcon, title: 'AI Pixel Analysis', subtitle: 'Analysis complete: No AI generation detected' },
+  { modelId: MODEL_IDS.type, icon: WaveformIcon, title: 'Metadata Check', subtitle: 'EXIF and file structure verified' },
+  { modelId: MODEL_IDS.quality, icon: PixelIcon, title: 'Image Quality', subtitle: 'Quality score verified' },
 ]
 
 const AUDIO_ITEMS = [
-  { icon: WaveformIcon, title: 'Voice Frequency', subtitle: 'Analysis complete: No synthetic voice detected' },
-  { icon: PersonIcon, title: 'Neural Synthesis Check', subtitle: 'Vocal patterns verified' },
+  { modelId: MODEL_IDS.genai, icon: WaveformIcon, title: 'Voice Frequency', subtitle: 'Analysis complete: No synthetic voice detected' },
+  { modelId: MODEL_IDS.deepfake, icon: PersonIcon, title: 'Neural Synthesis Check', subtitle: 'Vocal patterns verified' },
 ]
 
 const VIDEO_ITEMS = [
-  { icon: PersonIcon, title: 'Biometric Integrity', subtitle: 'Analysis complete: No AI cloning detected' },
-  { icon: WaveformIcon, title: 'Lip Sync', subtitle: 'Analysis complete: Lip sync verified' },
+  { modelId: MODEL_IDS.deepfake, icon: PersonIcon, title: 'Deepfake Detection', subtitle: 'Analysis complete: No AI cloning detected' },
+  { modelId: MODEL_IDS.genai, icon: WaveformIcon, title: 'Lip Sync', subtitle: 'Analysis complete: Lip sync verified' },
 ]
 
-export default function RealTimeAnalysis({ isComplete = true, fileType }) {
+function getItemsForScannedModels(mediaCategory, scannedModels) {
+  const scanned = Array.isArray(scannedModels) && scannedModels.length > 0 ? scannedModels : null
+  const allItems = mediaCategory === 'image' ? IMAGE_ITEMS : mediaCategory === 'audio' ? AUDIO_ITEMS : VIDEO_ITEMS
+
+  if (scanned) {
+    return allItems.filter((item) => scanned.includes(item.modelId))
+  }
+
+  return allItems.map((item) => ({ ...item, modelId: undefined }))
+}
+
+export default function RealTimeAnalysis({ isComplete = true, fileType, scannedModels }) {
   const mediaCategory = getMediaCategory(fileType)
-  const items = mediaCategory === 'image' ? IMAGE_ITEMS : mediaCategory === 'audio' ? AUDIO_ITEMS : VIDEO_ITEMS
+  const items = getItemsForScannedModels(mediaCategory, scannedModels)
+
+  if (items.length === 0) return null
 
   return (
     <section className="w-full max-w-2xl">

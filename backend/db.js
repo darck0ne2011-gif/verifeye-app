@@ -132,6 +132,7 @@ export function saveScan(hash, modelsKey, result) {
     aiProbability: result.aiProbability ?? result.fakeProbability,
     metadata: { ...meta, mediaCategory: meta.mediaCategory ?? 'image' },
     aiSignatures: result.aiSignatures ?? {},
+    scannedModels: result.scannedModels ?? [],
     createdAt: new Date().toISOString(),
   })
   save(data)

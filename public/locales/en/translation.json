@@ -64,7 +64,12 @@
   "nav": {
     "home": "Home",
     "history": "History",
+    "scan_settings": "Scan Settings",
     "upgrade": "Upgrade"
+  },
+  "scan_settings": {
+    "title": "Scan Settings",
+    "subtitle": "Choose which analysis models to run. Each model uses 1 credit per scan."
   },
   "header": {
     "scans": "{{count}} Scans",
