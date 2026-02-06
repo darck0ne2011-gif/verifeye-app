@@ -72,6 +72,7 @@
     "subtitle": "Choose which analysis models to run. Each model uses 1 credit per scan."
   },
   "header": {
+    "menu": "Menu",
     "scans": "{{count}} Scans",
     "scans_unlimited": "Unlimited scans"
   },
