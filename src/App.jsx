@@ -92,7 +92,10 @@ function App() {
       <FloatingScanner />
       <div className="pb-[100px] min-h-[100dvh]">
         {activeTab === 'home' && (
-          <ScanPage onSettingsClick={() => setShowSettings(true)} />
+          <ScanPage
+            onSettingsClick={() => setShowSettings(true)}
+            onUpgradeClick={() => setActiveTab('upgrade')}
+          />
         )}
         {activeTab === 'upgrade' && (
           <UpgradePage onSettingsClick={() => setShowSettings(true)} />

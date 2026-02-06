@@ -14,7 +14,7 @@ import VerdictScreen from '../components/VerdictScreen'
 const MIN_SCAN_DURATION_MS = 3000
 const PROGRESS_UPDATE_INTERVAL_MS = 30
 
-export default function ScanPage({ onSettingsClick }) {
+export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
   const { t } = useTranslation()
   const { user, getAuthHeaders, refreshUser, logout } = useAuth()
   const scansCount = user?.scanCredits ?? 0
@@ -29,6 +29,8 @@ export default function ScanPage({ onSettingsClick }) {
   const [verdictAiSignatures, setVerdictAiSignatures] = useState(null)
   const [verdictMediaCategory, setVerdictMediaCategory] = useState(null)
   const [verdictScannedModels, setVerdictScannedModels] = useState(null)
+  const [verdictFileHash, setVerdictFileHash] = useState(null)
+  const [verdictFileName, setVerdictFileName] = useState(null)
   const [uploadError, setUploadError] = useState(null)
   const [scanProgress, setScanProgress] = useState(0)
   const fileInputRef = useRef(null)
@@ -45,6 +47,8 @@ export default function ScanPage({ onSettingsClick }) {
       setVerdictAiSignatures(saved.aiSignatures ?? null)
       setVerdictMediaCategory(saved.mediaCategory ?? null)
       setVerdictScannedModels(saved.scannedModels ?? null)
+      setVerdictFileHash(saved.fileHash ?? null)
+      setVerdictFileName(saved.fileName ?? null)
       setUploadError(saved.error ?? null)
       setView('verdict')
       setVerdictVisible(true)
@@ -114,6 +118,8 @@ export default function ScanPage({ onSettingsClick }) {
           mediaCategory: data.mediaCategory ?? data.metadata?.mediaCategory ?? null,
           scannedModels: data.scannedModels ?? models,
           modelScores: data.modelScores ?? null,
+          fileHash: data.fileHash ?? null,
+          fileName: file?.name ?? null,
           error: null,
         }
       } catch (err) {
@@ -149,6 +155,8 @@ export default function ScanPage({ onSettingsClick }) {
     setVerdictAiSignatures(apiResult.aiSignatures ?? null)
     setVerdictMediaCategory(apiResult.mediaCategory ?? null)
     setVerdictScannedModels(apiResult.scannedModels ?? null)
+    setVerdictFileHash(apiResult.fileHash ?? null)
+    setVerdictFileName(apiResult.fileName ?? null)
     if (apiResult.error) setUploadError(apiResult.error)
     setView('verdict')
     setVerdictVisible(true)
@@ -162,6 +170,8 @@ export default function ScanPage({ onSettingsClick }) {
       aiSignatures: apiResult.aiSignatures ?? null,
       mediaCategory: apiResult.mediaCategory ?? null,
       scannedModels: apiResult.scannedModels ?? null,
+      fileHash: apiResult.fileHash ?? null,
+      fileName: apiResult.fileName ?? null,
       error: apiResult.error ?? null,
     })
 
@@ -178,6 +188,8 @@ export default function ScanPage({ onSettingsClick }) {
     setVerdictAiSignatures(null)
     setVerdictMediaCategory(null)
     setVerdictScannedModels(null)
+    setVerdictFileHash(null)
+    setVerdictFileName(null)
     setSelectedFile(null)
     setTimeout(() => setView('idle'), 300)
   }, [])
@@ -240,7 +252,11 @@ export default function ScanPage({ onSettingsClick }) {
               aiSignatures={verdictAiSignatures}
               mediaCategory={verdictMediaCategory}
               scannedModels={verdictScannedModels}
+              fileHash={verdictFileHash}
+              fileName={verdictFileName}
               error={uploadError}
+              canDownloadPdf={user?.subscriptionTier === 'pro' || user?.subscriptionTier === 'elite'}
+              onUpgradeClick={onUpgradeClick}
               onBack={handleBackToScan}
             />
           )}
