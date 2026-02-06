@@ -119,9 +119,9 @@ export async function extractAudioToTempFile(buffer, ext = 'mp4') {
     await new Promise((resolve, reject) => {
       ffmpeg(inputPath)
         .noVideo()
+        .outputOptions(['-map', 'a', '-q:a', '0'])
         .format('mp3')
         .audioCodec('libmp3lame')
-        .audioBitrate('128k')
         .output(audioPath)
         .on('end', () => resolve())
         .on('error', (err) => reject(err))

@@ -321,12 +321,15 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       if (isElite) {
         const fp = analysis.fakeProbability ?? 0
         const status = fp >= 50 ? 'FAKE' : 'REAL'
+        const lipSync = analysis.metadata?.lipSyncIntegrity
         const expertSummary = await generateExecutiveSummary({
           sightengineRaw: analysis.sightengineRaw,
           modelScores: analysis.modelScores,
           metadata: analysis.metadata,
           fakeProbability: fp,
           status,
+          aiScore: fp,
+          lipSyncScore: lipSync,
         })
         if (expertSummary && analysis.metadata) {
           analysis.metadata.expertSummary = expertSummary
@@ -381,12 +384,15 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     if (isElite) {
       const fp = analysis.fakeProbability ?? 0
       const status = fp >= 50 ? 'FAKE' : 'REAL'
+      const lipSync = analysis.metadata?.lipSyncIntegrity
       expertSummary = await generateExecutiveSummary({
         sightengineRaw: analysis.sightengineRaw,
         modelScores: analysis.modelScores,
         metadata: analysis.metadata,
         fakeProbability: fp,
         status,
+        aiScore: fp,
+        lipSyncScore: lipSync,
       })
       if (expertSummary && analysis.metadata) {
         analysis.metadata.expertSummary = expertSummary

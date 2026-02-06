@@ -123,22 +123,6 @@ export function generateScanPdf(opts) {
   doc.rect(margin, y, pageWidth - margin * 2, 2, 'F')
   y += 25
 
-  // AI Expert Interpretation (at beginning)
-  const summary = expertSummary || metadata?.expertSummary
-  if (summary) {
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(DARK_BLUE)
-    doc.text('AI Expert Interpretation', margin, y)
-    y += 18
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(DARK_GRAY)
-    const lines = doc.splitTextToSize(summary, pageWidth - margin * 2)
-    doc.text(lines, margin, y)
-    y += lines.length * 14 + 25
-  }
-
   // Scan details
   const dateFormatted = new Date().toLocaleString(undefined, {
     dateStyle: 'long',
@@ -183,6 +167,22 @@ export function generateScanPdf(opts) {
   doc.text(status, margin, y)
   doc.text(`${score}%`, margin + 70, y)
   y += 40
+
+  // AI Expert Interpretation (directly under Verdict line)
+  const summary = expertSummary || metadata?.expertSummary
+  if (summary) {
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(DARK_BLUE)
+    doc.text('AI Expert Interpretation', margin, y)
+    y += 16
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(DARK_GRAY)
+    const lines = doc.splitTextToSize(summary, pageWidth - margin * 2)
+    doc.text(lines, margin, y)
+    y += lines.length * 14 + 20
+  }
 
   // Detection signals
   const signals = getDetectionSignals(aiSignatures, t)

@@ -29,6 +29,14 @@ export async function classifyAudioWithElevenLabs(videoBuffer, ext = 'mp4') {
   try {
     extracted = await extractAudioToTempFile(videoBuffer, ext)
     if (!extracted?.audioPath || !fs.existsSync(extracted.audioPath)) {
+      console.warn('ElevenLabs: No extracted audio file. Extraction may have failed.')
+      return null
+    }
+
+    const stat = fs.statSync(extracted.audioPath)
+    const sizeKb = (stat.size / 1024).toFixed(2)
+    console.log(`ElevenLabs: Extracted .mp3 size: ${sizeKb} KB${stat.size === 0 ? ' (WARNING: 0 KB - extraction likely failed)' : ''}`)
+    if (stat.size === 0) {
       return null
     }
 
@@ -49,6 +57,7 @@ export async function classifyAudioWithElevenLabs(videoBuffer, ext = 'mp4') {
     })
 
     const data = res.data
+    console.log('ElevenLabs classifier response:', JSON.stringify(data, null, 2))
     const score = data?.probability ?? data?.score ?? data?.ai_generated_probability ?? data?.result?.probability
     if (score != null) {
       const num = Number(score)
