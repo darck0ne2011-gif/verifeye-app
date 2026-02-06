@@ -55,19 +55,21 @@ export default function ScanSettingsPage({ onSettingsClick }) {
         userEmail={user?.email}
         onSettingsClick={onSettingsClick}
       />
-      <main className="flex-1 px-4 pt-6 pb-8 overflow-y-auto">
-        <h1 className="text-xl font-semibold text-white mb-2">{t('scan_settings.title')}</h1>
+      <main className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-8 overflow-y-auto">
+        <h1 className="text-xl font-bold text-white text-left mb-2">{t('scan_settings.title')}</h1>
         <p className="text-slate-400 text-sm mb-6">{t('scan_settings.subtitle')}</p>
-        <ul className="space-y-1">
+        <ul className="space-y-3 w-full">
           {OPTIONS.map((opt) => {
             const isOn = activeModels.includes(opt.id)
             return (
               <li
                 key={opt.id}
-                className="flex items-center justify-between py-4 px-4 rounded-xl bg-slate-800/60 border border-slate-700/50"
+                className="w-full flex justify-between items-center p-4 bg-slate-800/50 rounded-xl border border-slate-700/50"
               >
-                <span className="text-white font-medium">{t(opt.labelKey)}</span>
-                <ToggleSwitch checked={isOn} onChange={() => toggle(opt.id)} />
+                <span className="text-white font-medium flex-1 min-w-0">{t(opt.labelKey)}</span>
+                <div className="shrink-0">
+                  <ToggleSwitch checked={isOn} onChange={() => toggle(opt.id)} />
+                </div>
               </li>
             )
           })}

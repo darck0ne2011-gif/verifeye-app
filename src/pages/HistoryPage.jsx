@@ -126,8 +126,8 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
         onSettingsClick={onSettingsClick}
       />
 
-      <main className="flex-1 flex flex-col w-full px-4 pt-6 pb-8 max-w-5xl mx-auto">
-        <h1 className="text-xl font-bold text-white mb-6">{t('history.title')}</h1>
+      <main className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-8">
+        <h1 className="text-xl font-bold text-white text-left mb-6">{t('history.title')}</h1>
 
         {history.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
@@ -136,11 +136,11 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
             </p>
           </div>
         ) : (
-          <div className="space-y-3 w-full max-w-none">
+          <div className="space-y-3 w-full">
             {history.map((item) => (
               <div
                 key={item.id}
-                className="w-full flex justify-between items-center p-4 bg-slate-800/60 rounded-xl border border-slate-700/50"
+                className="w-full flex justify-between items-center p-4 bg-slate-800/50 rounded-xl border border-slate-700/50"
               >
                 <div className="flex items-center gap-4 flex-1 min-w-0">
                   <FileIcon type={getFileType(item.fileName)} />
