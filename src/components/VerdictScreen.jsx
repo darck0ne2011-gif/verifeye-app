@@ -16,9 +16,9 @@ function buildReasonFromAiSignatures(aiSignatures, t) {
   return parts.length ? parts.join('. ') : null
 }
 
-export default function VerdictScreen({ score = 0, metadata, aiSignatures, mediaCategory, scannedModels, error, onBack }) {
+export default function VerdictScreen({ score = 0, status, metadata, aiSignatures, mediaCategory, scannedModels, error, onBack }) {
   const { t } = useTranslation()
-  const isDeepfake = score >= 50
+  const isDeepfake = status === 'FAKE' || (status == null && score >= 50)
   const reasonFromSignatures = buildReasonFromAiSignatures(aiSignatures, t)
   const fileType = mediaCategory ?? metadata?.mediaCategory
 

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import { addScanToHistory } from '../utils/scanHistory'
 import { getActiveModels } from '../utils/scanSettings'
+import { getWinningDisplay } from '../utils/verdictScore'
 
 const FAB_STORAGE_KEY = 'verifeye_fab_position'
 const FAB_SIZE = 56
@@ -120,10 +121,8 @@ export default function FloatingScanner() {
 
     await new Promise((r) => setTimeout(r, MIN_SCAN_DURATION_MS))
 
-    const simulatedScore = count > 0
-      ? Math.floor(Math.random() * 40) + 10
-      : 0
-    const status = simulatedScore >= 50 ? 'FAKE' : 'REAL'
+    const simulatedFakeProb = count > 0 ? Math.floor(Math.random() * 40) + 10 : 0
+    const { status, displayScore: simulatedScore } = getWinningDisplay(simulatedFakeProb)
     const fileName = count > 0
       ? `Page media (${count} element${count > 1 ? 's' : ''})`
       : 'No media on page'
@@ -136,7 +135,7 @@ export default function FloatingScanner() {
       status,
       score: simulatedScore,
       message: count > 0
-        ? `${status} — ${simulatedScore}% deepfake likelihood`
+        ? `${status} — ${simulatedScore}%`
         : 'No video or audio found on this page',
     })
     setScanning(false)
@@ -179,13 +178,12 @@ export default function FloatingScanner() {
           logout()
           setMiniResult({ status: 'ERROR', message: 'Session expired' })
         } else if (data.success) {
-          const score = data.fakeProbability ?? 0
-          const status = score >= 50 ? 'FAKE' : 'REAL'
-          addScanToHistory({ fileName: file.name, score, status })
+          const { status, displayScore } = getWinningDisplay(data.fakeProbability ?? 0)
+          addScanToHistory({ fileName: file.name, score: displayScore, status })
           setMiniResult({
             status,
-            score,
-            message: `${status} — ${score}% deepfake likelihood`,
+            score: displayScore,
+            message: `${status} — ${displayScore}%`,
           })
           await refreshUser()
         } else {

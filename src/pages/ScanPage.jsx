@@ -10,6 +10,7 @@ import GlobalAlerts from '../components/GlobalAlerts'
 import DropZone from '../components/DropZone'
 import CircularProgressLoader from '../components/CircularProgressLoader'
 import { getActiveModels } from '../utils/scanSettings'
+import { getWinningDisplay } from '../utils/verdictScore'
 import VerdictScreen from '../components/VerdictScreen'
 const MIN_SCAN_DURATION_MS = 3000
 const PROGRESS_UPDATE_INTERVAL_MS = 30
@@ -23,6 +24,7 @@ export default function ScanPage({ onSettingsClick }) {
   const [view, setView] = useState('idle')
   const [verdictVisible, setVerdictVisible] = useState(false)
   const [deepfakeScore, setDeepfakeScore] = useState(0)
+  const [verdictStatus, setVerdictStatus] = useState(null)
   const [verdictMetadata, setVerdictMetadata] = useState(null)
   const [verdictAiSignatures, setVerdictAiSignatures] = useState(null)
   const [verdictMediaCategory, setVerdictMediaCategory] = useState(null)
@@ -37,6 +39,7 @@ export default function ScanPage({ onSettingsClick }) {
     const saved = getLastScanResult()
     if (saved) {
       setDeepfakeScore(saved.score ?? 0)
+      setVerdictStatus(saved.status ?? (saved.score >= 50 ? 'FAKE' : 'REAL'))
       setVerdictMetadata(saved.metadata ?? null)
       setVerdictAiSignatures(saved.aiSignatures ?? null)
       setVerdictMediaCategory(saved.mediaCategory ?? null)
@@ -101,8 +104,10 @@ export default function ScanPage({ onSettingsClick }) {
         }
 
         refreshUser()
+        const { status, displayScore } = getWinningDisplay(data.fakeProbability ?? 0)
         apiResult = {
-          score: data.fakeProbability ?? 0,
+          score: displayScore,
+          status,
           metadata: data.metadata ?? null,
           aiSignatures: data.aiSignatures ?? null,
           mediaCategory: data.mediaCategory ?? data.metadata?.mediaCategory ?? null,
@@ -136,6 +141,7 @@ export default function ScanPage({ onSettingsClick }) {
     setScanProgress(100)
 
     setDeepfakeScore(apiResult.score)
+    setVerdictStatus(apiResult.status ?? (apiResult.score >= 50 ? 'FAKE' : 'REAL'))
     setVerdictMetadata(apiResult.metadata ?? null)
     setVerdictAiSignatures(apiResult.aiSignatures ?? null)
     setVerdictMediaCategory(apiResult.mediaCategory ?? null)
@@ -144,8 +150,10 @@ export default function ScanPage({ onSettingsClick }) {
     setView('verdict')
     setVerdictVisible(true)
 
+    const status = apiResult.status ?? (apiResult.score >= 50 ? 'FAKE' : 'REAL')
     setLastScanResult({
       score: apiResult.score,
+      status,
       metadata: apiResult.metadata ?? null,
       aiSignatures: apiResult.aiSignatures ?? null,
       mediaCategory: apiResult.mediaCategory ?? null,
@@ -156,7 +164,7 @@ export default function ScanPage({ onSettingsClick }) {
     if (!apiResult.error) addScanToHistory({
       fileName: file.name,
       score: apiResult.score,
-      status: apiResult.score >= 50 ? 'FAKE' : 'REAL',
+      status,
     })
   }, [selectedFile, getAuthHeaders, refreshUser, logout, t])
 
@@ -165,6 +173,7 @@ export default function ScanPage({ onSettingsClick }) {
     setVerdictVisible(false)
     setUploadError(null)
     setScanProgress(0)
+    setVerdictStatus(null)
     setVerdictMetadata(null)
     setVerdictAiSignatures(null)
     setVerdictMediaCategory(null)
@@ -224,6 +233,7 @@ export default function ScanPage({ onSettingsClick }) {
           {view === 'verdict' && verdictVisible && (
             <VerdictScreen
               score={deepfakeScore}
+              status={verdictStatus}
               metadata={verdictMetadata}
               aiSignatures={verdictAiSignatures}
               mediaCategory={verdictMediaCategory}

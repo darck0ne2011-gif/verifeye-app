@@ -126,7 +126,7 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
         onSettingsClick={onSettingsClick}
       />
 
-      <main className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-8">
+      <main className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-8 overflow-y-auto">
         <h1 className="text-xl font-bold text-white text-left mb-6">{t('history.title')}</h1>
 
         {history.length === 0 ? (
