@@ -118,6 +118,14 @@ export default function VerdictScreen({
                 <dd className="text-white">{Math.round(metadata.lipSyncIntegrity * 100)}%</dd>
               </div>
             )}
+            {metadata.mediaCategory === 'video' && metadata.analysisMethod && (
+              <div className="flex justify-between">
+                <dt className="text-slate-500">{t('verdict.analysis_method')}</dt>
+                <dd className="text-white">
+                  {metadata.analysisMethod === 'native_video' ? t('verdict.analysis_native_video') : t('verdict.analysis_frame_based')}
+                </dd>
+              </div>
+            )}
           </dl>
           {aiSignatures && (aiSignatures.missingExif || aiSignatures.suspiciousResolution || (aiSignatures.softwareTags?.length > 0)) && (
             <div className="mt-3 pt-3 border-t border-slate-600/60">

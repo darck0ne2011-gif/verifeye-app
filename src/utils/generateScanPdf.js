@@ -284,6 +284,9 @@ export function generateScanPdf(opts) {
       if (metadata.resolution) metaRows.push(['Resolution', String(metadata.resolution)])
       if (metadata.frameRate != null) metaRows.push(['Frame Rate', `${metadata.frameRate} fps`])
       if (metadata.framesAnalyzed != null) metaRows.push(['Frames Analyzed', String(metadata.framesAnalyzed)])
+      if (metadata.analysisMethod) {
+        metaRows.push(['Analysis Method', metadata.analysisMethod === 'native_video' ? 'Native Video (Sequential)' : 'Frame-Based (Fast)'])
+      }
     }
     if (metaRows.length > 0) {
       autoTable(doc, {

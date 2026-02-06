@@ -1,6 +1,6 @@
 import exifParser from 'exif-parser'
 import { fileTypeFromBuffer } from 'file-type'
-import { detectAiImage, detectAiAudio } from './sightengine.js'
+import { detectAiImage, detectAiAudio, detectAiVideo } from './sightengine.js'
 import { classifyAudioWithElevenLabs } from './services/audioScanner.js'
 import { extractVideoTracks } from './videoFrameExtractor.js'
 
@@ -190,75 +190,103 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     const VIDEO_LIGHT_MODELS = ['genai', 'deepfake']
     const eliteModels = isElite ? [...VIDEO_LIGHT_MODELS, 'voice_clone', 'lip_sync'] : VIDEO_LIGHT_MODELS
     const videoModels = missingModels.filter((m) => eliteModels.includes(m))
+    const useNativeVideo = isElite && options.videoAnalysisEngine === 'native_video'
     if (videoModels.length > 0) {
-      const fullForensic = isElite && options.videoAuditMode === 'full_forensic'
-      const maxFrames = fullForensic ? 15 : 5
-      const extracted = await extractVideoTracks(buffer, ext, { intervalSec: 2, maxFrames })
-      if (extracted?.frames?.length > 0) {
+      let consolidated = null
+      let analysisMethod = 'frame_based'
+
+      if (useNativeVideo) {
         const frameModels = videoModels.filter((m) => VIDEO_LIGHT_MODELS.includes(m))
-        const aiScores = []
-        const dfScores = []
-        for (let i = 0; i < extracted.frames.length; i++) {
-          const frameRes = await detectAiImage(
-            extracted.frames[i],
-            'image/jpeg',
-            `frame-${i + 1}.jpg`,
-            frameModels.length ? frameModels : ['genai']
-          )
-          if (frameRes?.type) {
-            if (frameRes.type.ai_generated != null) aiScores.push(Number(frameRes.type.ai_generated))
-            if (frameRes.type.deepfake != null) dfScores.push(Number(frameRes.type.deepfake))
+        const nativeRes = await detectAiVideo(
+          buffer,
+          detectedMime,
+          originalName || `video.${ext}`,
+          frameModels.length ? frameModels : ['genai']
+        )
+        if (nativeRes != null) {
+          consolidated = { ...nativeRes }
+          analysisMethod = 'native_video'
+        }
+      }
+
+      if (!consolidated) {
+        const fullForensic = isElite && options.videoAuditMode === 'full_forensic'
+        const maxFrames = fullForensic ? 15 : 5
+        const extracted = await extractVideoTracks(buffer, ext, { intervalSec: 2, maxFrames })
+        if (extracted?.frames?.length > 0) {
+          const frameModels = videoModels.filter((m) => VIDEO_LIGHT_MODELS.includes(m))
+          const aiScores = []
+          const dfScores = []
+          for (let i = 0; i < extracted.frames.length; i++) {
+            const frameRes = await detectAiImage(
+              extracted.frames[i],
+              'image/jpeg',
+              `frame-${i + 1}.jpg`,
+              frameModels.length ? frameModels : ['genai']
+            )
+            if (frameRes?.type) {
+              if (frameRes.type.ai_generated != null) aiScores.push(Number(frameRes.type.ai_generated))
+              if (frameRes.type.deepfake != null) dfScores.push(Number(frameRes.type.deepfake))
+            }
+          }
+          const avgAi = aiScores.length ? aiScores.reduce((a, b) => a + b, 0) / aiScores.length : 0
+          const avgDf = dfScores.length ? dfScores.reduce((a, b) => a + b, 0) / dfScores.length : 0
+          consolidated = {
+            type: {
+              ...(frameModels.includes('genai') && { ai_generated: avgAi }),
+              ...(frameModels.includes('deepfake') && { deepfake: avgDf }),
+            },
+            data: { frames: extracted.frames.map((_, i) => ({ index: i })) },
           }
         }
-        const avgAi = aiScores.length ? aiScores.reduce((a, b) => a + b, 0) / aiScores.length : 0
-        const avgDf = dfScores.length ? dfScores.reduce((a, b) => a + b, 0) / dfScores.length : 0
-        const consolidated = {
-          type: {
-            ...(frameModels.includes('genai') && { ai_generated: avgAi }),
-            ...(frameModels.includes('deepfake') && { deepfake: avgDf }),
-          },
-          data: { frames: extracted.frames.map((_, i) => ({ index: i })) },
-        }
+      }
+
+      if (consolidated) {
         sightengineResult = consolidated
+
+        let extracted = null
+        if (isElite && videoModels.some((m) => ['voice_clone', 'lip_sync'].includes(m))) {
+          extracted = await extractVideoTracks(buffer, ext, { intervalSec: 2, maxFrames: 5 })
+        }
 
         let vocalicImprint = null
         let lipSyncIntegrity = null
-        if (isElite && extracted.audio && extracted.audio.length > 0) {
-          if (videoModels.includes('voice_clone')) {
-            const elevenLabs = await classifyAudioWithElevenLabs(buffer, ext)
-            if (elevenLabs?.score != null) {
-              vocalicImprint = elevenLabs.score
-              consolidated.audioAnalysis = { vocalicImprint, source: 'elevenlabs' }
-            } else {
-              const audioRes = await detectAiAudio(
-                extracted.audio,
-                'audio/mpeg',
-                'audio.mp3',
-                ['genai', 'deepfake']
-              )
-              if (audioRes?.type) {
-                const ag = audioRes.type.ai_generated != null ? Number(audioRes.type.ai_generated) : 0
-                const df = audioRes.type.deepfake != null ? Number(audioRes.type.deepfake) : 0
-                vocalicImprint = Math.max(ag, df)
-                consolidated.audioAnalysis = { vocalicImprint }
-              }
+        if (isElite && videoModels.includes('voice_clone')) {
+          const elevenLabs = await classifyAudioWithElevenLabs(buffer, ext)
+          if (elevenLabs?.score != null) {
+            vocalicImprint = elevenLabs.score
+            consolidated.audioAnalysis = { vocalicImprint, source: 'elevenlabs' }
+          } else if (extracted?.audio?.length > 0) {
+            const audioRes = await detectAiAudio(
+              extracted.audio,
+              'audio/mpeg',
+              'audio.mp3',
+              ['genai', 'deepfake']
+            )
+            if (audioRes?.type) {
+              const ag = audioRes.type.ai_generated != null ? Number(audioRes.type.ai_generated) : 0
+              const df = audioRes.type.deepfake != null ? Number(audioRes.type.deepfake) : 0
+              vocalicImprint = Math.max(ag, df)
+              consolidated.audioAnalysis = { vocalicImprint }
             }
-          }
-          if (videoModels.includes('lip_sync')) {
-            const intervalSec = 2
-            const frameCount = extracted.frames.length
-            const estimatedDuration = frameCount * intervalSec
-            const hasAudio = extracted.audio && extracted.audio.length > 256
-            if (hasAudio && frameCount >= 2) {
-              const ratio = Math.min(1.2, extracted.audio.length / (estimatedDuration * 1000 || 1))
-              lipSyncIntegrity = ratio > 0.3 ? Math.min(1, 1 - (ratio - 0.5) * 0.3) : 0.5
-              lipSyncIntegrity = Math.max(0, Math.min(1, lipSyncIntegrity))
-            } else {
-              lipSyncIntegrity = 0.5
-            }
-            consolidated.lipSyncIntegrity = lipSyncIntegrity
           }
         }
+        if (isElite && videoModels.includes('lip_sync') && extracted?.audio && consolidated?.data?.frames) {
+          const intervalSec = 2
+          const frameCount = consolidated.data.frames.length
+          const estimatedDuration = frameCount * intervalSec
+          const hasAudio = extracted.audio.length > 256
+          if (hasAudio && frameCount >= 2) {
+            const ratio = Math.min(1.2, extracted.audio.length / (estimatedDuration * 1000 || 1))
+            lipSyncIntegrity = ratio > 0.3 ? Math.min(1, 1 - (ratio - 0.5) * 0.3) : 0.5
+            lipSyncIntegrity = Math.max(0, Math.min(1, lipSyncIntegrity))
+          } else {
+            lipSyncIntegrity = 0.5
+          }
+          consolidated.lipSyncIntegrity = lipSyncIntegrity
+        }
+
+        consolidated.analysisMethod = analysisMethod
 
         const mergedResults = { ...(cachedResults ?? {}), ...extractNewFromSightengine(consolidated, videoModels) }
         mergedShape = buildSightengineShapeFromResults(mergedResults, models)
@@ -312,6 +340,9 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
   }
   if (isVideo && sightengineResult?.data?.frames?.length > 0) {
     metadata.framesAnalyzed = sightengineResult.data.frames.length
+  }
+  if (isVideo && sightengineResult?.analysisMethod) {
+    metadata.analysisMethod = sightengineResult.analysisMethod
   }
 
   const source = mergedShape || sightengineResult

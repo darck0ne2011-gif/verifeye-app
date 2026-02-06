@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'verifeye_scan_models'
 const VIDEO_AUDIT_KEY = 'verifeye_video_audit_mode'
+const VIDEO_ENGINE_KEY = 'verifeye_video_analysis_engine'
 
 // Backend model IDs (used by API)
 const PHOTO_IDS = ['deepfake', 'genai', 'type', 'quality']
@@ -109,6 +110,22 @@ export function getVideoAuditMode() {
 export function setVideoAuditMode(mode) {
   try {
     localStorage.setItem(VIDEO_AUDIT_KEY, mode === 'full_forensic' ? 'full_forensic' : 'quick')
+  } catch {}
+}
+
+/** Video analysis engine: 'frame_based' (default) | 'native_video' - Elite only */
+export function getVideoAnalysisEngine() {
+  try {
+    const v = localStorage.getItem(VIDEO_ENGINE_KEY)
+    return v === 'native_video' ? 'native_video' : 'frame_based'
+  } catch {
+    return 'frame_based'
+  }
+}
+
+export function setVideoAnalysisEngine(engine) {
+  try {
+    localStorage.setItem(VIDEO_ENGINE_KEY, engine === 'native_video' ? 'native_video' : 'frame_based')
   } catch {}
 }
 

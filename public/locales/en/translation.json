@@ -90,6 +90,13 @@
     "video_audit_quick": "Quick Preview",
     "video_audit_full": "Full Forensic Audit",
     "video_audit_hint": "Quick Preview: 5 frames. Full Forensic: 15 frames (Elite only).",
+    "video_analysis_engine": "Video Analysis Engine",
+    "video_engine_frame": "Frame-Based (Fast)",
+    "video_engine_native": "Native Video (Sequential)",
+    "video_engine_hint": "Frame-Based: extracts keyframes and uses Image API. Native: Sightengine sequential video moderation.",
+    "verdict.analysis_method": "Analysis Method",
+    "verdict.analysis_frame_based": "Frame-Based (Fast)",
+    "verdict.analysis_native_video": "Native Video (Sequential)",
     "model_voice_cloning": "Voice Cloning Detection",
     "model_synthetic_speech": "Synthetic Speech Analysis",
     "model_background_noise": "Background Noise Integrity"
