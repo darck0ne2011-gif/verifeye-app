@@ -1,6 +1,7 @@
 import exifParser from 'exif-parser'
 import { fileTypeFromBuffer } from 'file-type'
 import { detectAiImage, detectAiAudio, detectAiVideo } from './sightengine.js'
+import { analyzeVideoSequential } from './services/videoScanner.js'
 import { classifyAudioWithElevenLabs } from './services/audioScanner.js'
 import { extractVideoTracks } from './videoFrameExtractor.js'
 
@@ -196,13 +197,11 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
       let analysisMethod = 'frame_based'
 
       if (useNativeVideo) {
+        const videoModelIds = options.videoModelIds || []
         const frameModels = videoModels.filter((m) => VIDEO_LIGHT_MODELS.includes(m))
-        const nativeRes = await detectAiVideo(
-          buffer,
-          detectedMime,
-          originalName || `video.${ext}`,
-          frameModels.length ? frameModels : ['genai']
-        )
+        const nativeRes = videoModelIds.length > 0
+          ? await analyzeVideoSequential(buffer, detectedMime, originalName || `video.${ext}`, videoModelIds)
+          : await detectAiVideo(buffer, detectedMime, originalName || `video.${ext}`, frameModels.length ? frameModels : ['genai'])
         if (nativeRes != null) {
           consolidated = { ...nativeRes }
           analysisMethod = 'native_video'

@@ -309,13 +309,16 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     if (missingModels.length === 0 && cached?.results) {
       console.log('--- Modular Memory: full cache hit (all models cached) ---')
       const videoAnalysisEngine = isElite ? (req.body?.videoAnalysisEngine || 'frame_based') : 'frame_based'
+      const videoModelIds = isVideo && req.body?.videoModelIds
+        ? String(req.body.videoModelIds).split(',').map((m) => m.trim()).filter(Boolean)
+        : []
       const analysis = await analyzeFile(
         file.buffer,
         file.originalname,
         file.mimetype,
         models,
         cached.results,
-        { isElite, videoAnalysisEngine }
+        { isElite, videoAnalysisEngine, videoModelIds }
       )
       if (isElite) {
         const fp = analysis.fakeProbability ?? 0
@@ -369,13 +372,16 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     }
 
     const videoAnalysisEngine = isElite ? (req.body?.videoAnalysisEngine || 'frame_based') : 'frame_based'
+    const videoModelIds = isVideo && req.body?.videoModelIds
+      ? String(req.body.videoModelIds).split(',').map((m) => m.trim()).filter(Boolean)
+      : []
     const analysis = await analyzeFile(
       file.buffer,
       file.originalname,
       file.mimetype,
       models,
       cached?.results ?? null,
-      { isElite, videoAnalysisEngine }
+      { isElite, videoAnalysisEngine, videoModelIds }
     )
 
     let expertSummary = null

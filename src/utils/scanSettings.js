@@ -22,7 +22,7 @@ const TO_API_MAP = {
   // Video: frame-by-frame uses genai/deepfake; Elite-only dual-track
   temporal_ai: 'genai',
   video_deepfake: 'deepfake',
-  frame_integrity: 'deepfake',
+  frame_integrity: 'genai',  // AI Pixel / Frame Integrity -> genai for sequential
   video_voice_clone: 'voice_clone',
   video_lip_sync: 'lip_sync',
   // Audio: maps to genai/deepfake
