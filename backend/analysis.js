@@ -214,12 +214,22 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     createdAt: exifResult?.tags?.DateTimeOriginal || exifResult?.tags?.DateTime || null,
   }
 
+  const source = mergedShape || sightengineResult
+  const modelScores = source
+    ? {
+        ai_generated: source.type?.ai_generated,
+        deepfake: source.type?.deepfake,
+        quality: source.quality != null ? (typeof source.quality === 'object' ? source.quality?.score : source.quality) : null,
+      }
+    : null
+
   const result = {
     fakeProbability,
     aiProbability: aiProbability ?? fakeProbability,
     metadata,
     aiSignatures,
     scannedModels: models,
+    modelScores,
   }
   if (sightengineResult != null) result.sightengineRaw = sightengineResult
   if (missingModels.length > 0 && sightengineResult != null) result.modelsFetched = missingModels

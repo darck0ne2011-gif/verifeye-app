@@ -25,6 +25,7 @@ export default function ScanPage({ onSettingsClick }) {
   const [verdictVisible, setVerdictVisible] = useState(false)
   const [deepfakeScore, setDeepfakeScore] = useState(0)
   const [verdictStatus, setVerdictStatus] = useState(null)
+  const [verdictModelScores, setVerdictModelScores] = useState(null)
   const [verdictMetadata, setVerdictMetadata] = useState(null)
   const [verdictAiSignatures, setVerdictAiSignatures] = useState(null)
   const [verdictMediaCategory, setVerdictMediaCategory] = useState(null)
@@ -40,6 +41,7 @@ export default function ScanPage({ onSettingsClick }) {
     if (saved) {
       setDeepfakeScore(saved.score ?? 0)
       setVerdictStatus(saved.status ?? (saved.score >= 50 ? 'FAKE' : 'REAL'))
+      setVerdictModelScores(saved.modelScores ?? null)
       setVerdictMetadata(saved.metadata ?? null)
       setVerdictAiSignatures(saved.aiSignatures ?? null)
       setVerdictMediaCategory(saved.mediaCategory ?? null)
@@ -112,6 +114,7 @@ export default function ScanPage({ onSettingsClick }) {
           aiSignatures: data.aiSignatures ?? null,
           mediaCategory: data.mediaCategory ?? data.metadata?.mediaCategory ?? null,
           scannedModels: data.scannedModels ?? models,
+          modelScores: data.modelScores ?? null,
           error: null,
         }
       } catch (err) {
@@ -142,6 +145,7 @@ export default function ScanPage({ onSettingsClick }) {
 
     setDeepfakeScore(apiResult.score)
     setVerdictStatus(apiResult.status ?? (apiResult.score >= 50 ? 'FAKE' : 'REAL'))
+    setVerdictModelScores(apiResult.modelScores ?? null)
     setVerdictMetadata(apiResult.metadata ?? null)
     setVerdictAiSignatures(apiResult.aiSignatures ?? null)
     setVerdictMediaCategory(apiResult.mediaCategory ?? null)
@@ -154,6 +158,7 @@ export default function ScanPage({ onSettingsClick }) {
     setLastScanResult({
       score: apiResult.score,
       status,
+      modelScores: apiResult.modelScores ?? null,
       metadata: apiResult.metadata ?? null,
       aiSignatures: apiResult.aiSignatures ?? null,
       mediaCategory: apiResult.mediaCategory ?? null,
@@ -174,6 +179,7 @@ export default function ScanPage({ onSettingsClick }) {
     setUploadError(null)
     setScanProgress(0)
     setVerdictStatus(null)
+    setVerdictModelScores(null)
     setVerdictMetadata(null)
     setVerdictAiSignatures(null)
     setVerdictMediaCategory(null)
@@ -234,6 +240,7 @@ export default function ScanPage({ onSettingsClick }) {
             <VerdictScreen
               score={deepfakeScore}
               status={verdictStatus}
+              modelScores={verdictModelScores}
               metadata={verdictMetadata}
               aiSignatures={verdictAiSignatures}
               mediaCategory={verdictMediaCategory}

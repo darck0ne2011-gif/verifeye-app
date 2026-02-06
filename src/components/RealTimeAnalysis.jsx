@@ -1,6 +1,12 @@
 import { getMediaCategory } from '../utils/fileType.js'
 import { MODEL_IDS } from './ModelCheckboxes'
 
+const XIcon = () => (
+  <svg className="w-6 h-6 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  </svg>
+)
+
 // deepfake -> Face/User icon
 const FaceIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,21 +42,38 @@ const CheckIcon = () => (
 )
 
 const IMAGE_ITEMS = [
-  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Deepfake Detection', subtitle: 'Analysis complete: No face swap detected' },
-  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'AI Pixel Analysis', subtitle: 'Analysis complete: No AI generation detected' },
-  { modelId: MODEL_IDS.type, icon: FileInfoIcon, title: 'Metadata Check', subtitle: 'EXIF and file structure verified' },
-  { modelId: MODEL_IDS.quality, icon: QualityStarsIcon, title: 'Image Quality', subtitle: 'Quality score verified' },
+  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Deepfake Detection', passSubtitle: 'No face swap detected', failSubtitle: 'Deepfake detected' },
+  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'AI Pixel Analysis', passSubtitle: 'No AI generation detected', failSubtitle: 'AI generation detected' },
+  { modelId: MODEL_IDS.type, icon: FileInfoIcon, title: 'Metadata Check', passSubtitle: 'EXIF and file structure verified', failSubtitle: 'Metadata anomalies' },
+  { modelId: MODEL_IDS.quality, icon: QualityStarsIcon, title: 'Image Quality', passSubtitle: 'Quality score verified', failSubtitle: 'Low quality score' },
 ]
 
 const AUDIO_ITEMS = [
-  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'Voice Frequency', subtitle: 'Analysis complete: No synthetic voice detected' },
-  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Neural Synthesis Check', subtitle: 'Vocal patterns verified' },
+  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'Voice Frequency', passSubtitle: 'No synthetic voice detected', failSubtitle: 'Synthetic voice detected' },
+  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Neural Synthesis Check', passSubtitle: 'Vocal patterns verified', failSubtitle: 'Neural synthesis detected' },
 ]
 
 const VIDEO_ITEMS = [
-  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Deepfake Detection', subtitle: 'Analysis complete: No AI cloning detected' },
-  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'Lip Sync', subtitle: 'Analysis complete: Lip sync verified' },
+  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Deepfake Detection', passSubtitle: 'No AI cloning detected', failSubtitle: 'AI cloning detected' },
+  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'Lip Sync', passSubtitle: 'Lip sync verified', failSubtitle: 'Lip sync anomaly' },
 ]
+
+function getScoreForModel(modelId, modelScores) {
+  if (!modelScores) return null
+  if (modelId === MODEL_IDS.genai) return modelScores.ai_generated
+  if (modelId === MODEL_IDS.deepfake) return modelScores.deepfake
+  if (modelId === MODEL_IDS.quality) return modelScores.quality
+  return null
+}
+
+function getSubtitleAndStatus(item, modelScores) {
+  const raw = getScoreForModel(item.modelId, modelScores)
+  if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
+  const pct = Math.round(Number(raw) * 100)
+  const isFail = item.modelId === MODEL_IDS.quality ? raw < 0.4 : raw > 0.5
+  const subtitle = isFail ? `${item.failSubtitle} (${pct}%)` : `Analysis complete: ${item.passSubtitle}`
+  return { subtitle, isFail, pct }
+}
 
 function getItemsForScannedModels(mediaCategory, scannedModels) {
   const scanned = Array.isArray(scannedModels) && scannedModels.length > 0 ? scannedModels : null
@@ -63,31 +86,35 @@ function getItemsForScannedModels(mediaCategory, scannedModels) {
   return allItems.map((item) => ({ ...item, modelId: undefined }))
 }
 
-export default function RealTimeAnalysis({ isComplete = true, fileType, scannedModels }) {
+export default function RealTimeAnalysis({ isComplete = true, fileType, scannedModels, modelScores }) {
   const mediaCategory = getMediaCategory(fileType)
   const items = getItemsForScannedModels(mediaCategory, scannedModels)
 
   if (items.length === 0) return null
 
   return (
-    <section className="w-full max-w-2xl">
+    <section className="w-full max-w-4xl">
       <h2 className="text-base font-medium text-white mb-4">Real-Time Analysis:</h2>
       <div className="space-y-4">
         {items.map((item, i) => {
           const Icon = item.icon
+          const { subtitle, isFail } = getSubtitleAndStatus(item, modelScores)
+          const StatusIcon = isFail ? XIcon : CheckIcon
           return (
             <div
               key={i}
-              className="flex items-start justify-between gap-3 py-3 px-4 bg-verifeye-card rounded-xl border border-slate-700/50"
+              className={`flex items-start justify-between gap-3 py-3 px-4 rounded-xl border ${
+                isFail ? 'bg-red-950/30 border-red-500/40' : 'bg-verifeye-card border-slate-700/50'
+              }`}
             >
               <div className="flex items-start gap-3 flex-1 min-w-0">
                 <Icon />
                 <div>
                   <p className="text-white font-medium">{item.title}</p>
-                  <p className="text-slate-400 text-sm mt-0.5">{item.subtitle}</p>
+                  <p className={`text-sm mt-0.5 ${isFail ? 'text-red-400' : 'text-slate-400'}`}>{subtitle}</p>
                 </div>
               </div>
-              <CheckIcon />
+              <StatusIcon />
             </div>
           )
         })}
