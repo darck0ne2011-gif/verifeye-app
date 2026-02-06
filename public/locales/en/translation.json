@@ -86,6 +86,10 @@
     "model_frame_integrity": "Frame Integrity Analysis",
     "model_video_voice_clone": "Voice Clone Detection",
     "model_video_lip_sync": "Lip-Sync Integrity",
+    "video_audit_mode": "Video Scan Mode",
+    "video_audit_quick": "Quick Preview",
+    "video_audit_full": "Full Forensic Audit",
+    "video_audit_hint": "Quick Preview: 5 frames. Full Forensic: 15 frames (Elite only).",
     "model_voice_cloning": "Voice Cloning Detection",
     "model_synthetic_speech": "Synthetic Speech Analysis",
     "model_background_noise": "Background Noise Integrity"

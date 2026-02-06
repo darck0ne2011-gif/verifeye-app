@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
-import { getActiveModels, getMaxCreditsPerScan } from '../utils/scanSettings'
+import { getActiveModels, getMaxCreditsPerScan, getVideoAuditMode } from '../utils/scanSettings'
 import { getMediaCategory } from '../utils/fileType'
 import { getWinningDisplay } from '../utils/verdictScore'
 
@@ -156,6 +156,9 @@ export default function FloatingScanner() {
         const formData = new FormData()
         formData.append('file', file)
         formData.append('models', getActiveModels(getMediaCategory(file)).join(','))
+        if (getMediaCategory(file) === 'video') {
+          formData.append('videoAuditMode', getVideoAuditMode())
+        }
 
         const startTime = Date.now()
         const res = await fetch(`${API_BASE}/api/analyze`, {

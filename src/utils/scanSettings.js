@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'verifeye_scan_models'
+const VIDEO_AUDIT_KEY = 'verifeye_video_audit_mode'
 
 // Backend model IDs (used by API)
 const PHOTO_IDS = ['deepfake', 'genai', 'type', 'quality']
@@ -93,6 +94,22 @@ export function setActiveModelsForCategory(category, models, ensureOne = true) {
 /** Legacy: set photo models (backward compat) */
 export function setActiveModels(models) {
   setActiveModelsForCategory('photo', models)
+}
+
+/** Video audit mode: 'quick' = 5 frames (default), 'full_forensic' = 15 frames (Elite only) */
+export function getVideoAuditMode() {
+  try {
+    const v = localStorage.getItem(VIDEO_AUDIT_KEY)
+    return v === 'full_forensic' ? 'full_forensic' : 'quick'
+  } catch {
+    return 'quick'
+  }
+}
+
+export function setVideoAuditMode(mode) {
+  try {
+    localStorage.setItem(VIDEO_AUDIT_KEY, mode === 'full_forensic' ? 'full_forensic' : 'quick')
+  } catch {}
 }
 
 /** Max credits needed across all categories (for display before file selection) */

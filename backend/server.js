@@ -307,13 +307,14 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
 
     if (missingModels.length === 0 && cached?.results) {
       console.log('--- Modular Memory: full cache hit (all models cached) ---')
+      const videoAuditMode = req.body?.videoAuditMode || 'quick'
       const analysis = await analyzeFile(
         file.buffer,
         file.originalname,
         file.mimetype,
         models,
         cached.results,
-        { isElite }
+        { isElite, videoAuditMode }
       )
       if (!isElite) {
         const credits = getCredits(userId)
@@ -349,13 +350,14 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       })
     }
 
+    const videoAuditMode = req.body?.videoAuditMode || 'quick'
     const analysis = await analyzeFile(
       file.buffer,
       file.originalname,
       file.mimetype,
       models,
       cached?.results ?? null,
-      { isElite }
+      { isElite, videoAuditMode }
     )
 
     if (analysis.sightengineRaw) {

@@ -187,12 +187,15 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
       mergedShape = buildSightengineShapeFromResults(mergedResults, models)
     }
   } else if (isVideo && missingModels.length > 0) {
-    const eliteModels = isElite ? ['genai', 'deepfake', 'voice_clone', 'lip_sync'] : ['genai', 'deepfake']
+    const VIDEO_LIGHT_MODELS = ['genai', 'deepfake']
+    const eliteModels = isElite ? [...VIDEO_LIGHT_MODELS, 'voice_clone', 'lip_sync'] : VIDEO_LIGHT_MODELS
     const videoModels = missingModels.filter((m) => eliteModels.includes(m))
     if (videoModels.length > 0) {
-      const extracted = await extractVideoTracks(buffer, ext, { intervalSec: 2, maxFrames: 15 })
+      const fullForensic = isElite && options.videoAuditMode === 'full_forensic'
+      const maxFrames = fullForensic ? 15 : 5
+      const extracted = await extractVideoTracks(buffer, ext, { intervalSec: 2, maxFrames })
       if (extracted?.frames?.length > 0) {
-        const frameModels = videoModels.filter((m) => ['genai', 'deepfake'].includes(m))
+        const frameModels = videoModels.filter((m) => VIDEO_LIGHT_MODELS.includes(m))
         const aiScores = []
         const dfScores = []
         for (let i = 0; i < extracted.frames.length; i++) {
