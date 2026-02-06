@@ -165,55 +165,45 @@ export default function ScanSettingsPage({ onSettingsClick }) {
             <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
               {t('scan_settings.section_video')}
             </h2>
-            {user?.subscriptionTier === 'elite' && (
-              <>
-                <div className="mb-4 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                  <p className="text-sm font-medium text-white mb-2">{t('scan_settings.video_analysis_engine')}</p>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => { setVideoAnalysisEngine('frame_based'); setVideoAnalysisEngineState('frame_based') }}
-                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                        videoAnalysisEngine === 'frame_based'
-                          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                          : 'bg-slate-700/40 text-slate-400 border border-slate-600 hover:border-slate-500'
-                      }`}
-                    >
-                      {t('scan_settings.video_engine_frame')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setVideoAnalysisEngine('native_video'); setVideoAnalysisEngineState('native_video') }}
-                      className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                        videoAnalysisEngine === 'native_video'
-                          ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                          : 'bg-slate-700/40 text-slate-400 border border-slate-600 hover:border-slate-500'
-                      }`}
-                    >
-                      {t('scan_settings.video_engine_native')}
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-2">{t('scan_settings.video_engine_hint')}</p>
-                </div>
-              </>
-            )}
+            <div className="mb-4 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+              <p className="text-sm font-medium text-white mb-2">{t('scan_settings.video_analysis_engine')}</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setVideoAnalysisEngine('frame_based'); setVideoAnalysisEngineState('frame_based') }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    videoAnalysisEngine === 'frame_based'
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
+                      : 'bg-slate-700/40 text-slate-400 border border-slate-600 hover:border-slate-500'
+                  }`}
+                >
+                  {t('scan_settings.video_engine_frame')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setVideoAnalysisEngine('native_video'); setVideoAnalysisEngineState('native_video') }}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    videoAnalysisEngine === 'native_video'
+                      ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
+                      : 'bg-slate-700/40 text-slate-400 border border-slate-600 hover:border-slate-500'
+                  }`}
+                >
+                  {t('scan_settings.video_engine_native')}
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">{t('scan_settings.video_engine_hint')}</p>
+            </div>
             <ul className="space-y-3 w-full">
-              {VIDEO_OPTIONS.map((opt) => {
-                const isElite = user?.subscriptionTier === 'elite'
-                const isDisabled = opt.eliteOnly && !isElite
-                return (
-                  <SectionToggle
-                    key={opt.id}
-                    id={opt.id}
-                    labelKey={opt.labelKey}
-                    isOn={videoModels.includes(opt.id)}
-                    onToggle={toggleVideo}
-                    t={t}
-                    disabled={isDisabled}
-                    eliteBadge={opt.eliteOnly}
-                  />
-                )
-              })}
+              {VIDEO_OPTIONS.map((opt) => (
+                <SectionToggle
+                  key={opt.id}
+                  id={opt.id}
+                  labelKey={opt.labelKey}
+                  isOn={videoModels.includes(opt.id)}
+                  onToggle={toggleVideo}
+                  t={t}
+                />
+              ))}
             </ul>
           </section>
         )}

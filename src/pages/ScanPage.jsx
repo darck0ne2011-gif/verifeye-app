@@ -275,7 +275,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
               fileName={verdictFileName}
               expertSummary={verdictExpertSummary}
               error={uploadError}
-              canDownloadPdf={user?.subscriptionTier === 'pro' || user?.subscriptionTier === 'elite'}
+              canDownloadPdf={true}
               onUpgradeClick={onUpgradeClick}
               onBack={handleBackToScan}
             />

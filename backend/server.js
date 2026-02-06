@@ -208,7 +208,7 @@ app.post('/api/generate-pdf', authMiddleware, async (req, res) => {
   try {
     const user = findById(req.userId)
     const tier = user?.subscriptionTier ?? 'starter'
-    const canDownloadPdf = tier === 'pro' || tier === 'elite'
+    const canDownloadPdf = true // All users can download PDF (testing)
     if (!canDownloadPdf) {
       return res.status(403).json({
         success: false,
@@ -270,7 +270,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     const userId = req.userId
     const user = findById(userId)
     const tier = user?.subscriptionTier ?? 'starter'
-    const isElite = tier === 'elite'
+    const isElite = true // All features enabled for testing; later: tier === 'elite'
 
     if (!isElite) {
       const credits = getCredits(userId)
@@ -288,10 +288,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     const modelsList = typeof rawModels === 'string' ? rawModels.split(',').map((m) => m.trim()).filter(Boolean) : []
     let models = modelsList.length ? modelsList : ['genai']
     const isVideo = /^video\//i.test(req.file?.mimetype || '')
-    if (isVideo && !isElite) {
-      models = models.filter((m) => ['genai', 'deepfake'].includes(m))
-      if (models.length === 0) models = ['genai']
-    }
+    // All video models allowed for all users (testing)
     const creditsToCharge = models.length
 
     if (!isElite && getCredits(userId) < creditsToCharge) {
@@ -327,7 +324,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
         cached.results,
         { isElite, videoAnalysisEngine, videoModelIds }
       )
-      if (isElite) {
+      {
         const fp = analysis.fakeProbability ?? 0
         const status = fp >= 50 ? 'FAKE' : 'REAL'
         const lipSync = analysis.metadata?.lipSyncIntegrity
@@ -392,7 +389,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     )
 
     let expertSummary = null
-    if (isElite) {
+    {
       const fp = analysis.fakeProbability ?? 0
       const status = fp >= 50 ? 'FAKE' : 'REAL'
       const lipSync = analysis.metadata?.lipSyncIntegrity

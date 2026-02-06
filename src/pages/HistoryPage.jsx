@@ -58,8 +58,6 @@ function formatDate(isoString) {
   })
 }
 
-const PDF_ALLOWED_TIERS = ['pro', 'elite']
-
 export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
   const { t } = useTranslation()
   const { user, getAuthHeaders } = useAuth()
@@ -68,8 +66,7 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
   const [error, setError] = useState(null)
   const [downloadingId, setDownloadingId] = useState(null)
   const scansCount = user?.scanCredits ?? 0
-  const tier = user?.subscriptionTier ?? 'starter'
-  const canDownloadPdf = PDF_ALLOWED_TIERS.includes(tier)
+  const canDownloadPdf = true // All users can download PDF (testing)
 
   const fetchHistory = useCallback(async () => {
     if (!user || !getAuthHeaders) return
