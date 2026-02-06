@@ -72,6 +72,7 @@ export default function VerdictScreen({
         scannedModels,
         metadata,
         expertSummary: summary,
+        mediaCategory: fileType,
         t,
       })
       const safeName = (fileName || 'report').replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 50)

@@ -122,6 +122,7 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
         modelScores: item.modelScores ?? null,
         scannedModels: item.scannedModels ?? null,
         metadata: item.metadata ?? null,
+        mediaCategory: item.mediaCategory ?? item.metadata?.mediaCategory,
         t,
       })
       const safeName = (item.fileName || 'report').replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 40)

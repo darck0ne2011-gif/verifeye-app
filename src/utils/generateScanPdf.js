@@ -44,6 +44,28 @@ function getModelStatus(modelId, scannedModels, modelScores, aiSignatures) {
 }
 
 /**
+ * Get display value for a video analysis model in the breakdown.
+ * Maps: genai → ai_generated, deepfake → deepfake, voice_clone → vocalicImprint, lip_sync → lipSyncIntegrity.
+ */
+function getVideoModelStatus(modelId, scannedModels, modelScores, metadata) {
+  const wasRequested = Array.isArray(scannedModels) && scannedModels.includes(modelId)
+  if (!wasRequested) return 'Not Requested'
+
+  if (modelId === 'voice_clone') {
+    const v = metadata?.audioAnalysis?.vocalicImprint
+    return toDisplayScore(v) ?? 'Not Applicable'
+  }
+  if (modelId === 'lip_sync') {
+    const v = metadata?.lipSyncIntegrity
+    return toDisplayScore(v) ?? 'Not Applicable'
+  }
+  const key = modelId === 'genai' ? 'ai_generated' : modelId === 'deepfake' ? 'deepfake' : null
+  if (!key || !modelScores) return 'Not Applicable'
+  const score = toDisplayScore(modelScores[key])
+  return score ?? 'Not Applicable'
+}
+
+/**
  * Build detection signals list from aiSignatures for PDF display.
  * @param {object} aiSignatures - { missingExif, suspiciousResolution, softwareTags }
  * @param {object} t - i18n translate function
@@ -97,8 +119,12 @@ export function generateScanPdf(opts) {
     scannedModels = null,
     metadata = null,
     expertSummary = null,
+    mediaCategory = null,
     t,
   } = opts
+
+  const mediaType = mediaCategory ?? metadata?.mediaCategory ?? 'image'
+  const isVideo = mediaType === 'video'
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
@@ -207,29 +233,19 @@ export function generateScanPdf(opts) {
     y = doc.lastAutoTable.finalY + 20
   }
 
-  // Analysis Breakdown – all 4 types with status logic
+  // Analysis Breakdown – Video template vs Photo template
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(DARK_BLUE)
   doc.text('Analysis Breakdown', margin, y)
   y += 20
 
-  const isVideo = metadata?.mediaCategory === 'video'
-  const hasVideoModels = Array.isArray(scannedModels) && scannedModels.some((m) => ['genai', 'deepfake'].includes(m))
-  const modelRows = isVideo && hasVideoModels
+  const modelRows = isVideo
     ? [
-        ['AI Detection Across Frames', (() => {
-          const ag = modelScores?.ai_generated != null ? Number(modelScores.ai_generated) : 0
-          const df = modelScores?.deepfake != null ? Number(modelScores.deepfake) : 0
-          const consolidated = Math.max(ag, df)
-          return toDisplayScore(consolidated) ?? 'Not Applicable'
-        })()],
-        ...(metadata?.audioAnalysis?.vocalicImprint != null
-          ? [['Vocalic Imprint (Audio)', toDisplayScore(metadata.audioAnalysis.vocalicImprint) ?? '—']]
-          : []),
-        ...(metadata?.lipSyncIntegrity != null
-          ? [['Lip-Sync Integrity', toDisplayScore(metadata.lipSyncIntegrity) ?? '—']]
-          : []),
+        ['Temporal AI Consistency', getVideoModelStatus('genai', scannedModels, modelScores)],
+        ['Video Deepfake Detection', getVideoModelStatus('deepfake', scannedModels, modelScores)],
+        ['Voice Clone Detection', getVideoModelStatus('voice_clone', scannedModels, metadata)],
+        ['Lip-Sync Integrity', getVideoModelStatus('lip_sync', scannedModels, metadata)],
       ]
     : [
         ['AI Pixel Analysis', getModelStatus('genai', scannedModels, modelScores, aiSignatures)],
@@ -253,37 +269,9 @@ export function generateScanPdf(opts) {
   })
   y = doc.lastAutoTable.finalY + 20
 
-  // Audio Analysis section (video with dual-track / Elite)
-  if (isVideo && metadata?.audioAnalysis) {
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(DARK_BLUE)
-    doc.text('Audio Analysis', margin, y)
-    y += 20
-
-    const vocalic = metadata.audioAnalysis.vocalicImprint
-    const vocalicPct = vocalic != null ? `${Math.round(vocalic * 100)}%` : 'Not Applicable'
-    const audioRows = [['Vocalic Imprint', vocalicPct]]
-    if (metadata.lipSyncIntegrity != null) {
-      audioRows.push(['Lip-Sync Integrity', `${Math.round(metadata.lipSyncIntegrity * 100)}%`])
-    }
-    autoTable(doc, {
-      startY: y,
-      body: audioRows,
-      theme: 'plain',
-      bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
-      columnStyles: {
-        0: { cellWidth: 120, fontStyle: 'bold' },
-        1: { cellWidth: pageWidth - margin * 2 - 140 },
-      },
-      margin: { left: margin },
-      tableWidth: pageWidth - margin * 2,
-    })
-    y = doc.lastAutoTable.finalY + 20
-  }
-
   // Metadata snippet (image or video)
-  if (metadata && (metadata.fileType || metadata.sizeFormatted || metadata.extension)) {
+  const hasMetadata = metadata && (metadata.fileType || metadata.sizeFormatted || metadata.extension || isVideo)
+  if (hasMetadata) {
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(DARK_BLUE)
@@ -291,20 +279,18 @@ export function generateScanPdf(opts) {
     y += 20
 
     const metaRows = []
-    if (metadata.fileType || metadata.extension) {
+    if (metadata?.fileType || metadata?.extension) {
       metaRows.push(['Type', metadata.fileType || metadata.extension || '—'])
     }
-    if (metadata.sizeFormatted || metadata.size) {
-      metaRows.push(['Size', metadata.sizeFormatted || `${metadata.size || 0} B`])
+    if (metadata?.sizeFormatted || metadata?.size != null) {
+      metaRows.push(['Size', metadata.sizeFormatted || `${metadata.size ?? 0} B`])
     }
     if (isVideo) {
-      if (metadata.duration != null) metaRows.push(['Duration', String(metadata.duration)])
-      if (metadata.resolution) metaRows.push(['Resolution', String(metadata.resolution)])
-      if (metadata.frameRate != null) metaRows.push(['Frame Rate', `${metadata.frameRate} fps`])
-      if (metadata.framesAnalyzed != null) metaRows.push(['Frames Analyzed', String(metadata.framesAnalyzed)])
-      if (metadata.analysisMethod) {
-        metaRows.push(['Analysis Method', metadata.analysisMethod === 'native_video' ? 'Native Video (Sequential)' : 'Frame-Based (Fast)'])
-      }
+      if (metadata?.duration != null) metaRows.push(['Duration', String(metadata.duration)])
+      if (metadata?.resolution) metaRows.push(['Resolution', String(metadata.resolution)])
+      if (metadata?.frameRate != null) metaRows.push(['Frame Rate', `${metadata.frameRate} fps`])
+      metaRows.push(['Frames Analyzed', metadata?.framesAnalyzed != null ? String(metadata.framesAnalyzed) : '—'])
+      metaRows.push(['Analysis Method', metadata?.analysisMethod === 'native_video' ? 'Native Video (Sequential)' : metadata?.analysisMethod === 'frame_based' ? 'Frame-Based (Fast)' : '—'])
     }
     if (metaRows.length > 0) {
       autoTable(doc, {
