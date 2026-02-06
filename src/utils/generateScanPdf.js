@@ -82,7 +82,7 @@ export function getDetectionSignals(aiSignatures, t) {
  * @param {object} [opts.aiSignatures] - Detection signals
  * @param {object} [opts.modelScores] - Per-model scores
  * @param {string[]} [opts.scannedModels] - Which models were requested (genai, deepfake, type, quality)
- * @param {object} [opts.metadata] - File metadata
+ * @param {object} [opts.metadata] - File metadata (mediaCategory, duration, resolution, etc.)
  * @param {function} [opts.t] - i18n translate
  */
 export function generateScanPdf(opts) {
@@ -196,11 +196,15 @@ export function generateScanPdf(opts) {
   doc.text('Analysis Breakdown', margin, y)
   y += 20
 
+  const isVideo = metadata?.mediaCategory === 'video'
+  const modelLabels = isVideo
+    ? { genai: 'Temporal Consistency', deepfake: 'Frame Integrity', type: 'Metadata Check', quality: 'Image Quality' }
+    : { genai: 'AI Pixel Analysis', deepfake: 'Deepfake Detection', type: 'Metadata Check', quality: 'Image Quality' }
   const modelRows = [
-    ['AI Pixel Analysis', getModelStatus('genai', scannedModels, modelScores, aiSignatures)],
-    ['Deepfake Detection', getModelStatus('deepfake', scannedModels, modelScores, aiSignatures)],
-    ['Metadata Check', getModelStatus('type', scannedModels, modelScores, aiSignatures)],
-    ['Image Quality', getModelStatus('quality', scannedModels, modelScores, aiSignatures)],
+    [modelLabels.genai, getModelStatus('genai', scannedModels, modelScores, aiSignatures)],
+    [modelLabels.deepfake, getModelStatus('deepfake', scannedModels, modelScores, aiSignatures)],
+    [modelLabels.type, getModelStatus('type', scannedModels, modelScores, aiSignatures)],
+    [modelLabels.quality, getModelStatus('quality', scannedModels, modelScores, aiSignatures)],
   ]
   autoTable(doc, {
     startY: y,
@@ -218,12 +222,13 @@ export function generateScanPdf(opts) {
   })
   y = doc.lastAutoTable.finalY + 20
 
-  // Metadata snippet
+  // Metadata snippet (image or video)
+  const isVideo = metadata?.mediaCategory === 'video'
   if (metadata && (metadata.fileType || metadata.sizeFormatted || metadata.extension)) {
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(DARK_BLUE)
-    doc.text('File Metadata', margin, y)
+    doc.text(isVideo ? 'Video Metadata' : 'File Metadata', margin, y)
     y += 20
 
     const metaRows = []
@@ -232,6 +237,12 @@ export function generateScanPdf(opts) {
     }
     if (metadata.sizeFormatted || metadata.size) {
       metaRows.push(['Size', metadata.sizeFormatted || `${metadata.size || 0} B`])
+    }
+    if (isVideo) {
+      if (metadata.duration != null) metaRows.push(['Duration', String(metadata.duration)])
+      if (metadata.resolution) metaRows.push(['Resolution', String(metadata.resolution)])
+      if (metadata.frameRate != null) metaRows.push(['Frame Rate', `${metadata.frameRate} fps`])
+      if (metadata.framesAnalyzed != null) metaRows.push(['Frames Analyzed', String(metadata.framesAnalyzed)])
     }
     if (metaRows.length > 0) {
       autoTable(doc, {

@@ -4,7 +4,7 @@ import { getMediaCategory } from '../utils/fileType.js'
 const LOADING_MESSAGES = {
   image: ['Analyzing pixels...', 'Checking EXIF data...'],
   audio: ['Analyzing voice frequency...', 'Running neural synthesis check...'],
-  video: ['Verifying metadata...', 'Checking biometrics...', 'Analyzing lip sync...', 'Consulting primary sources...'],
+  video: ['Extracting frames...', 'Temporal consistency check...', 'Frame integrity analysis...', 'Deepfake detection...', 'AI-generated sequence scan...', 'Processing video—this may take longer...'],
 }
 
 export default function CircularProgressLoader({ progress = 0, fileType }) {

@@ -54,8 +54,8 @@ const AUDIO_ITEMS = [
 ]
 
 const VIDEO_ITEMS = [
-  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Deepfake Detection', passSubtitle: 'No AI cloning detected', failSubtitle: 'AI cloning detected' },
-  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'Lip Sync', passSubtitle: 'Lip sync verified', failSubtitle: 'Lip sync anomaly' },
+  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Frame Integrity', passSubtitle: 'No face manipulation detected', failSubtitle: 'Deepfake or frame manipulation detected' },
+  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'Temporal Consistency', passSubtitle: 'No AI-generated sequences detected', failSubtitle: 'AI-generated video detected' },
 ]
 
 function getScoreForModel(modelId, modelScores) {

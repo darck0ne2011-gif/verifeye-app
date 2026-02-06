@@ -100,6 +100,12 @@ export default function VerdictScreen({
                 <dd className="text-white">{metadata.createdAt}</dd>
               </div>
             )}
+            {metadata.mediaCategory === 'video' && metadata.framesAnalyzed != null && (
+              <div className="flex justify-between">
+                <dt className="text-slate-500">Frames Analyzed</dt>
+                <dd className="text-white">{metadata.framesAnalyzed}</dd>
+              </div>
+            )}
           </dl>
           {aiSignatures && (aiSignatures.missingExif || aiSignatures.suspiciousResolution || (aiSignatures.softwareTags?.length > 0)) && (
             <div className="mt-3 pt-3 border-t border-slate-600/60">

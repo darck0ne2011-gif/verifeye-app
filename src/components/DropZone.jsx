@@ -78,7 +78,7 @@ export default function DropZone({ onDrop, onTriggerClick, onClearFile, selected
         <FolderIcon />
         <div className="flex flex-col gap-1 flex-1 min-w-0">
           <p className="text-white font-medium">{t('dropzone.drag_drop')}</p>
-          <p className="text-slate-400 text-sm">{t('dropzone.or_click')}</p>
+          <p className="text-slate-400 text-sm">{t('dropzone.or_click')} (MP4, MOV, images, audio)</p>
         </div>
       </div>
     </div>

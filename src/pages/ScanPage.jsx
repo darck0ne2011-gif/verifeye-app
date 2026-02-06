@@ -12,6 +12,12 @@ import { getActiveModels } from '../utils/scanSettings'
 import { getWinningDisplay } from '../utils/verdictScore'
 import VerdictScreen from '../components/VerdictScreen'
 const MIN_SCAN_DURATION_MS = 3000
+const MIN_SCAN_DURATION_MS_VIDEO = 8000
+
+function getMinScanDurationMs(file) {
+  const isVideo = file?.type && /^video\//i.test(file.type)
+  return isVideo ? MIN_SCAN_DURATION_MS_VIDEO : MIN_SCAN_DURATION_MS
+}
 const PROGRESS_UPDATE_INTERVAL_MS = 30
 
 export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
@@ -131,17 +137,18 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
       }
     }
 
+    const minDuration = getMinScanDurationMs(file)
     const startTime = Date.now()
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - startTime
-      const progress = Math.min(100, (elapsed / MIN_SCAN_DURATION_MS) * 100)
+      const progress = Math.min(100, (elapsed / minDuration) * 100)
       setScanProgress(progress)
     }, PROGRESS_UPDATE_INTERVAL_MS)
 
     await runScan()
 
     const elapsed = Date.now() - startTime
-    const remaining = Math.max(0, MIN_SCAN_DURATION_MS - elapsed)
+    const remaining = Math.max(0, minDuration - elapsed)
 
     await new Promise((resolve) => setTimeout(resolve, remaining))
 
@@ -285,7 +292,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="video/*,audio/*,image/*"
+        accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,.mp4,.mov,.avi,.webm,audio/*,image/*"
         className="hidden"
         onChange={(e) => {
           const files = e.target.files

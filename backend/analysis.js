@@ -1,6 +1,6 @@
 import exifParser from 'exif-parser'
 import { fileTypeFromBuffer } from 'file-type'
-import { detectAiImage } from './sightengine.js'
+import { detectAiImage, detectAiVideo } from './sightengine.js'
 
 // Known AI-generation resolutions (DALL-E, Midjourney, Stable Diffusion, etc.)
 const AI_SUSPICIOUS_RESOLUTIONS = new Set([
@@ -138,6 +138,7 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
   const ext = (originalName?.split('.').pop() || detectedMime?.split('/')[1] || 'unknown').toLowerCase()
 
   const isImage = /image/i.test(detectedMime || '')
+  const isVideo = /video/i.test(detectedMime || '')
   const exifResult = isImage ? parseExif(buffer) : null
   const dimensions = getImageDimensions(exifResult)
 
@@ -180,6 +181,15 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
       const mergedResults = { ...(cachedResults ?? {}), ...extractNewFromSightengine(sightengineResult, missingModels) }
       mergedShape = buildSightengineShapeFromResults(mergedResults, models)
     }
+  } else if (isVideo && missingModels.length > 0) {
+    const videoModels = missingModels.filter((m) => ['genai', 'deepfake'].includes(m))
+    if (videoModels.length > 0) {
+      sightengineResult = await detectAiVideo(buffer, detectedMime, originalName || `video.${ext}`, videoModels)
+      if (sightengineResult != null) {
+        const mergedResults = { ...(cachedResults ?? {}), ...extractNewFromSightengine(sightengineResult, videoModels) }
+        mergedShape = buildSightengineShapeFromResults(mergedResults, models)
+      }
+    }
   }
 
   let fakeProbability
@@ -191,7 +201,7 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
   } else if (sightengineResult != null) {
     aiProbability = computeFakeFromSightengine(sightengineResult, models)
     fakeProbability = Math.max(0, Math.min(100, aiProbability))
-  } else if (isImage && missingModels.length > 0) {
+  } else if ((isImage || isVideo) && missingModels.length > 0) {
     throw new Error('Sightengine connection error - check API credits')
   } else if (isImage) {
     const fallbackScore = metadataFallbackScore(buffer, detectedMime, fileSize)
@@ -213,6 +223,11 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     sizeFormatted: formatFileSize(fileSize),
     createdAt: exifResult?.tags?.DateTimeOriginal || exifResult?.tags?.DateTime || null,
   }
+  if (isVideo && sightengineResult?.media) {
+    metadata.videoId = sightengineResult.media.id
+    const frameCount = sightengineResult.data?.frames?.length ?? 0
+    if (frameCount > 0) metadata.framesAnalyzed = frameCount
+  }
 
   const source = mergedShape || sightengineResult
   const modelScores = source
@@ -232,7 +247,9 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     modelScores,
   }
   if (sightengineResult != null) result.sightengineRaw = sightengineResult
-  if (missingModels.length > 0 && sightengineResult != null) result.modelsFetched = missingModels
+  if (missingModels.length > 0 && sightengineResult != null) {
+    result.modelsFetched = isVideo ? missingModels.filter((m) => ['genai', 'deepfake'].includes(m)) : missingModels
+  }
   return result
 }
 
