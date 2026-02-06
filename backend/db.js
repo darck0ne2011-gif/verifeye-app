@@ -114,27 +114,67 @@ export function getCredits(userId) {
   return user?.scanCredits ?? 0
 }
 
-/** Find cached scan result by file hash and models */
-export function findScanByHash(hash, modelsKey = '') {
+/** Find cached scan entry by file hash only (Modular Memory: one entry per file) */
+export function findScanByHash(hash) {
   const data = load()
-  return data.past_scans?.find((s) => s.hash === hash && s.modelsKey === modelsKey) ?? null
+  return data.past_scans?.find((s) => s.hash === hash) ?? null
 }
 
-/** Save scan result to cache for future lookups */
-export function saveScan(hash, modelsKey, result) {
+/** Extract per-model results from Sightengine response for storage */
+function extractModelResults(seResponse, models) {
+  const out = {}
+  if (!seResponse || !models?.length) return out
+  if (seResponse.type) {
+    if (models.includes('genai') && seResponse.type.ai_generated != null) {
+      out.genai = { ai_generated: seResponse.type.ai_generated }
+    }
+    if (models.includes('deepfake') && seResponse.type.deepfake != null) {
+      out.deepfake = { deepfake: seResponse.type.deepfake }
+    }
+    if (models.includes('type')) {
+      out.type = { ...seResponse.type }
+    }
+  }
+  if (models.includes('quality') && seResponse.quality != null) {
+    const q = seResponse.quality
+    out.quality = { score: typeof q === 'object' ? q?.score : q }
+  }
+  return out
+}
+
+/** Save or update scan with modular results. Merges new model results into existing. */
+export function saveScanResults(hash, result, sightengineResponse, modelsRequested) {
   const data = load()
   if (!data.past_scans) data.past_scans = []
+
+  const existing = data.past_scans.find((s) => s.hash === hash)
   const meta = result.metadata ?? {}
-  data.past_scans.push({
-    hash,
-    modelsKey,
+  const base = {
     fakeProbability: result.fakeProbability,
     aiProbability: result.aiProbability ?? result.fakeProbability,
     metadata: { ...meta, mediaCategory: meta.mediaCategory ?? 'image' },
     aiSignatures: result.aiSignatures ?? {},
     scannedModels: result.scannedModels ?? [],
-    createdAt: new Date().toISOString(),
-  })
+    updatedAt: new Date().toISOString(),
+  }
+
+  const newModelResults = extractModelResults(sightengineResponse, modelsRequested)
+  const mergedResults = {
+    ...(existing?.results ?? {}),
+    ...newModelResults,
+  }
+
+  if (existing) {
+    existing.results = mergedResults
+    Object.assign(existing, base)
+  } else {
+    data.past_scans.push({
+      hash,
+      results: mergedResults,
+      createdAt: new Date().toISOString(),
+      ...base,
+    })
+  }
   save(data)
 }
 

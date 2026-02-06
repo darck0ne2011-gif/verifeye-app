@@ -88,11 +88,48 @@ function computeFakeFromSightengine(data, models) {
   return Math.round(maxScore * 100)
 }
 
+/** Build Sightengine-like shape from cached results dict (for computeFakeFromSightengine) */
+function buildSightengineShapeFromResults(results, models) {
+  const shape = { type: {}, quality: null }
+  if (!results || !models?.length) return shape
+  for (const m of models) {
+    const r = results[m]
+    if (!r) continue
+    if (m === 'genai' && r.ai_generated != null) shape.type.ai_generated = r.ai_generated
+    if (m === 'deepfake' && r.deepfake != null) shape.type.deepfake = r.deepfake
+    if (m === 'type' && r) Object.assign(shape.type, r)
+    if (m === 'quality' && r?.score != null) shape.quality = typeof r.score === 'object' ? r.score : { score: r.score }
+  }
+  return shape
+}
+
+/** Extract per-model dict from Sightengine response (mirrors db.extractModelResults) */
+function extractNewFromSightengine(se, modelsReq) {
+  const out = {}
+  if (!se || !modelsReq?.length) return out
+  if (se.type) {
+    if (modelsReq.includes('genai') && se.type.ai_generated != null) out.genai = { ai_generated: se.type.ai_generated }
+    if (modelsReq.includes('deepfake') && se.type.deepfake != null) out.deepfake = { deepfake: se.type.deepfake }
+    if (modelsReq.includes('type')) out.type = { ...se.type }
+  }
+  if (modelsReq.includes('quality') && se.quality != null) {
+    const q = se.quality
+    out.quality = { score: typeof q === 'object' ? q?.score : q }
+  }
+  return out
+}
+
 /**
  * Full file analysis: metadata extraction + AI signature detection + fake probability.
+ * Modular Memory: uses cached per-model results; only calls Sightengine for missing models.
+ * @param {Buffer} buffer - File buffer
+ * @param {string} originalName - Original filename
+ * @param {string} mimeType - MIME type
  * @param {string[]} models - Sightengine model IDs: deepfake, genai, type, quality
+ * @param {{ [model: string]: object } | null} cachedResults - Existing per-model cache (results dict from past_scans)
+ * @returns {{ fakeProbability, aiProbability, metadata, aiSignatures, scannedModels, sightengineRaw?, modelsFetched? }}
  */
-export async function analyzeFile(buffer, originalName, mimeType, models = ['genai']) {
+export async function analyzeFile(buffer, originalName, mimeType, models = ['genai'], cachedResults = null) {
   const fileSize = buffer?.length || 0
   let score = 20
 
@@ -129,19 +166,37 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     }
   }
 
+  const missingModels = cachedResults
+    ? models.filter((m) => !cachedResults[m])
+    : [...models]
   let sightengineResult = null
-  if (isImage) {
-    sightengineResult = await detectAiImage(buffer, detectedMime, originalName || `image.${ext}`, models)
+  let mergedShape = null
+
+  if (missingModels.length === 0 && cachedResults) {
+    mergedShape = buildSightengineShapeFromResults(cachedResults, models)
+  } else if (isImage && missingModels.length > 0) {
+    sightengineResult = await detectAiImage(buffer, detectedMime, originalName || `image.${ext}`, missingModels)
+    if (sightengineResult != null) {
+      const mergedResults = { ...(cachedResults ?? {}), ...extractNewFromSightengine(sightengineResult, missingModels) }
+      mergedShape = buildSightengineShapeFromResults(mergedResults, models)
+    }
   }
 
   let fakeProbability
   let aiProbability = null
 
-  if (sightengineResult != null) {
+  if (mergedShape) {
+    aiProbability = computeFakeFromSightengine(mergedShape, models)
+    fakeProbability = Math.max(0, Math.min(100, aiProbability))
+  } else if (sightengineResult != null) {
     aiProbability = computeFakeFromSightengine(sightengineResult, models)
     fakeProbability = Math.max(0, Math.min(100, aiProbability))
-  } else if (isImage) {
+  } else if (isImage && missingModels.length > 0) {
     throw new Error('Sightengine connection error - check API credits')
+  } else if (isImage) {
+    const fallbackScore = metadataFallbackScore(buffer, detectedMime, fileSize)
+    score = Math.round((score + fallbackScore) / 2)
+    fakeProbability = Math.max(0, Math.min(100, score))
   } else {
     const fallbackScore = metadataFallbackScore(buffer, detectedMime, fileSize)
     score = Math.round((score + fallbackScore) / 2)
@@ -159,13 +214,16 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     createdAt: exifResult?.tags?.DateTimeOriginal || exifResult?.tags?.DateTime || null,
   }
 
-  return {
+  const result = {
     fakeProbability,
     aiProbability: aiProbability ?? fakeProbability,
     metadata,
     aiSignatures,
     scannedModels: models,
   }
+  if (sightengineResult != null) result.sightengineRaw = sightengineResult
+  if (missingModels.length > 0 && sightengineResult != null) result.modelsFetched = missingModels
+  return result
 }
 
 export async function computeFakeProbability(buffer, originalName, mimeType) {

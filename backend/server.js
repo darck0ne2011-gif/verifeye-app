@@ -11,7 +11,7 @@ import {
   changePassword,
   deleteAccount,
 } from './auth.js'
-import { findById, getCredits, updateCredits, updatePassword, deleteUser, upgradeUserToElite, findScanByHash, saveScan } from './db.js'
+import { findById, getCredits, updateCredits, updatePassword, deleteUser, upgradeUserToElite, findScanByHash, saveScanResults } from './db.js'
 import { generatePdfBuffer } from './pdfReport.js'
 import {
   getGoogleAuthUrl,
@@ -266,7 +266,6 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     const rawModels = req.body?.models || req.body?.modelsString || 'genai'
     const modelsList = typeof rawModels === 'string' ? rawModels.split(',').map((m) => m.trim()).filter(Boolean) : []
     const models = modelsList.length ? modelsList : ['genai']
-    const modelsKey = [...models].sort().join(',')
     const creditsToCharge = models.length
 
     if (!isElite && getCredits(userId) < creditsToCharge) {
@@ -274,10 +273,21 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     }
 
     const fileHash = crypto.createHash('sha256').update(file.buffer).digest('hex')
-    const cached = findScanByHash(fileHash, modelsKey)
+    const cached = findScanByHash(fileHash)
 
-    if (cached) {
-      console.log('--- Global Match found (cache hit) ---')
+    const missingModels = cached?.results
+      ? models.filter((m) => !cached.results[m])
+      : models
+
+    if (missingModels.length === 0 && cached?.results) {
+      console.log('--- Modular Memory: full cache hit (all models cached) ---')
+      const analysis = await analyzeFile(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        models,
+        cached.results
+      )
       if (!isElite) {
         const credits = getCredits(userId)
         updateCredits(userId, credits - creditsToCharge)
@@ -285,13 +295,13 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       const updatedUser = findById(userId)
       return res.json({
         success: true,
-        fakeProbability: cached.fakeProbability,
-        aiProbability: cached.aiProbability ?? cached.fakeProbability,
+        fakeProbability: analysis.fakeProbability,
+        aiProbability: analysis.aiProbability ?? analysis.fakeProbability,
         scanCredits: isElite ? 999999 : updatedUser.scanCredits,
-        metadata: cached.metadata,
-        aiSignatures: cached.aiSignatures,
-        mediaCategory: cached.metadata?.mediaCategory ?? 'image',
-        scannedModels: cached.scannedModels ?? ['genai'],
+        metadata: analysis.metadata,
+        aiSignatures: analysis.aiSignatures,
+        mediaCategory: analysis.metadata?.mediaCategory ?? 'image',
+        scannedModels: models,
         cached: true,
       })
     }
@@ -300,10 +310,13 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       file.buffer,
       file.originalname,
       file.mimetype,
-      models
+      models,
+      cached?.results ?? null
     )
 
-    saveScan(fileHash, modelsKey, analysis)
+    if (analysis.sightengineRaw) {
+      saveScanResults(fileHash, analysis, analysis.sightengineRaw, analysis.modelsFetched ?? models)
+    }
 
     if (!isElite) {
       const credits = getCredits(userId)
@@ -311,15 +324,17 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     }
     const updatedUser = findById(userId)
 
+    const { sightengineRaw, modelsFetched, ...rest } = analysis
     res.json({
       success: true,
-      fakeProbability: analysis.fakeProbability,
-      aiProbability: analysis.aiProbability ?? analysis.fakeProbability,
+      fakeProbability: rest.fakeProbability,
+      aiProbability: rest.aiProbability ?? rest.fakeProbability,
       scanCredits: isElite ? 999999 : updatedUser.scanCredits,
-      metadata: analysis.metadata,
-      aiSignatures: analysis.aiSignatures,
-      mediaCategory: analysis.metadata?.mediaCategory ?? 'image',
+      metadata: rest.metadata,
+      aiSignatures: rest.aiSignatures,
+      mediaCategory: rest.metadata?.mediaCategory ?? 'image',
       scannedModels: models,
+      cached: missingModels.length < models.length,
     })
   } catch (err) {
     console.error(err)
