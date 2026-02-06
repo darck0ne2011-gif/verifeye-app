@@ -123,6 +123,7 @@
   },
   "history": {
     "title": "Scan History",
+    "loading_archive": "Loading Archive",
     "empty": "No scans yet. Start by verifying your first file!",
     "download_report": "Download Report",
     "upgrade_for_pdf": "Upgrade to download PDF",

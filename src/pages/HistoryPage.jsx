@@ -158,9 +158,9 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
         <h1 className="text-xl font-bold text-white text-left mb-6">{t('history.title')}</h1>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-16 px-4">
+          <div className="flex-1 w-full flex flex-col items-center justify-center py-16 px-4 min-h-[240px]">
             <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-slate-400 text-center">{t('common.loading') || 'Loading...'}</p>
+            <p className="text-slate-400 text-center">{t('history.loading_archive') || 'Loading Archive'}</p>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
