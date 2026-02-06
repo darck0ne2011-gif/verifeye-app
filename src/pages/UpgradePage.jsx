@@ -13,7 +13,7 @@ function getTiers(t) {
       subtext: t('pricing.free_forever'),
       scans: t('pricing.scans_3'),
       featureKeys: ['feature_3_scans', 'feature_basic'],
-      cta: t('pricing.current_plan'),
+      cta: t('pricing.price_free'),
       highlighted: false,
     },
     {
@@ -212,7 +212,7 @@ export default function UpgradePage({ onSettingsClick }) {
                   >
                     {quickBoostLoading && tier.id === 'quick_boost'
                       ? t('pricing.adding')
-                      : (tier.id === 'starter' && currentTier === 'starter') || (tier.id !== 'starter' && currentTier === tier.id)
+                      : currentTier === tier.id
                         ? t('pricing.current_plan')
                         : tier.cta}
                   </button>

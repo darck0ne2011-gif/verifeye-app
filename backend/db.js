@@ -99,12 +99,23 @@ export function findByEmail(email) {
   return data.users.find((u) => u.email === email.toLowerCase().trim()) ?? null
 }
 
+/** Ensure user has a single canonical plan; Elite wins over any conflicting flags */
+function normalizeUserTier(user) {
+  if (!user) return user
+  const tier = user.subscriptionTier ?? 'starter'
+  const isElite = tier === 'elite' || user.isPremium === true
+  if (isElite) {
+    return { ...user, subscriptionTier: 'elite', scanCredits: 999999, isPremium: true }
+  }
+  return user
+}
+
 export function findById(id) {
   const data = load()
   const u = data.users.find((u) => u.id === id)
   if (!u) return null
   const { password, ...user } = u
-  return user
+  return normalizeUserTier(user)
 }
 
 export function findByIdWithPassword(id) {
