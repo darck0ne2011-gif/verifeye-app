@@ -2,7 +2,6 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
-import { addScanToHistory } from '../utils/scanHistory'
 import { getLastScanResult, setLastScanResult, clearLastScanResult } from '../utils/lastScanResult'
 import DashboardHeader from '../components/DashboardHeader'
 import OverlayButton from '../components/OverlayButton'
@@ -166,11 +165,6 @@ export default function ScanPage({ onSettingsClick }) {
       error: apiResult.error ?? null,
     })
 
-    if (!apiResult.error) addScanToHistory({
-      fileName: file.name,
-      score: apiResult.score,
-      status,
-    })
   }, [selectedFile, getAuthHeaders, refreshUser, logout, t])
 
   const handleBackToScan = useCallback(() => {

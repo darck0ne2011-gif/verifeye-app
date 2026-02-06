@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import DashboardHeader from '../components/DashboardHeader'
-import { getScanHistory } from '../utils/scanHistory'
 
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,14 +63,43 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
   const { t } = useTranslation()
   const { user, getAuthHeaders } = useAuth()
   const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [downloadingId, setDownloadingId] = useState(null)
   const scansCount = user?.scanCredits ?? 0
   const tier = user?.subscriptionTier ?? 'starter'
   const canDownloadPdf = PDF_ALLOWED_TIERS.includes(tier)
 
   useEffect(() => {
-    setHistory(getScanHistory())
-  }, [])
+    let cancelled = false
+    async function fetchHistory() {
+      if (!user || !getAuthHeaders) return
+      setLoading(true)
+      setError(null)
+      try {
+        const res = await fetch(`${API_BASE}/api/history`, {
+          headers: getAuthHeaders(),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (cancelled) return
+        if (res.ok && data.success) {
+          setHistory(data.history ?? [])
+        } else {
+          setError(data.error || 'Failed to load history')
+          setHistory([])
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err.message || 'Network error')
+          setHistory([])
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchHistory()
+    return () => { cancelled = true }
+  }, [user, getAuthHeaders])
 
   const handleDownloadReport = async (item) => {
     if (!canDownloadPdf && onUpgradeClick) {
@@ -129,7 +157,17 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
       <main className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-8 overflow-y-auto">
         <h1 className="text-xl font-bold text-white text-left mb-6">{t('history.title')}</h1>
 
-        {history.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin mb-4" />
+            <p className="text-slate-400 text-center">{t('common.loading') || 'Loading...'}</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-16 px-4">
+            <p className="text-red-400 text-center mb-2">{error}</p>
+            <p className="text-slate-500 text-sm text-center">{t('history.try_again') || 'Try again later.'}</p>
+          </div>
+        ) : history.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4">
             <p className="text-slate-400 text-center">
               {t('history.empty')}

@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
-import { addScanToHistory } from '../utils/scanHistory'
 import { getActiveModels } from '../utils/scanSettings'
 import { getWinningDisplay } from '../utils/verdictScore'
 
@@ -127,10 +126,6 @@ export default function FloatingScanner() {
       ? `Page media (${count} element${count > 1 ? 's' : ''})`
       : 'No media on page'
 
-    if (count > 0) {
-      addScanToHistory({ fileName, score: simulatedScore, status })
-    }
-
     setMiniResult({
       status,
       score: simulatedScore,
@@ -179,7 +174,6 @@ export default function FloatingScanner() {
           setMiniResult({ status: 'ERROR', message: 'Session expired' })
         } else if (data.success) {
           const { status, displayScore } = getWinningDisplay(data.fakeProbability ?? 0)
-          addScanToHistory({ fileName: file.name, score: displayScore, status })
           setMiniResult({
             status,
             score: displayScore,

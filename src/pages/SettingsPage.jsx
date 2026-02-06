@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
-import { getScanHistory } from '../utils/scanHistory'
 import LegalPage from '../components/LegalPage'
 
 const APP_VERSION = '0.1.2-beta'
@@ -147,22 +146,30 @@ export default function SettingsPage({ onBack }) {
     setDisplayNameState(getDisplayName(email))
   }, [email])
 
-  const handleExportData = () => {
-    const history = getScanHistory()
-    const exportData = {
-      exportDate: new Date().toISOString(),
-      userEmail: email,
-      scanHistory: history,
+  const handleExportData = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/history`, {
+        headers: getAuthHeaders(),
+      })
+      const data = await res.json().catch(() => ({}))
+      const history = res.ok && data.success ? (data.history ?? []) : []
+      const exportData = {
+        exportDate: new Date().toISOString(),
+        userEmail: email,
+        scanHistory: history,
+      }
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `verifeye-data-export-${new Date().toISOString().slice(0, 10)}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Export failed:', err)
     }
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `verifeye-data-export-${new Date().toISOString().slice(0, 10)}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
   }
 
   const handleSaveDisplayName = () => {

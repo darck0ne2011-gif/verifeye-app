@@ -8,7 +8,7 @@ const dbPath = path.join(__dirname, 'verifeye-data.json')
 function load() {
   try {
     if (!fs.existsSync(dbPath)) {
-      const initial = { users: [], past_scans: [], nextId: 1 }
+      const initial = { users: [], past_scans: [], user_scan_history: [], nextId: 1, nextScanHistoryId: 1 }
       try {
         fs.writeFileSync(dbPath, JSON.stringify(initial, null, 2), 'utf8')
       } catch {
@@ -20,9 +20,11 @@ function load() {
     const parsed = JSON.parse(data)
     if (!Array.isArray(parsed.past_scans)) parsed.past_scans = []
     if (!Array.isArray(parsed.users)) parsed.users = []
+    if (!Array.isArray(parsed.user_scan_history)) parsed.user_scan_history = []
+    if (typeof parsed.nextScanHistoryId !== 'number') parsed.nextScanHistoryId = 1
     return parsed
   } catch {
-    return { users: [], past_scans: [], nextId: 1 }
+    return { users: [], past_scans: [], user_scan_history: [], nextId: 1, nextScanHistoryId: 1 }
   }
 }
 
@@ -186,6 +188,33 @@ export function saveScanResults(hash, result, sightengineResponse, modelsRequest
     })
   }
   save(data)
+}
+
+/** Add a scan to the user's history (shared across devices) */
+export function addToUserScanHistory(userId, { fileName, score, status }) {
+  const data = load()
+  if (!data.user_scan_history) data.user_scan_history = []
+  const id = String(data.nextScanHistoryId ?? 1)
+  if (typeof data.nextScanHistoryId === 'number') data.nextScanHistoryId++
+  else data.nextScanHistoryId = 2
+  const entry = {
+    id,
+    userId,
+    fileName: fileName || 'Unknown file',
+    date: new Date().toISOString(),
+    score: Number(score) || 0,
+    status: status === 'FAKE' || status === 'REAL' ? status : 'REAL',
+  }
+  data.user_scan_history.unshift(entry)
+  save(data)
+  return entry
+}
+
+/** Get scan history for a user, newest first */
+export function getUserScanHistory(userId, limit = 100) {
+  const data = load()
+  const list = (data.user_scan_history || []).filter((s) => s.userId === userId)
+  return list.slice(0, limit)
 }
 
 export function updatePassword(userId, hashedPassword) {

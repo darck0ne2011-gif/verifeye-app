@@ -11,7 +11,18 @@ import {
   changePassword,
   deleteAccount,
 } from './auth.js'
-import { findById, getCredits, updateCredits, updatePassword, deleteUser, upgradeUserToElite, findScanByHash, saveScanResults } from './db.js'
+import {
+  findById,
+  getCredits,
+  updateCredits,
+  updatePassword,
+  deleteUser,
+  upgradeUserToElite,
+  findScanByHash,
+  saveScanResults,
+  addToUserScanHistory,
+  getUserScanHistory,
+} from './db.js'
 import { generatePdfBuffer } from './pdfReport.js'
 import {
   getGoogleAuthUrl,
@@ -166,6 +177,15 @@ app.get('/api/alerts', (req, res) => {
   res.json({ success: true, alerts })
 })
 
+app.get('/api/history', authMiddleware, (req, res) => {
+  try {
+    const history = getUserScanHistory(req.userId)
+    res.json({ success: true, history })
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message })
+  }
+})
+
 app.get('/api/me', authMiddleware, (req, res) => {
   try {
     const user = findById(req.userId)
@@ -293,6 +313,14 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
         const credits = getCredits(userId)
         updateCredits(userId, credits - creditsToCharge)
       }
+      const fp = analysis.fakeProbability ?? 0
+      const status = fp >= 50 ? 'FAKE' : 'REAL'
+      const displayScore = fp >= 50 ? fp : 100 - fp
+      addToUserScanHistory(userId, {
+        fileName: file.originalname,
+        score: displayScore,
+        status,
+      })
       const updatedUser = findById(userId)
       return res.json({
         success: true,
@@ -324,6 +352,14 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       const credits = getCredits(userId)
       updateCredits(userId, credits - creditsToCharge)
     }
+    const fp = analysis.fakeProbability ?? 0
+    const status = fp >= 50 ? 'FAKE' : 'REAL'
+    const displayScore = fp >= 50 ? fp : 100 - fp
+    addToUserScanHistory(userId, {
+      fileName: file.originalname,
+      score: displayScore,
+      status,
+    })
     const updatedUser = findById(userId)
 
     const { sightengineRaw, modelsFetched, ...rest } = analysis
