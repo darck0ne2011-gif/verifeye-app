@@ -122,6 +122,7 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
         modelScores: item.modelScores ?? null,
         scannedModels: item.scannedModels ?? null,
         metadata: item.metadata ?? null,
+        expertSummary: item.metadata?.expertSummary ?? item.expertSummary ?? null,
         mediaCategory: item.mediaCategory ?? item.metadata?.mediaCategory,
         t,
       })

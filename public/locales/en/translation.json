@@ -128,6 +128,7 @@
   "verdict": {
     "view_source": "View Original Source",
     "api_error": "API error (using fallback): {{error}}",
+    "api_config_missing": "API Configuration Missing",
     "metadata_title": "File Analysis",
     "file_type": "File Type",
     "file_size": "File Size",

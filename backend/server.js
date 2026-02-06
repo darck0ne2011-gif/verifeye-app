@@ -298,6 +298,13 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       return res.status(402).json({ success: false, error: `Need ${creditsToCharge} credits (1 per model). You have ${getCredits(userId)}.` })
     }
 
+    const hasSightengineCreds = !!(process.env.SIGHTENGINE_USER || process.env.SIGHTENGINE_API_USER) && !!(process.env.SIGHTENGINE_SECRET || process.env.SIGHTENGINE_API_SECRET)
+    const isImage = /^image\//i.test(file.mimetype || '')
+    const isAudio = /^audio\//i.test(file.mimetype || '')
+    if ((isVideo || isImage || isAudio) && !hasSightengineCreds) {
+      return res.status(503).json({ success: false, error: 'API Configuration Missing', code: 'API_CONFIG_MISSING' })
+    }
+
     // SHA-256 is deterministic: same file buffer always yields same hash → consistent cache hits
     const fileHash = crypto.createHash('sha256').update(file.buffer).digest('hex')
     const cached = findScanByHash(fileHash)
@@ -444,9 +451,14 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     })
   } catch (err) {
     console.error(err)
+    const hasSE = !!(process.env.SIGHTENGINE_USER || process.env.SIGHTENGINE_API_USER) && !!(process.env.SIGHTENGINE_SECRET || process.env.SIGHTENGINE_API_SECRET)
     const isSightengineError = /sightengine|api credits|connection error/i.test(err.message || '')
-    const errorMessage = isSightengineError ? 'Sightengine connection error - check API credits' : err.message
-    res.status(500).json({ success: false, error: errorMessage })
+    const errorMessage = !hasSE && isSightengineError
+      ? 'API Configuration Missing'
+      : isSightengineError
+        ? 'Sightengine connection error - check API credits'
+        : err.message
+    res.status(hasSE ? 500 : 503).json({ success: false, error: errorMessage })
   }
 })
 

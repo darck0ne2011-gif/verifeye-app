@@ -189,7 +189,7 @@ export default function VerdictScreen({
       )}
       {error && (
         <p className="text-amber-400 text-sm">
-          {t('verdict.api_error', { error })}
+          {error === 'API Configuration Missing' ? t('verdict.api_config_missing') : t('verdict.api_error', { error })}
         </p>
       )}
     </div>

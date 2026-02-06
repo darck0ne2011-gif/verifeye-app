@@ -2,7 +2,7 @@ import exifParser from 'exif-parser'
 import { fileTypeFromBuffer } from 'file-type'
 import { detectAiImage, detectAiAudio, detectAiVideo } from './sightengine.js'
 import { analyzeVideoSequential } from './services/videoScanner.js'
-import { classifyAudioWithElevenLabs } from './services/audioScanner.js'
+import { classifyAudioWithSightengine } from './services/audioScanner.js'
 import { extractVideoTracks } from './videoFrameExtractor.js'
 
 // Known AI-generation resolutions (DALL-E, Midjourney, Stable Diffusion, etc.)
@@ -250,10 +250,10 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
         let vocalicImprint = null
         let lipSyncIntegrity = null
         if (isElite && videoModels.includes('voice_clone')) {
-          const elevenLabs = await classifyAudioWithElevenLabs(buffer, ext)
-          if (elevenLabs?.score != null) {
-            vocalicImprint = elevenLabs.score
-            consolidated.audioAnalysis = { vocalicImprint, source: 'elevenlabs' }
+          const sightengineAudio = await classifyAudioWithSightengine(buffer, ext)
+          if (sightengineAudio?.score != null) {
+            vocalicImprint = sightengineAudio.score
+            consolidated.audioAnalysis = { vocalicImprint, source: 'sightengine' }
           } else if (extracted?.audio?.length > 0) {
             const audioRes = await detectAiAudio(
               extracted.audio,
@@ -265,7 +265,7 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
               const ag = audioRes.type.ai_generated != null ? Number(audioRes.type.ai_generated) : 0
               const df = audioRes.type.deepfake != null ? Number(audioRes.type.deepfake) : 0
               vocalicImprint = Math.max(ag, df)
-              consolidated.audioAnalysis = { vocalicImprint }
+              consolidated.audioAnalysis = { vocalicImprint, source: 'sightengine' }
             }
           }
         }
@@ -335,6 +335,9 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     size: fileSize,
     sizeFormatted: formatFileSize(fileSize),
     createdAt: exifResult?.tags?.DateTimeOriginal || exifResult?.tags?.DateTime || null,
+  }
+  if (isImage && dimensions) {
+    metadata.resolution = `${dimensions.width}x${dimensions.height}`
   }
   if (isVideo && sightengineResult?.data?.frames?.length > 0) {
     metadata.framesAnalyzed = sightengineResult.data.frames.length

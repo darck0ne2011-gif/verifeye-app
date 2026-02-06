@@ -33,8 +33,11 @@ function getModelStatus(modelId, scannedModels, modelScores, aiSignatures) {
 
   if (modelId === 'type') {
     if (!aiSignatures) return 'Not Applicable'
-    const hasAnomalies = aiSignatures.missingExif || aiSignatures.suspiciousResolution || (aiSignatures.softwareTags?.length > 0)
-    return hasAnomalies ? 'Anomalies Detected' : 'Verified'
+    const parts = []
+    if (aiSignatures.missingExif) parts.push('Missing EXIF')
+    if (aiSignatures.suspiciousResolution) parts.push(`Resolution: ${aiSignatures.suspiciousResolution}`)
+    if (aiSignatures.softwareTags?.length) parts.push(`AI tags: ${aiSignatures.softwareTags.join(', ')}`)
+    return parts.length ? parts.join('; ') : 'Verified'
   }
 
   const key = modelId === 'genai' ? 'ai_generated' : modelId === 'deepfake' ? 'deepfake' : modelId === 'quality' ? 'quality' : null
@@ -194,13 +197,13 @@ export function generateScanPdf(opts) {
   doc.text(`${score}%`, margin + 70, y)
   y += 40
 
-  // AI Expert Interpretation (directly under Verdict line)
+  // AI Expert Interpretation (DeepSeek) - directly under Verdict line
   const summary = expertSummary || metadata?.expertSummary
   if (summary) {
     doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(DARK_BLUE)
-    doc.text('AI Expert Interpretation', margin, y)
+    doc.text('AI Expert Interpretation (DeepSeek Forensic Analyst)', margin, y)
     y += 16
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
@@ -285,12 +288,21 @@ export function generateScanPdf(opts) {
     if (metadata?.sizeFormatted || metadata?.size != null) {
       metaRows.push(['Size', metadata.sizeFormatted || `${metadata.size ?? 0} B`])
     }
+    if (!isVideo && metadata?.resolution) {
+      metaRows.push(['Resolution', metadata.resolution])
+    }
+    if (!isVideo && metadata?.createdAt) {
+      metaRows.push(['Created', String(metadata.createdAt)])
+    }
     if (isVideo) {
       if (metadata?.duration != null) metaRows.push(['Duration', String(metadata.duration)])
       if (metadata?.resolution) metaRows.push(['Resolution', String(metadata.resolution)])
       if (metadata?.frameRate != null) metaRows.push(['Frame Rate', `${metadata.frameRate} fps`])
       metaRows.push(['Frames Analyzed', metadata?.framesAnalyzed != null ? String(metadata.framesAnalyzed) : '—'])
       metaRows.push(['Analysis Method', metadata?.analysisMethod === 'native_video' ? 'Native Video (Sequential)' : metadata?.analysisMethod === 'frame_based' ? 'Frame-Based (Fast)' : '—'])
+      if (metadata?.audioAnalysis) {
+        metaRows.push(['Voice Authenticity', 'Sightengine Audio Engine'])
+      }
     }
     if (metaRows.length > 0) {
       autoTable(doc, {
