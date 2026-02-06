@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { getActiveModelsForCategory, setActiveModelsForCategory, getVideoAuditMode, setVideoAuditMode, getVideoAnalysisEngine, setVideoAnalysisEngine } from '../utils/scanSettings'
+import { getActiveModelsForCategory, setActiveModelsForCategory, getVideoAnalysisEngine, setVideoAnalysisEngine } from '../utils/scanSettings'
 import DashboardHeader from '../components/DashboardHeader'
 
 const PHOTO_OPTIONS = [
@@ -71,14 +71,12 @@ export default function ScanSettingsPage({ onSettingsClick }) {
   const [photoModels, setPhotoModels] = useState(() => getActiveModelsForCategory('photo'))
   const [videoModels, setVideoModels] = useState(() => getActiveModelsForCategory('video'))
   const [audioModels, setAudioModels] = useState(() => getActiveModelsForCategory('audio'))
-  const [videoAuditMode, setVideoAuditModeState] = useState(() => getVideoAuditMode())
   const [videoAnalysisEngine, setVideoAnalysisEngineState] = useState(() => getVideoAnalysisEngine())
 
   useEffect(() => {
     setPhotoModels(getActiveModelsForCategory('photo'))
     setVideoModels(getActiveModelsForCategory('video'))
     setAudioModels(getActiveModelsForCategory('audio'))
-    setVideoAuditModeState(getVideoAuditMode())
     setVideoAnalysisEngineState(getVideoAnalysisEngine())
   }, [])
 
@@ -197,36 +195,6 @@ export default function ScanSettingsPage({ onSettingsClick }) {
                   </div>
                   <p className="text-xs text-slate-500 mt-2">{t('scan_settings.video_engine_hint')}</p>
                 </div>
-                {videoAnalysisEngine === 'frame_based' && (
-                  <div className="mb-4 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                    <p className="text-sm font-medium text-white mb-2">{t('scan_settings.video_audit_mode')}</p>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => { setVideoAuditMode('quick'); setVideoAuditModeState('quick') }}
-                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                          videoAuditMode === 'quick'
-                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                            : 'bg-slate-700/40 text-slate-400 border border-slate-600 hover:border-slate-500'
-                        }`}
-                      >
-                        {t('scan_settings.video_audit_quick')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setVideoAuditMode('full_forensic'); setVideoAuditModeState('full_forensic') }}
-                        className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                          videoAuditMode === 'full_forensic'
-                            ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
-                            : 'bg-slate-700/40 text-slate-400 border border-slate-600 hover:border-slate-500'
-                        }`}
-                      >
-                        {t('scan_settings.video_audit_full')}
-                      </button>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-2">{t('scan_settings.video_audit_hint')}</p>
-                  </div>
-                )}
               </>
             )}
             <ul className="space-y-3 w-full">

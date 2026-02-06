@@ -8,7 +8,7 @@ import OverlayButton from '../components/OverlayButton'
 import GlobalAlerts from '../components/GlobalAlerts'
 import DropZone from '../components/DropZone'
 import CircularProgressLoader from '../components/CircularProgressLoader'
-import { getActiveModels, getMaxCreditsPerScan, getVideoAuditMode, getVideoAnalysisEngine } from '../utils/scanSettings'
+import { getActiveModels, getMaxCreditsPerScan, getVideoAnalysisEngine } from '../utils/scanSettings'
 import { getMediaCategory } from '../utils/fileType'
 import { getWinningDisplay } from '../utils/verdictScore'
 import VerdictScreen from '../components/VerdictScreen'
@@ -92,7 +92,6 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
         formData.append('file', file)
         formData.append('models', models.join(','))
         if (getMediaCategory(file) === 'video') {
-          formData.append('videoAuditMode', getVideoAuditMode())
           formData.append('videoAnalysisEngine', getVideoAnalysisEngine())
         }
 

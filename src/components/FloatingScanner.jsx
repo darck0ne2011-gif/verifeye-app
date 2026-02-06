@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
-import { getActiveModels, getMaxCreditsPerScan, getVideoAuditMode, getVideoAnalysisEngine } from '../utils/scanSettings'
+import { getActiveModels, getMaxCreditsPerScan, getVideoAnalysisEngine } from '../utils/scanSettings'
 import { getMediaCategory } from '../utils/fileType'
 import { getWinningDisplay } from '../utils/verdictScore'
 
@@ -157,7 +157,6 @@ export default function FloatingScanner() {
         formData.append('file', file)
         formData.append('models', getActiveModels(getMediaCategory(file)).join(','))
         if (getMediaCategory(file) === 'video') {
-          formData.append('videoAuditMode', getVideoAuditMode())
           formData.append('videoAnalysisEngine', getVideoAnalysisEngine())
         }
 

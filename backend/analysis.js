@@ -210,8 +210,7 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
       }
 
       if (!consolidated) {
-        const fullForensic = isElite && options.videoAuditMode === 'full_forensic'
-        const maxFrames = fullForensic ? 15 : 5
+        const maxFrames = 5
         const extracted = await extractVideoTracks(buffer, ext, { intervalSec: 2, maxFrames })
         if (extracted?.frames?.length > 0) {
           const frameModels = videoModels.filter((m) => VIDEO_LIGHT_MODELS.includes(m))
