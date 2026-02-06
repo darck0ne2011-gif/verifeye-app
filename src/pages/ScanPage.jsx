@@ -8,7 +8,8 @@ import OverlayButton from '../components/OverlayButton'
 import GlobalAlerts from '../components/GlobalAlerts'
 import DropZone from '../components/DropZone'
 import CircularProgressLoader from '../components/CircularProgressLoader'
-import { getActiveModels } from '../utils/scanSettings'
+import { getActiveModels, getMaxCreditsPerScan } from '../utils/scanSettings'
+import { getMediaCategory } from '../utils/fileType'
 import { getWinningDisplay } from '../utils/verdictScore'
 import VerdictScreen from '../components/VerdictScreen'
 const MIN_SCAN_DURATION_MS = 3000
@@ -72,7 +73,8 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
 
   const handleStartScan = useCallback(async () => {
     const file = selectedFile
-    const models = getActiveModels()
+    const mediaCat = getMediaCategory(file)
+    const models = getActiveModels(mediaCat)
     const creditsNeeded = models.length
     if (!file || scansCountRef.current < creditsNeeded) return
 
@@ -204,7 +206,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
   const handleOverlayClick = useCallback(() => {
     if (view === 'verdict') {
       handleBackToScan()
-    } else if (view === 'idle' && selectedFile && scansCountRef.current >= getActiveModels().length) {
+    } else if (view === 'idle' && selectedFile && scansCountRef.current >= getActiveModels(getMediaCategory(selectedFile)).length) {
       handleStartScan()
     }
   }, [view, selectedFile, handleBackToScan, handleStartScan])
@@ -214,8 +216,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
     fileInputRef.current?.click()
   }, [])
 
-  const models = getActiveModels()
-  const creditsNeeded = models.length
+  const creditsNeeded = selectedFile ? getActiveModels(getMediaCategory(selectedFile)).length : getMaxCreditsPerScan()
   const overlayDisabled = scansCount < creditsNeeded || (view === 'idle' && !selectedFile)
   const overlayFaded = view === 'idle' && !selectedFile && scansCount >= creditsNeeded
 

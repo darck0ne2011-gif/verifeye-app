@@ -1,9 +1,27 @@
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { getActiveModels, setActiveModels } from '../utils/scanSettings'
-import { MODEL_IDS } from '../components/ModelCheckboxes'
+import { getActiveModelsForCategory, setActiveModelsForCategory } from '../utils/scanSettings'
 import DashboardHeader from '../components/DashboardHeader'
+
+const PHOTO_OPTIONS = [
+  { id: 'deepfake', labelKey: 'scan_settings.model_deepfake' },
+  { id: 'genai', labelKey: 'scan_settings.model_genai' },
+  { id: 'type', labelKey: 'scan_settings.model_metadata' },
+  { id: 'quality', labelKey: 'scan_settings.model_quality' },
+]
+
+const VIDEO_OPTIONS = [
+  { id: 'temporal_ai', labelKey: 'scan_settings.model_temporal_ai' },
+  { id: 'video_deepfake', labelKey: 'scan_settings.model_video_deepfake' },
+  { id: 'frame_integrity', labelKey: 'scan_settings.model_frame_integrity' },
+]
+
+const AUDIO_OPTIONS = [
+  { id: 'voice_cloning', labelKey: 'scan_settings.model_voice_cloning' },
+  { id: 'synthetic_speech', labelKey: 'scan_settings.model_synthetic_speech' },
+  { id: 'background_noise', labelKey: 'scan_settings.model_background_noise' },
+]
 
 function ToggleSwitch({ checked, onChange }) {
   return (
@@ -25,28 +43,58 @@ function ToggleSwitch({ checked, onChange }) {
   )
 }
 
-const OPTIONS = [
-  { id: MODEL_IDS.deepfake, labelKey: 'scan.model_deepfake' },
-  { id: MODEL_IDS.genai, labelKey: 'scan.model_genai' },
-  { id: MODEL_IDS.type, labelKey: 'scan.model_metadata' },
-  { id: MODEL_IDS.quality, labelKey: 'scan.model_quality' },
-]
+function SectionToggle({ id, labelKey, isOn, onToggle, t }) {
+  return (
+    <li className="w-full flex justify-between items-center p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+      <span className="text-white font-medium flex-1 min-w-0">{t(labelKey)}</span>
+      <div className="shrink-0">
+        <ToggleSwitch checked={isOn} onChange={() => onToggle(id)} />
+      </div>
+    </li>
+  )
+}
 
 export default function ScanSettingsPage({ onSettingsClick }) {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const [activeModels, setActiveModelsState] = useState(() => getActiveModels())
+  const [activeTab, setActiveTab] = useState('photo')
+
+  const [photoModels, setPhotoModels] = useState(() => getActiveModelsForCategory('photo'))
+  const [videoModels, setVideoModels] = useState(() => getActiveModelsForCategory('video'))
+  const [audioModels, setAudioModels] = useState(() => getActiveModelsForCategory('audio'))
 
   useEffect(() => {
-    setActiveModels(activeModels)
-  }, [activeModels])
+    setPhotoModels(getActiveModelsForCategory('photo'))
+    setVideoModels(getActiveModelsForCategory('video'))
+    setAudioModels(getActiveModelsForCategory('audio'))
+  }, [])
 
-  const toggle = (id) => {
-    setActiveModelsState((prev) => {
-      const next = prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
-      return next.length > 0 ? next : [MODEL_IDS.genai]
-    })
+  const togglePhoto = (id) => {
+    const next = photoModels.includes(id) ? photoModels.filter((m) => m !== id) : [...photoModels, id]
+    const arr = next.length > 0 ? next : ['genai']
+    setActiveModelsForCategory('photo', arr)
+    setPhotoModels(arr)
   }
+
+  const toggleVideo = (id) => {
+    const next = videoModels.includes(id) ? videoModels.filter((m) => m !== id) : [...videoModels, id]
+    const arr = next.length > 0 ? next : ['temporal_ai']
+    setActiveModelsForCategory('video', arr)
+    setVideoModels(arr)
+  }
+
+  const toggleAudio = (id) => {
+    const next = audioModels.includes(id) ? audioModels.filter((m) => m !== id) : [...audioModels, id]
+    const arr = next.length > 0 ? next : ['voice_cloning']
+    setActiveModelsForCategory('audio', arr)
+    setAudioModels(arr)
+  }
+
+  const tabs = [
+    { id: 'photo', labelKey: 'scan_settings.tab_photo', icon: '📷' },
+    { id: 'video', labelKey: 'scan_settings.tab_video', icon: '🎬' },
+    { id: 'audio', labelKey: 'scan_settings.tab_audio', icon: '🎙️' },
+  ]
 
   return (
     <div className="min-h-screen bg-[#0d0d0d] flex flex-col pb-20">
@@ -59,22 +107,90 @@ export default function ScanSettingsPage({ onSettingsClick }) {
       <main className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-8 overflow-y-auto">
         <h1 className="text-xl font-bold text-white text-left mb-2">{t('scan_settings.title')}</h1>
         <p className="text-slate-400 text-sm mb-6">{t('scan_settings.subtitle')}</p>
-        <ul className="space-y-3 w-full">
-          {OPTIONS.map((opt) => {
-            const isOn = activeModels.includes(opt.id)
-            return (
-              <li
-                key={opt.id}
-                className="w-full flex justify-between items-center p-4 bg-slate-800/50 rounded-xl border border-slate-700/50"
-              >
-                <span className="text-white font-medium flex-1 min-w-0">{t(opt.labelKey)}</span>
-                <div className="shrink-0">
-                  <ToggleSwitch checked={isOn} onChange={() => toggle(opt.id)} />
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+
+        {/* Tab bar */}
+        <div className="flex gap-1 p-1 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50 border border-transparent'
+              }`}
+            >
+              <span>{tab.icon}</span>
+              {t(tab.labelKey)}
+            </button>
+          ))}
+        </div>
+
+        {/* Photo section */}
+        {activeTab === 'photo' && (
+          <section className="space-y-3 animate-fade-in">
+            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              {t('scan_settings.section_photo')}
+            </h2>
+            <ul className="space-y-3 w-full">
+              {PHOTO_OPTIONS.map((opt) => (
+                <SectionToggle
+                  key={opt.id}
+                  id={opt.id}
+                  labelKey={opt.labelKey}
+                  isOn={photoModels.includes(opt.id)}
+                  onToggle={togglePhoto}
+                  t={t}
+                />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Video section */}
+        {activeTab === 'video' && (
+          <section className="space-y-3 animate-fade-in">
+            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              {t('scan_settings.section_video')}
+            </h2>
+            <ul className="space-y-3 w-full">
+              {VIDEO_OPTIONS.map((opt) => (
+                <SectionToggle
+                  key={opt.id}
+                  id={opt.id}
+                  labelKey={opt.labelKey}
+                  isOn={videoModels.includes(opt.id)}
+                  onToggle={toggleVideo}
+                  t={t}
+                />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Audio section */}
+        {activeTab === 'audio' && (
+          <section className="space-y-3 animate-fade-in">
+            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
+              {t('scan_settings.section_audio')}
+            </h2>
+            <ul className="space-y-3 w-full">
+              {AUDIO_OPTIONS.map((opt) => (
+                <SectionToggle
+                  key={opt.id}
+                  id={opt.id}
+                  labelKey={opt.labelKey}
+                  isOn={audioModels.includes(opt.id)}
+                  onToggle={toggleAudio}
+                  t={t}
+                />
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <p className="text-slate-500 text-xs mt-6">{t('scan_settings.credits_note')}</p>
       </main>
     </div>
   )

@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
-import { getActiveModels } from '../utils/scanSettings'
+import { getActiveModels, getMaxCreditsPerScan } from '../utils/scanSettings'
+import { getMediaCategory } from '../utils/fileType'
 import { getWinningDisplay } from '../utils/verdictScore'
 
 const FAB_STORAGE_KEY = 'verifeye_fab_position'
@@ -101,7 +102,7 @@ export default function FloatingScanner() {
   const hasDraggedRef = useRef(false)
 
   const scansCount = user?.scanCredits ?? 0
-  const creditsNeeded = getActiveModels().length
+  const creditsNeeded = getMaxCreditsPerScan()
   const scansLabel = scansCount >= 999999 ? 'Unlimited' : `${scansCount} Scans left`
   const hasCredits = scansCount >= 999999 || scansCount >= creditsNeeded
 
@@ -154,7 +155,7 @@ export default function FloatingScanner() {
       try {
         const formData = new FormData()
         formData.append('file', file)
-        formData.append('models', getActiveModels().join(','))
+        formData.append('models', getActiveModels(getMediaCategory(file)).join(','))
 
         const startTime = Date.now()
         const res = await fetch(`${API_BASE}/api/analyze`, {
