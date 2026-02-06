@@ -32,12 +32,22 @@ function App() {
       } else {
         await register(email, password)
       }
+      setActiveTab('home')
+      setShowSettings(false)
+      window.history.replaceState({}, '', '/')
     } catch (err) {
       setAuthError(err.message)
     } finally {
       setAuthLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (!user) {
+      setActiveTab('home')
+      setShowSettings(false)
+    }
+  }, [user])
 
   if (loading) {
     return (

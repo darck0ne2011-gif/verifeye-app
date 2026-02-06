@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { API_BASE } from '../config.js'
 
 const TOKEN_KEY = 'verifeye_token'
+const REDIRECT_PATH_KEY = 'verifeye_redirect_path'
 
 const AuthContext = createContext(null)
 
@@ -99,6 +100,7 @@ export function AuthProvider({ children }) {
   }, [setToken])
 
   const logout = useCallback(() => {
+    localStorage.removeItem(REDIRECT_PATH_KEY)
     setToken(null)
   }, [setToken])
 
