@@ -126,7 +126,7 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
         onSettingsClick={onSettingsClick}
       />
 
-      <main className="flex-1 flex flex-col px-4 pt-6 pb-8">
+      <main className="flex-1 flex flex-col w-full px-4 pt-6 pb-8 max-w-5xl mx-auto">
         <h1 className="text-xl font-bold text-white mb-6">{t('history.title')}</h1>
 
         {history.length === 0 ? (
@@ -136,17 +136,17 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
             </p>
           </div>
         ) : (
-          <div className="space-y-3 max-w-2xl w-full">
+          <div className="space-y-3 w-full max-w-none">
             {history.map((item) => (
               <div
                 key={item.id}
                 className="w-full flex justify-between items-center p-4 bg-slate-800/60 rounded-xl border border-slate-700/50"
               >
-                <div className="flex items-center gap-4 min-w-0 flex-1">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
                   <FileIcon type={getFileType(item.fileName)} />
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 overflow-hidden">
                     <p className="text-white font-medium truncate">{item.fileName}</p>
-                    <p className="text-slate-400 text-sm">{formatDate(item.date)}</p>
+                    <p className="text-slate-400 text-sm truncate">{formatDate(item.date)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
