@@ -93,7 +93,6 @@ async function run() {
   console.log(results.apple.ok ? '   ✓ ' + results.apple.msg : '   ✗ ' + results.apple.error)
 
   const ok = [results.sightengine, results.deepseek].filter((r) => r.ok).length
-  const total = 4
   console.log('\n--- Summary ---')
   console.log(`Working: ${ok}/2 API calls (Sightengine, DeepSeek)`)
   console.log(`Config:  ${[results.google, results.apple].filter((r) => r.ok).length}/2 OAuth providers`)

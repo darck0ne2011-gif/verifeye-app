@@ -98,6 +98,53 @@ export async function extractVideoTracks(buffer, ext = 'mp4', options = {}) {
 }
 
 /**
+ * Extract audio from video as lossless WAV (mono, 16kHz) for vocoder artifact detection.
+ * @param {Buffer} buffer - Video file buffer
+ * @param {string} ext - File extension (mp4, mov, etc.)
+ * @returns {{ wavPath: string, tmpDir: string } | null} - Path to temp WAV, or null on failure
+ */
+export async function extractAudioAsWav(buffer, ext = 'mp4') {
+  const tmpDir = path.join(
+    process.env.TMPDIR || process.env.TEMP || os.tmpdir(),
+    `verifeye-wav-${Date.now()}-${Math.random().toString(36).slice(2)}`
+  )
+  const inputPath = path.join(tmpDir, `input.${ext}`)
+  const wavPath = path.join(tmpDir, 'audio.wav')
+
+  try {
+    fs.mkdirSync(tmpDir, { recursive: true })
+    fs.writeFileSync(inputPath, buffer)
+
+    await new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
+        .noVideo()
+        .audioChannels(1)
+        .audioFrequency(16000)
+        .format('wav')
+        .output(wavPath)
+        .on('end', () => resolve())
+        .on('error', (err) => reject(err))
+        .run()
+    })
+
+    if (fs.existsSync(wavPath) && fs.statSync(wavPath).size > 0) {
+      try {
+        if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath)
+      } catch {}
+      return { wavPath, tmpDir }
+    }
+    return null
+  } catch (err) {
+    console.warn('WAV extraction error:', err.message)
+    return null
+  } finally {
+    try {
+      if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath)
+    } catch {}
+  }
+}
+
+/**
  * Extract audio track from video to a temporary .mp3 file.
  * Caller must delete the file after use.
  * @param {Buffer} buffer - Video file buffer

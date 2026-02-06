@@ -92,7 +92,7 @@ export default function VerdictScreen({
           <p className="text-sm text-slate-300 leading-relaxed">{summary}</p>
         </section>
       )}
-      <RealTimeAnalysis isComplete fileType={fileType} scannedModels={scannedModels} modelScores={modelScores} aiSignatures={aiSignatures} />
+      <RealTimeAnalysis isComplete fileType={fileType} scannedModels={scannedModels} modelScores={modelScores} aiSignatures={aiSignatures} metadata={metadata} />
       {metadata && (
         <section className="w-full rounded-xl bg-slate-800/60 border border-slate-600/60 p-4">
           <h3 className="text-sm font-medium text-slate-300 mb-3">{t('verdict.metadata_title')}</h3>
@@ -117,10 +117,10 @@ export default function VerdictScreen({
                 <dd className="text-white">{metadata.framesAnalyzed}</dd>
               </div>
             )}
-            {metadata.mediaCategory === 'video' && metadata.audioAnalysis?.vocalicImprint != null && (
-              <div className="flex justify-between">
-                <dt className="text-slate-500">Vocalic Imprint</dt>
-                <dd className="text-white">{Math.round(metadata.audioAnalysis.vocalicImprint * 100)}%</dd>
+            {metadata.mediaCategory === 'video' && metadata.audioAnalysis?.voiceCloneReasoning && (
+              <div className="flex flex-col gap-1">
+                <dt className="text-slate-500">Voice Clone Detection</dt>
+                <dd className="text-white text-sm">{metadata.audioAnalysis.voiceCloneReasoning}</dd>
               </div>
             )}
             {metadata.mediaCategory === 'video' && metadata.lipSyncIntegrity != null && (

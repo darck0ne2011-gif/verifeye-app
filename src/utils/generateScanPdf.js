@@ -48,15 +48,15 @@ function getModelStatus(modelId, scannedModels, modelScores, aiSignatures) {
 
 /**
  * Get display value for a video analysis model in the breakdown.
- * Maps: genai → ai_generated, deepfake → deepfake, voice_clone → vocalicImprint, lip_sync → lipSyncIntegrity.
+ * Maps: genai → ai_generated, deepfake → deepfake, voice_clone → voiceCloneReasoning, lip_sync → lipSyncIntegrity.
  */
 function getVideoModelStatus(modelId, scannedModels, modelScores, metadata) {
   const wasRequested = Array.isArray(scannedModels) && scannedModels.includes(modelId)
   if (!wasRequested) return 'Not Requested'
 
   if (modelId === 'voice_clone') {
-    const v = metadata?.audioAnalysis?.vocalicImprint
-    return toDisplayScore(v) ?? 'Not Applicable'
+    const v = metadata?.audioAnalysis?.voiceCloneReasoning
+    return (typeof v === 'string' && v.trim()) ? v : 'Not Applicable'
   }
   if (modelId === 'lip_sync') {
     const v = metadata?.lipSyncIntegrity
@@ -251,8 +251,8 @@ export function generateScanPdf(opts) {
         ['Lip-Sync Integrity', getVideoModelStatus('lip_sync', scannedModels, metadata)],
       ]
     : [
-        ['AI Pixel Analysis', getModelStatus('genai', scannedModels, modelScores, aiSignatures)],
         ['Deepfake Detection', getModelStatus('deepfake', scannedModels, modelScores, aiSignatures)],
+        ['AI Pixel Analysis', getModelStatus('genai', scannedModels, modelScores, aiSignatures)],
         ['Metadata Check', getModelStatus('type', scannedModels, modelScores, aiSignatures)],
         ['Image Quality', getModelStatus('quality', scannedModels, modelScores, aiSignatures)],
       ]

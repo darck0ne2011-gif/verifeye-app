@@ -1,0 +1,5 @@
+# Vocoder artifact / synthetic voice detection
+torch>=2.0.0
+transformers>=4.30.0
+soundfile>=0.12.0
+scipy>=1.10.0

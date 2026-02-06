@@ -1,61 +1,41 @@
 /**
- * Sightengine Audio analysis for voice / synthetic speech detection.
- * Extracts audio from video, sends to Sightengine with genai/deepfake models.
- * Maps results to Vocalic Imprint and Voice Clone Detection.
+ * Voice Clone Detection: ffprobe audio metadata + DeepSeek reasoning.
+ * No Python/Sightengine. Uses audio metadata (bitrate, sample rate, silence gaps) and Lip-Sync score.
  */
 
-import fs from 'fs'
-import { extractAudioToTempFile } from '../videoFrameExtractor.js'
-import { detectAiAudio } from '../sightengine.js'
+import { getAudioMetadata } from './audioMetadataService.js'
+import { getVoiceCloneReasoning } from './deepseekAnalyst.js'
 
 /**
- * Analyze extracted audio from video using Sightengine.
+ * Analyze audio for Voice Clone Detection via DeepSeek.
+ * Extracts audio metadata (ffprobe) and sends to DeepSeek with Lip-Sync score.
  * @param {Buffer} videoBuffer - Video file buffer
  * @param {string} ext - File extension (mp4, mov, etc.)
- * @returns {{ score: number, source: string } | null} - Vocalic imprint 0-1, or null on failure
+ * @param {object} options - { lipSyncScore?: number } - Lip-Sync integrity 0-1
+ * @returns {{ reasoning: string, source: string } | null} - DeepSeek reasoning or null
  */
-export async function classifyAudioWithSightengine(videoBuffer, ext = 'mp4') {
-  let extracted = null
+export async function classifyAudioWithSightengine(videoBuffer, ext = 'mp4', options = {}) {
   try {
-    extracted = await extractAudioToTempFile(videoBuffer, ext)
-    if (!extracted?.audioPath || !fs.existsSync(extracted.audioPath)) {
-      console.warn('AudioScanner: No extracted audio file.')
-      return null
+    const audioMetadata = await getAudioMetadata(videoBuffer, ext)
+    if (!audioMetadata?.hasAudio) {
+      return { reasoning: 'No audio track detected.', source: 'deepseek' }
     }
 
-    const stat = fs.statSync(extracted.audioPath)
-    if (stat.size === 0) {
-      return null
+    const lipSyncScore = options?.lipSyncScore ?? null
+    const reasoning = await getVoiceCloneReasoning(audioMetadata, lipSyncScore)
+    if (reasoning) {
+      return { reasoning, source: 'deepseek' }
     }
 
-    const audioBuffer = fs.readFileSync(extracted.audioPath)
-    const res = await detectAiAudio(
-      audioBuffer,
-      'audio/mpeg',
-      'audio.mp3',
-      ['genai', 'deepfake']
-    )
-
-    if (res?.type) {
-      const ag = res.type.ai_generated != null ? Number(res.type.ai_generated) : 0
-      const df = res.type.deepfake != null ? Number(res.type.deepfake) : 0
-      const vocalicImprint = Math.max(ag, df)
-      return { score: Math.max(0, Math.min(1, vocalicImprint)), source: 'sightengine' }
+    // Fallback when DeepSeek unavailable
+    const bitrate = audioMetadata.bitrate ?? 'N/A'
+    const sampleRate = audioMetadata.sampleRate ?? 'N/A'
+    return {
+      reasoning: `Audio metadata: bitrate ${bitrate} bps, sample rate ${sampleRate} Hz. Lip-Sync: ${lipSyncScore != null ? Math.round(lipSyncScore * 100) : 'N/A'}%. DeepSeek analysis unavailable.`,
+      source: 'metadata_only',
     }
-    return null
   } catch (err) {
     console.warn('AudioScanner:', err.message)
     return null
-  } finally {
-    if (extracted?.audioPath) {
-      try {
-        if (fs.existsSync(extracted.audioPath)) fs.unlinkSync(extracted.audioPath)
-      } catch {}
-    }
-    if (extracted?.tmpDir) {
-      try {
-        if (fs.existsSync(extracted.tmpDir)) fs.rmdirSync(extracted.tmpDir)
-      } catch {}
-    }
   }
 }

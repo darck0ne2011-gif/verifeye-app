@@ -1,6 +1,6 @@
 import exifParser from 'exif-parser'
 import { fileTypeFromBuffer } from 'file-type'
-import { detectAiImage, detectAiAudio, detectAiVideo } from './sightengine.js'
+import { detectAiImage, detectAiVideo } from './sightengine.js'
 import { analyzeVideoSequential } from './services/videoScanner.js'
 import { classifyAudioWithSightengine } from './services/audioScanner.js'
 import { extractVideoTracks } from './videoFrameExtractor.js'
@@ -247,28 +247,7 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
           extracted = await extractVideoTracks(buffer, ext, { intervalSec: 2, maxFrames: 5 })
         }
 
-        let vocalicImprint = null
         let lipSyncIntegrity = null
-        if (isElite && videoModels.includes('voice_clone')) {
-          const sightengineAudio = await classifyAudioWithSightengine(buffer, ext)
-          if (sightengineAudio?.score != null) {
-            vocalicImprint = sightengineAudio.score
-            consolidated.audioAnalysis = { vocalicImprint, source: 'sightengine' }
-          } else if (extracted?.audio?.length > 0) {
-            const audioRes = await detectAiAudio(
-              extracted.audio,
-              'audio/mpeg',
-              'audio.mp3',
-              ['genai', 'deepfake']
-            )
-            if (audioRes?.type) {
-              const ag = audioRes.type.ai_generated != null ? Number(audioRes.type.ai_generated) : 0
-              const df = audioRes.type.deepfake != null ? Number(audioRes.type.deepfake) : 0
-              vocalicImprint = Math.max(ag, df)
-              consolidated.audioAnalysis = { vocalicImprint, source: 'sightengine' }
-            }
-          }
-        }
         if (isElite && videoModels.includes('lip_sync') && extracted?.audio && consolidated?.data?.frames) {
           const intervalSec = 2
           const frameCount = consolidated.data.frames.length
@@ -282,6 +261,12 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
             lipSyncIntegrity = 0.5
           }
           consolidated.lipSyncIntegrity = lipSyncIntegrity
+        }
+        if (isElite && videoModels.includes('voice_clone')) {
+          const voiceCloneResult = await classifyAudioWithSightengine(buffer, ext, { lipSyncScore: lipSyncIntegrity })
+          if (voiceCloneResult?.reasoning) {
+            consolidated.audioAnalysis = { voiceCloneReasoning: voiceCloneResult.reasoning, source: voiceCloneResult.source || 'deepseek' }
+          }
         }
 
         consolidated.analysisMethod = analysisMethod
@@ -299,12 +284,7 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     aiProbability = computeFakeFromSightengine(mergedShape, models)
     fakeProbability = Math.max(0, Math.min(100, aiProbability))
     if (isVideo && sightengineResult) {
-      const vocalic = sightengineResult.audioAnalysis?.vocalicImprint
       const lipSync = sightengineResult.lipSyncIntegrity
-      if (vocalic != null) {
-        const vScore = Math.round(vocalic * 100)
-        fakeProbability = Math.max(fakeProbability, vScore)
-      }
       if (lipSync != null) {
         const lsScore = Math.round((1 - lipSync) * 100)
         fakeProbability = Math.max(fakeProbability, lsScore)
@@ -352,7 +332,7 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
         ai_generated: source.type?.ai_generated,
         deepfake: source.type?.deepfake,
         quality: source.quality != null ? (typeof source.quality === 'object' ? source.quality?.score : source.quality) : null,
-        vocalic_imprint: sightengineResult?.audioAnalysis?.vocalicImprint ?? null,
+        voice_clone_reasoning: sightengineResult?.audioAnalysis?.voiceCloneReasoning ?? null,
         lip_sync_integrity: sightengineResult?.lipSyncIntegrity ?? null,
       }
     : null

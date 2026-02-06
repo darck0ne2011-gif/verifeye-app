@@ -3,7 +3,7 @@
  * Maps UI toggles to Sightengine model parameters. Only sends enabled models to save credits.
  *
  * UI → Sightengine mapping:
- * - temporal_ai (Temporal AI Consistency) → reproach
+ * - temporal_ai (Temporal AI Consistency) → genai
  * - video_deepfake (Video Deepfake Detection) → deepfake
  * - frame_integrity (Frame Integrity / AI Pixel Analysis) → genai
  */
@@ -13,11 +13,11 @@ import FormData from 'form-data'
 
 const SIGHTENGINE_VIDEO_URL = 'https://api.sightengine.com/1.0/video/check-sync.json'
 
-/** Map UI model IDs to Sightengine video API model IDs. Only enabled toggles are sent. */
+/** Map UI model IDs to Sightengine video API model IDs */
 const UI_TO_SIGHTENGINE = {
-  temporal_ai: 'reproach',       // Temporal Consistency
+  temporal_ai: 'genai',          // Temporal AI Consistency
   video_deepfake: 'deepfake',    // Video Deepfake Detection
-  frame_integrity: 'genai',      // AI Pixel / Frame Integrity Analysis
+  frame_integrity: 'genai',      // Frame Integrity / AI Pixel (same model)
 }
 
 /**
@@ -25,7 +25,7 @@ const UI_TO_SIGHTENGINE = {
  * Only includes models that are enabled. Disabled toggles are NOT sent (saves credits).
  *
  * @param {string[]} enabledUiModelIds - Raw UI IDs from ScanSettings (e.g. ['temporal_ai', 'video_deepfake'])
- * @returns {string} - Comma-separated Sightengine models, e.g. 'reproach,deepfake,genai'
+ * @returns {string} - Comma-separated Sightengine models, e.g. 'genai,deepfake'
  */
 export function buildSightengineModelsParam(enabledUiModelIds) {
   if (!Array.isArray(enabledUiModelIds) || enabledUiModelIds.length === 0) {
@@ -40,10 +40,10 @@ export function buildSightengineModelsParam(enabledUiModelIds) {
 
 /**
  * Parse Sightengine video response to extract per-frame scores.
- * Handles ai_generated, deepfake, reproach (or other model-specific scores).
+ * Handles ai_generated, deepfake.
  *
  * @param {object} data - Sightengine API response data
- * @param {string[]} requestedSightengineModels - Models we requested (e.g. ['genai','deepfake','reproach'])
+ * @param {string[]} requestedSightengineModels - Models we requested (e.g. ['genai','deepfake'])
  * @returns {{ type: object, data: object, media?: object } | null}
  */
 function parseVideoResponse(data, requestedSightengineModels) {
@@ -52,14 +52,11 @@ function parseVideoResponse(data, requestedSightengineModels) {
 
   let maxAiGenerated = 0
   let maxDeepfake = 0
-  let maxReproach = 0
 
   for (const frame of frames) {
     const t = frame.type || frame.info?.type || {}
     if (t.ai_generated != null) maxAiGenerated = Math.max(maxAiGenerated, Number(t.ai_generated))
     if (t.deepfake != null) maxDeepfake = Math.max(maxDeepfake, Number(t.deepfake))
-    if (t.reproach != null) maxReproach = Math.max(maxReproach, Number(t.reproach))
-    // Some Sightengine responses may use different keys; try common variants
     const genAi = t.ai_generated ?? t.genai ?? t['gen-ai']
     if (genAi != null) maxAiGenerated = Math.max(maxAiGenerated, Number(genAi))
   }
@@ -71,14 +68,9 @@ function parseVideoResponse(data, requestedSightengineModels) {
   if (requestedSightengineModels.includes('deepfake')) {
     type.deepfake = maxDeepfake
   }
-  if (requestedSightengineModels.includes('reproach')) {
-    type.reproach = maxReproach
-    // Map reproach (temporal) into ai_generated for backward compat if genai wasn't requested
-    if (type.ai_generated == null) type.ai_generated = maxReproach
-  }
 
   return {
-    type: Object.keys(type).length ? type : { ai_generated: maxAiGenerated || maxDeepfake || maxReproach },
+    type: Object.keys(type).length ? type : { ai_generated: maxAiGenerated || maxDeepfake },
     data: { frames },
     media: data.media,
   }

@@ -56,7 +56,7 @@ const AUDIO_ITEMS = [
 // Video: frame + optional Elite dual-track (audio, lip-sync)
 const VIDEO_ITEMS = [
   { modelId: 'video_ai', icon: ImageLayersIcon, title: 'AI Detection Across Frames', passSubtitle: 'No AI-generated content detected in sampled frames', failSubtitle: 'AI-generated or manipulated content detected' },
-  { modelId: 'voice_clone', icon: FaceIcon, title: 'Vocalic Imprint', passSubtitle: 'No voice cloning or synthetic speech detected', failSubtitle: 'Voice cloning or synthetic speech detected', scannedKey: 'voice_clone' },
+  { modelId: 'voice_clone', icon: FaceIcon, title: 'Voice Clone Detection', passSubtitle: 'No forensic suspicion of synthetic voice cloning', failSubtitle: 'Forensic suspicion of synthetic voice cloning', scannedKey: 'voice_clone' },
   { modelId: 'lip_sync', icon: ImageLayersIcon, title: 'Lip-Sync Integrity', passSubtitle: 'Audio-visual sync verified', failSubtitle: 'Lip-sync anomalies detected', scannedKey: 'lip_sync' },
 ]
 
@@ -67,7 +67,7 @@ function getScoreForModel(modelId, modelScores) {
     const df = modelScores.deepfake != null ? Number(modelScores.deepfake) : 0
     return Math.max(ag, df)
   }
-  if (modelId === 'voice_clone') return modelScores.vocalic_imprint
+  if (modelId === 'voice_clone') return modelScores?.voice_clone_reasoning ? 'reasoning' : null
   if (modelId === 'lip_sync') return modelScores.lip_sync_integrity != null ? 1 - modelScores.lip_sync_integrity : null
   if (modelId === MODEL_IDS.genai) return modelScores.ai_generated
   if (modelId === MODEL_IDS.deepfake) return modelScores.deepfake
@@ -75,7 +75,7 @@ function getScoreForModel(modelId, modelScores) {
   return null
 }
 
-function getSubtitleAndStatus(item, modelScores, aiSignatures) {
+function getSubtitleAndStatus(item, modelScores, aiSignatures, metadata) {
   if (item.modelId === 'video_ai') {
     const raw = getScoreForModel('video_ai', modelScores)
     if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
@@ -85,12 +85,10 @@ function getSubtitleAndStatus(item, modelScores, aiSignatures) {
     return { subtitle, isFail, pct }
   }
   if (item.modelId === 'voice_clone') {
-    const raw = getScoreForModel('voice_clone', modelScores)
-    if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
-    const pct = Math.round(Number(raw) * 100)
-    const isFail = raw > 0.5
-    const subtitle = isFail ? `${item.failSubtitle} (${pct}%)` : `Analysis complete: ${item.passSubtitle}`
-    return { subtitle, isFail, pct }
+    const reasoning = metadata?.audioAnalysis?.voiceCloneReasoning ?? modelScores?.voice_clone_reasoning
+    if (!reasoning) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
+    const hasSuspicion = /suspicion|yes|likely|probable|synthetic|cloned/i.test(reasoning) && !/no (forensic )?suspicion|low suspicion|unlikely/i.test(reasoning)
+    return { subtitle: reasoning, isFail: hasSuspicion }
   }
   if (item.modelId === 'lip_sync') {
     const raw = getScoreForModel('lip_sync', modelScores)
@@ -139,7 +137,7 @@ function getItemsForScannedModels(mediaCategory, scannedModels) {
   return allItems.map((item) => ({ ...item, modelId: undefined }))
 }
 
-export default function RealTimeAnalysis({ isComplete = true, fileType, scannedModels, modelScores, aiSignatures }) {
+export default function RealTimeAnalysis({ isComplete = true, fileType, scannedModels, modelScores, aiSignatures, metadata }) {
   const mediaCategory = getMediaCategory(fileType)
   const items = getItemsForScannedModels(mediaCategory, scannedModels)
 
@@ -151,7 +149,7 @@ export default function RealTimeAnalysis({ isComplete = true, fileType, scannedM
       <div className="space-y-4">
         {items.map((item, i) => {
           const Icon = item.icon
-          const { subtitle, isFail } = getSubtitleAndStatus(item, modelScores, aiSignatures)
+          const { subtitle, isFail } = getSubtitleAndStatus(item, modelScores, aiSignatures, metadata)
           const StatusIcon = isFail ? XIcon : CheckIcon
           return (
             <div
