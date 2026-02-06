@@ -97,6 +97,7 @@
     "verdict.analysis_method": "Analysis Method",
     "verdict.analysis_frame_based": "Frame-Based (Fast)",
     "verdict.analysis_native_video": "Native Video (Sequential)",
+    "verdict.ai_expert_interpretation": "AI Expert Interpretation",
     "model_voice_cloning": "Voice Cloning Detection",
     "model_synthetic_speech": "Synthetic Speech Analysis",
     "model_background_noise": "Background Noise Integrity"

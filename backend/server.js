@@ -24,6 +24,7 @@ import {
   getUserScanHistory,
 } from './db.js'
 import { generatePdfBuffer } from './pdfReport.js'
+import { generateExecutiveSummary } from './services/deepseekAnalyst.js'
 import {
   getGoogleAuthUrl,
   handleGoogleCallback,
@@ -317,6 +318,20 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
         cached.results,
         { isElite, videoAuditMode, videoAnalysisEngine }
       )
+      if (isElite) {
+        const fp = analysis.fakeProbability ?? 0
+        const status = fp >= 50 ? 'FAKE' : 'REAL'
+        const expertSummary = await generateExecutiveSummary({
+          sightengineRaw: analysis.sightengineRaw,
+          modelScores: analysis.modelScores,
+          metadata: analysis.metadata,
+          fakeProbability: fp,
+          status,
+        })
+        if (expertSummary && analysis.metadata) {
+          analysis.metadata.expertSummary = expertSummary
+        }
+      }
       if (!isElite) {
         const credits = getCredits(userId)
         updateCredits(userId, credits - creditsToCharge)
@@ -362,6 +377,22 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       { isElite, videoAuditMode, videoAnalysisEngine }
     )
 
+    let expertSummary = null
+    if (isElite) {
+      const fp = analysis.fakeProbability ?? 0
+      const status = fp >= 50 ? 'FAKE' : 'REAL'
+      expertSummary = await generateExecutiveSummary({
+        sightengineRaw: analysis.sightengineRaw,
+        modelScores: analysis.modelScores,
+        metadata: analysis.metadata,
+        fakeProbability: fp,
+        status,
+      })
+      if (expertSummary && analysis.metadata) {
+        analysis.metadata.expertSummary = expertSummary
+      }
+    }
+
     if (analysis.sightengineRaw) {
       saveScanResults(fileHash, analysis, analysis.sightengineRaw, analysis.modelsFetched ?? models)
     }
@@ -393,6 +424,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       aiProbability: rest.aiProbability ?? rest.fakeProbability,
       scanCredits: isElite ? 999999 : updatedUser.scanCredits,
       metadata: rest.metadata,
+      expertSummary: rest.metadata?.expertSummary ?? null,
       aiSignatures: rest.aiSignatures,
       mediaCategory: rest.metadata?.mediaCategory ?? 'image',
       scannedModels: models,

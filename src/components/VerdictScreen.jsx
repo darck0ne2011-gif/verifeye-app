@@ -40,6 +40,7 @@ export default function VerdictScreen({
   scannedModels,
   fileHash,
   fileName,
+  expertSummary = null,
   error,
   canDownloadPdf = false,
   onUpgradeClick,
@@ -50,6 +51,8 @@ export default function VerdictScreen({
   const isDeepfake = status === 'FAKE' || (status == null && score >= 50)
   const reasonFromSignatures = buildReasonFromAiSignatures(aiSignatures, t)
   const fileType = mediaCategory ?? metadata?.mediaCategory
+
+  const summary = expertSummary ?? metadata?.expertSummary
 
   const handleDownloadPdf = () => {
     if (!canDownloadPdf && onUpgradeClick) {
@@ -68,6 +71,7 @@ export default function VerdictScreen({
         modelScores,
         scannedModels,
         metadata,
+        expertSummary: summary,
         t,
       })
       const safeName = (fileName || 'report').replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 50)
@@ -81,6 +85,12 @@ export default function VerdictScreen({
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 animate-fade-in">
+      {summary && (
+        <section className="w-full rounded-xl bg-slate-800/60 border border-cyan-500/30 p-4">
+          <h3 className="text-sm font-medium text-cyan-400 mb-2">{t('verdict.ai_expert_interpretation')}</h3>
+          <p className="text-sm text-slate-300 leading-relaxed">{summary}</p>
+        </section>
+      )}
       <RealTimeAnalysis isComplete fileType={fileType} scannedModels={scannedModels} modelScores={modelScores} aiSignatures={aiSignatures} />
       {metadata && (
         <section className="w-full rounded-xl bg-slate-800/60 border border-slate-600/60 p-4">

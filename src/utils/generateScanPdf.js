@@ -83,6 +83,7 @@ export function getDetectionSignals(aiSignatures, t) {
  * @param {object} [opts.modelScores] - Per-model scores
  * @param {string[]} [opts.scannedModels] - Which models were requested (genai, deepfake, type, quality)
  * @param {object} [opts.metadata] - File metadata (mediaCategory, duration, resolution, etc.)
+ * @param {string} [opts.expertSummary] - AI Expert Interpretation (Elite)
  * @param {function} [opts.t] - i18n translate
  */
 export function generateScanPdf(opts) {
@@ -95,6 +96,7 @@ export function generateScanPdf(opts) {
     modelScores = null,
     scannedModels = null,
     metadata = null,
+    expertSummary = null,
     t,
   } = opts
 
@@ -120,6 +122,22 @@ export function generateScanPdf(opts) {
   doc.setFillColor(DARK_BLUE)
   doc.rect(margin, y, pageWidth - margin * 2, 2, 'F')
   y += 25
+
+  // AI Expert Interpretation (at beginning)
+  const summary = expertSummary || metadata?.expertSummary
+  if (summary) {
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(DARK_BLUE)
+    doc.text('AI Expert Interpretation', margin, y)
+    y += 18
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(DARK_GRAY)
+    const lines = doc.splitTextToSize(summary, pageWidth - margin * 2)
+    doc.text(lines, margin, y)
+    y += lines.length * 14 + 25
+  }
 
   // Scan details
   const dateFormatted = new Date().toLocaleString(undefined, {

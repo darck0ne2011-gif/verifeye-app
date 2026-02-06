@@ -38,6 +38,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
   const [verdictScannedModels, setVerdictScannedModels] = useState(null)
   const [verdictFileHash, setVerdictFileHash] = useState(null)
   const [verdictFileName, setVerdictFileName] = useState(null)
+  const [verdictExpertSummary, setVerdictExpertSummary] = useState(null)
   const [uploadError, setUploadError] = useState(null)
   const [scanProgress, setScanProgress] = useState(0)
   const fileInputRef = useRef(null)
@@ -56,6 +57,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
       setVerdictScannedModels(saved.scannedModels ?? null)
       setVerdictFileHash(saved.fileHash ?? null)
       setVerdictFileName(saved.fileName ?? null)
+      setVerdictExpertSummary(saved.expertSummary ?? saved.metadata?.expertSummary ?? null)
       setUploadError(saved.error ?? null)
       setView('verdict')
       setVerdictVisible(true)
@@ -132,6 +134,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
           modelScores: data.modelScores ?? null,
           fileHash: data.fileHash ?? null,
           fileName: file?.name ?? null,
+          expertSummary: data.expertSummary ?? data.metadata?.expertSummary ?? null,
           error: null,
         }
       } catch (err) {
@@ -170,6 +173,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
     setVerdictScannedModels(apiResult.scannedModels ?? null)
     setVerdictFileHash(apiResult.fileHash ?? null)
     setVerdictFileName(apiResult.fileName ?? null)
+    setVerdictExpertSummary(apiResult.expertSummary ?? null)
     if (apiResult.error) setUploadError(apiResult.error)
     setView('verdict')
     setVerdictVisible(true)
@@ -185,6 +189,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
       scannedModels: apiResult.scannedModels ?? null,
       fileHash: apiResult.fileHash ?? null,
       fileName: apiResult.fileName ?? null,
+      expertSummary: apiResult.expertSummary ?? null,
       error: apiResult.error ?? null,
     })
 
@@ -203,6 +208,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
     setVerdictScannedModels(null)
     setVerdictFileHash(null)
     setVerdictFileName(null)
+    setVerdictExpertSummary(null)
     setSelectedFile(null)
     setTimeout(() => setView('idle'), 300)
   }, [])
@@ -267,6 +273,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
               scannedModels={verdictScannedModels}
               fileHash={verdictFileHash}
               fileName={verdictFileName}
+              expertSummary={verdictExpertSummary}
               error={uploadError}
               canDownloadPdf={user?.subscriptionTier === 'pro' || user?.subscriptionTier === 'elite'}
               onUpgradeClick={onUpgradeClick}
