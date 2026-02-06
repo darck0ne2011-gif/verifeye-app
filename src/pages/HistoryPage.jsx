@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import DashboardHeader from '../components/DashboardHeader'
+import { generateScanPdf } from '../utils/generateScanPdf'
 
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -70,36 +71,40 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
   const tier = user?.subscriptionTier ?? 'starter'
   const canDownloadPdf = PDF_ALLOWED_TIERS.includes(tier)
 
-  useEffect(() => {
-    let cancelled = false
-    async function fetchHistory() {
-      if (!user || !getAuthHeaders) return
-      setLoading(true)
-      setError(null)
-      try {
-        const res = await fetch(`${API_BASE}/api/history`, {
-          headers: getAuthHeaders(),
-        })
-        const data = await res.json().catch(() => ({}))
-        if (cancelled) return
-        if (res.ok && data.success) {
-          setHistory(data.history ?? [])
-        } else {
-          setError(data.error || 'Failed to load history')
-          setHistory([])
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.message || 'Network error')
-          setHistory([])
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
+  const fetchHistory = useCallback(async () => {
+    if (!user || !getAuthHeaders) return
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`${API_BASE}/api/history`, {
+        headers: getAuthHeaders(),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.success) {
+        setHistory(data.history ?? [])
+      } else {
+        setError(data.error || 'Failed to load history')
+        setHistory([])
       }
+    } catch (err) {
+      setError(err.message || 'Network error')
+      setHistory([])
+    } finally {
+      setLoading(false)
     }
-    fetchHistory()
-    return () => { cancelled = true }
   }, [user, getAuthHeaders])
+
+  useEffect(() => {
+    fetchHistory()
+  }, [fetchHistory])
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') fetchHistory()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [fetchHistory])
 
   const handleDownloadReport = async (item) => {
     if (!canDownloadPdf && onUpgradeClick) {
@@ -108,37 +113,19 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
     }
     setDownloadingId(item.id)
     try {
-      const res = await fetch(`${API_BASE}/api/generate-pdf`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify({
-          id: item.id,
-          fileName: item.fileName,
-          date: item.date,
-          score: item.score,
-          status: item.status,
-        }),
+      const doc = generateScanPdf({
+        score: item.score ?? 0,
+        status: item.status ?? 'REAL',
+        fileName: item.fileName ?? 'Unknown file',
+        fileHash: item.fileHash ?? null,
+        aiSignatures: item.aiSignatures ?? null,
+        modelScores: item.modelScores ?? null,
+        scannedModels: item.scannedModels ?? null,
+        metadata: item.metadata ?? null,
+        t,
       })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        if (res.status === 403 && data.code === 'UPGRADE_REQUIRED' && onUpgradeClick) {
-          onUpgradeClick()
-          return
-        }
-        throw new Error(data.error || 'Download failed')
-      }
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `VerifEye-Report-${(item.fileName || 'report').replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 40)}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      const safeName = (item.fileName || 'report').replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 40)
+      doc.save(`VerifEye-Report-${safeName}.pdf`)
     } catch (err) {
       console.error(err)
     } finally {

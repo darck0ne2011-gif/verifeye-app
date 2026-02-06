@@ -320,6 +320,12 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
         fileName: file.originalname,
         score: displayScore,
         status,
+        fileHash,
+        modelScores: analysis.modelScores ?? null,
+        aiSignatures: analysis.aiSignatures ?? null,
+        scannedModels: models,
+        metadata: analysis.metadata ?? null,
+        mediaCategory: analysis.metadata?.mediaCategory ?? 'image',
       })
       const updatedUser = findById(userId)
       return res.json({
@@ -360,6 +366,12 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       fileName: file.originalname,
       score: displayScore,
       status,
+      fileHash,
+      modelScores: analysis.modelScores ?? null,
+      aiSignatures: analysis.aiSignatures ?? null,
+      scannedModels: models,
+      metadata: analysis.metadata ?? null,
+      mediaCategory: analysis.metadata?.mediaCategory ?? 'image',
     })
     const updatedUser = findById(userId)
 

@@ -154,7 +154,7 @@ function extractModelResults(seResponse, models) {
   return out
 }
 
-/** Save or update scan with modular results. Merges new model results into existing. */
+/** Save or update scan with modular results. Replaces cache when models change; only keeps results for currently requested models. */
 export function saveScanResults(hash, result, sightengineResponse, modelsRequested) {
   const data = load()
   if (!data.past_scans) data.past_scans = []
@@ -166,14 +166,16 @@ export function saveScanResults(hash, result, sightengineResponse, modelsRequest
     aiProbability: result.aiProbability ?? result.fakeProbability,
     metadata: { ...meta, mediaCategory: meta.mediaCategory ?? 'image' },
     aiSignatures: result.aiSignatures ?? {},
-    scannedModels: result.scannedModels ?? [],
+    scannedModels: modelsRequested ?? result.scannedModels ?? [],
     updatedAt: new Date().toISOString(),
   }
 
   const newModelResults = extractModelResults(sightengineResponse, modelsRequested)
-  const mergedResults = {
-    ...(existing?.results ?? {}),
-    ...newModelResults,
+  const modelsSet = new Set(modelsRequested || [])
+  const mergedResults = {}
+  for (const m of modelsSet) {
+    if (newModelResults[m]) mergedResults[m] = newModelResults[m]
+    else if (existing?.results?.[m]) mergedResults[m] = existing.results[m]
   }
 
   if (existing) {
@@ -190,8 +192,8 @@ export function saveScanResults(hash, result, sightengineResponse, modelsRequest
   save(data)
 }
 
-/** Add a scan to the user's history (shared across devices) */
-export function addToUserScanHistory(userId, { fileName, score, status }) {
+/** Add a scan to the user's history (shared across devices). Stores full scan data for unified PDF generation. */
+export function addToUserScanHistory(userId, payload) {
   const data = load()
   if (!data.user_scan_history) data.user_scan_history = []
   const id = String(data.nextScanHistoryId ?? 1)
@@ -200,10 +202,16 @@ export function addToUserScanHistory(userId, { fileName, score, status }) {
   const entry = {
     id,
     userId,
-    fileName: fileName || 'Unknown file',
+    fileName: payload.fileName || 'Unknown file',
     date: new Date().toISOString(),
-    score: Number(score) || 0,
-    status: status === 'FAKE' || status === 'REAL' ? status : 'REAL',
+    score: Number(payload.score) || 0,
+    status: payload.status === 'FAKE' || payload.status === 'REAL' ? payload.status : 'REAL',
+    fileHash: payload.fileHash ?? null,
+    modelScores: payload.modelScores ?? null,
+    aiSignatures: payload.aiSignatures ?? null,
+    scannedModels: Array.isArray(payload.scannedModels) ? payload.scannedModels : null,
+    metadata: payload.metadata ?? null,
+    mediaCategory: payload.mediaCategory ?? null,
   }
   data.user_scan_history.unshift(entry)
   save(data)

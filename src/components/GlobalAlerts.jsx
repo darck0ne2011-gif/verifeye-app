@@ -79,10 +79,10 @@ export default function GlobalAlerts() {
   if (alerts.length === 0) return null
 
   return (
-    <div className="w-full max-w-4xl mx-auto mt-6 shrink-0 min-w-0">
+    <div className="w-full max-w-4xl mx-auto mt-6 shrink-0 min-w-0 overflow-hidden">
       <div
-        className="w-full min-w-0 space-y-3 max-h-[180px] overflow-y-auto overflow-x-hidden pr-2 pb-6 box-border [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600/50"
-        style={{ scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth', scrollbarGutter: 'stable' }}
+        className="w-full min-w-0 space-y-3 max-h-[180px] overflow-y-auto overflow-x-hidden py-1 pr-1 box-border [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600/50"
+        style={{ scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         {alerts.map((alert, i) => (
           <AlertCard key={alert.id || i} alert={alert} />
