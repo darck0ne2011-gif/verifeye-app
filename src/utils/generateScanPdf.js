@@ -8,23 +8,39 @@ const LIGHT_GRAY = '#6b7280'
 const VERDICT_REAL = '#047857'
 const VERDICT_FAKE = '#b91c1c'
 
-const MODEL_LABELS = {
-  ai_generated: 'AI Pixel Analysis',
-  deepfake: 'Deepfake Detection',
-  quality: 'Image Quality',
-  type: 'Metadata Check',
-}
 
 /**
  * Convert raw model score to display percentage (matches UI: RealTimeAnalysis uses raw * 100).
- * API returns 0-1 for ai_generated, deepfake, quality. Returns 'N/A' for null/undefined.
+ * API returns 0-1 for ai_generated, deepfake, quality.
  */
 function toDisplayScore(raw) {
-  if (raw == null || raw === undefined) return 'N/A'
+  if (raw == null || raw === undefined) return null
   const n = Number(raw)
-  if (Number.isNaN(n)) return 'N/A'
+  if (Number.isNaN(n)) return null
   if (n <= 1 && n >= 0) return `${Math.round(n * 100)}%`
   return `${Math.round(n)}%`
+}
+
+/**
+ * Get display value for a model in the breakdown.
+ * - Not in scannedModels → "Not Requested"
+ * - In scannedModels, has score → show score (e.g. "94%")
+ * - In scannedModels, no score → "Not Applicable"
+ */
+function getModelStatus(modelId, scannedModels, modelScores, aiSignatures) {
+  const wasRequested = Array.isArray(scannedModels) && scannedModels.includes(modelId)
+  if (!wasRequested) return 'Not Requested'
+
+  if (modelId === 'type') {
+    if (!aiSignatures) return 'Not Applicable'
+    const hasAnomalies = aiSignatures.missingExif || aiSignatures.suspiciousResolution || (aiSignatures.softwareTags?.length > 0)
+    return hasAnomalies ? 'Anomalies Detected' : 'Verified'
+  }
+
+  const key = modelId === 'genai' ? 'ai_generated' : modelId === 'deepfake' ? 'deepfake' : modelId === 'quality' ? 'quality' : null
+  if (!key || !modelScores) return 'Not Applicable'
+  const score = toDisplayScore(modelScores[key])
+  return score ?? 'Not Applicable'
 }
 
 /**
@@ -65,6 +81,7 @@ export function getDetectionSignals(aiSignatures, t) {
  * @param {string} [opts.fileHash] - SHA-256 hash of file
  * @param {object} [opts.aiSignatures] - Detection signals
  * @param {object} [opts.modelScores] - Per-model scores
+ * @param {string[]} [opts.scannedModels] - Which models were requested (genai, deepfake, type, quality)
  * @param {object} [opts.metadata] - File metadata
  * @param {function} [opts.t] - i18n translate
  */
@@ -76,6 +93,7 @@ export function generateScanPdf(opts) {
     fileHash = null,
     aiSignatures = null,
     modelScores = null,
+    scannedModels = null,
     metadata = null,
     t,
   } = opts
@@ -171,38 +189,34 @@ export function generateScanPdf(opts) {
     y = doc.lastAutoTable.finalY + 20
   }
 
-  // Model scores – use exact same winningScore logic as UI (0-1 → display %)
-  if (modelScores && typeof modelScores === 'object' && Object.keys(modelScores).length > 0) {
-    doc.setFontSize(12)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(DARK_BLUE)
-    doc.text('Analysis Breakdown', margin, y)
-    y += 20
+  // Analysis Breakdown – all 4 types with status logic
+  doc.setFontSize(12)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(DARK_BLUE)
+  doc.text('Analysis Breakdown', margin, y)
+  y += 20
 
-    const modelRows = []
-    for (const key of ['ai_generated', 'deepfake', 'quality']) {
-      const raw = modelScores[key]
-      const label = MODEL_LABELS[key] || key
-      modelRows.push([label, toDisplayScore(raw)])
-    }
-    if (modelRows.length > 0) {
-      autoTable(doc, {
-        startY: y,
-        head: [['Model', 'Score']],
-        body: modelRows,
-        theme: 'striped',
-        headStyles: { fillColor: DARK_BLUE, textColor: '#fff', fontStyle: 'bold' },
-        bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
-        columnStyles: {
-          0: { cellWidth: pageWidth - margin * 2 - 80 },
-          1: { cellWidth: 70, halign: 'right' },
-        },
-        margin: { left: margin },
-        tableWidth: pageWidth - margin * 2,
-      })
-      y = doc.lastAutoTable.finalY + 20
-    }
-  }
+  const modelRows = [
+    ['AI Pixel Analysis', getModelStatus('genai', scannedModels, modelScores, aiSignatures)],
+    ['Deepfake Detection', getModelStatus('deepfake', scannedModels, modelScores, aiSignatures)],
+    ['Metadata Check', getModelStatus('type', scannedModels, modelScores, aiSignatures)],
+    ['Image Quality', getModelStatus('quality', scannedModels, modelScores, aiSignatures)],
+  ]
+  autoTable(doc, {
+    startY: y,
+    head: [['Analysis Type', 'Status']],
+    body: modelRows,
+    theme: 'striped',
+    headStyles: { fillColor: DARK_BLUE, textColor: '#fff', fontStyle: 'bold' },
+    bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
+    columnStyles: {
+      0: { cellWidth: pageWidth - margin * 2 - 100 },
+      1: { cellWidth: 100, halign: 'right' },
+    },
+    margin: { left: margin },
+    tableWidth: pageWidth - margin * 2,
+  })
+  y = doc.lastAutoTable.finalY + 20
 
   // Metadata snippet
   if (metadata && (metadata.fileType || metadata.sizeFormatted || metadata.extension)) {

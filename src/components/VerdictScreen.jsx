@@ -66,6 +66,7 @@ export default function VerdictScreen({
         fileHash: fileHash ?? null,
         aiSignatures,
         modelScores,
+        scannedModels,
         metadata,
         t,
       })
