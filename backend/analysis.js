@@ -1,6 +1,7 @@
 import exifParser from 'exif-parser'
 import { fileTypeFromBuffer } from 'file-type'
 import { detectAiImage, detectAiAudio } from './sightengine.js'
+import { classifyAudioWithElevenLabs } from './services/audioScanner.js'
 import { extractVideoTracks } from './videoFrameExtractor.js'
 
 // Known AI-generation resolutions (DALL-E, Midjourney, Stable Diffusion, etc.)
@@ -221,17 +222,23 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
         let lipSyncIntegrity = null
         if (isElite && extracted.audio && extracted.audio.length > 0) {
           if (videoModels.includes('voice_clone')) {
-            const audioRes = await detectAiAudio(
-              extracted.audio,
-              'audio/mpeg',
-              'audio.mp3',
-              ['genai', 'deepfake']
-            )
-            if (audioRes?.type) {
-              const ag = audioRes.type.ai_generated != null ? Number(audioRes.type.ai_generated) : 0
-              const df = audioRes.type.deepfake != null ? Number(audioRes.type.deepfake) : 0
-              vocalicImprint = Math.max(ag, df)
-              consolidated.audioAnalysis = { vocalicImprint }
+            const elevenLabs = await classifyAudioWithElevenLabs(buffer, ext)
+            if (elevenLabs?.score != null) {
+              vocalicImprint = elevenLabs.score
+              consolidated.audioAnalysis = { vocalicImprint, source: 'elevenlabs' }
+            } else {
+              const audioRes = await detectAiAudio(
+                extracted.audio,
+                'audio/mpeg',
+                'audio.mp3',
+                ['genai', 'deepfake']
+              )
+              if (audioRes?.type) {
+                const ag = audioRes.type.ai_generated != null ? Number(audioRes.type.ai_generated) : 0
+                const df = audioRes.type.deepfake != null ? Number(audioRes.type.deepfake) : 0
+                vocalicImprint = Math.max(ag, df)
+                consolidated.audioAnalysis = { vocalicImprint }
+              }
             }
           }
           if (videoModels.includes('lip_sync')) {
