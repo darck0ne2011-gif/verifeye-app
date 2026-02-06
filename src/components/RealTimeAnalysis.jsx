@@ -53,13 +53,18 @@ const AUDIO_ITEMS = [
   { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Neural Synthesis Check', passSubtitle: 'Vocal patterns verified', failSubtitle: 'Neural synthesis detected' },
 ]
 
+// Video: single consolidated signal (frame-by-frame AI detection via Image API)
 const VIDEO_ITEMS = [
-  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Frame Integrity', passSubtitle: 'No face manipulation detected', failSubtitle: 'Deepfake or frame manipulation detected' },
-  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'Temporal Consistency', passSubtitle: 'No AI-generated sequences detected', failSubtitle: 'AI-generated video detected' },
+  { modelId: 'video_ai', icon: ImageLayersIcon, title: 'AI Detection Across Frames', passSubtitle: 'No AI-generated content detected in sampled frames', failSubtitle: 'AI-generated or manipulated content detected' },
 ]
 
 function getScoreForModel(modelId, modelScores) {
   if (!modelScores) return null
+  if (modelId === 'video_ai') {
+    const ag = modelScores.ai_generated != null ? Number(modelScores.ai_generated) : 0
+    const df = modelScores.deepfake != null ? Number(modelScores.deepfake) : 0
+    return Math.max(ag, df)
+  }
   if (modelId === MODEL_IDS.genai) return modelScores.ai_generated
   if (modelId === MODEL_IDS.deepfake) return modelScores.deepfake
   if (modelId === MODEL_IDS.quality) return modelScores.quality
@@ -67,6 +72,14 @@ function getScoreForModel(modelId, modelScores) {
 }
 
 function getSubtitleAndStatus(item, modelScores, aiSignatures) {
+  if (item.modelId === 'video_ai') {
+    const raw = getScoreForModel('video_ai', modelScores)
+    if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
+    const pct = Math.round(Number(raw) * 100)
+    const isFail = raw > 0.5
+    const subtitle = isFail ? `${item.failSubtitle} (${pct}%)` : `Analysis complete: ${item.passSubtitle}`
+    return { subtitle, isFail, pct }
+  }
   if (item.modelId === MODEL_IDS.type && aiSignatures) {
     const parts = []
     if (aiSignatures.missingExif) parts.push('Missing EXIF')
@@ -90,6 +103,10 @@ function getItemsForScannedModels(mediaCategory, scannedModels) {
   const allItems = mediaCategory === 'image' ? IMAGE_ITEMS : mediaCategory === 'audio' ? AUDIO_ITEMS : VIDEO_ITEMS
 
   if (scanned) {
+    if (mediaCategory === 'video') {
+      const hasVideoModels = scanned.some((m) => ['genai', 'deepfake'].includes(m))
+      return hasVideoModels ? VIDEO_ITEMS : []
+    }
     return allItems.filter((item) => scanned.includes(item.modelId))
   }
 

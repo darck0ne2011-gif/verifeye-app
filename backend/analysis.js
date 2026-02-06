@@ -1,6 +1,7 @@
 import exifParser from 'exif-parser'
 import { fileTypeFromBuffer } from 'file-type'
-import { detectAiImage, detectAiVideo } from './sightengine.js'
+import { detectAiImage } from './sightengine.js'
+import { extractKeyframes } from './videoFrameExtractor.js'
 
 // Known AI-generation resolutions (DALL-E, Midjourney, Stable Diffusion, etc.)
 const AI_SUSPICIOUS_RESOLUTIONS = new Set([
@@ -184,9 +185,33 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
   } else if (isVideo && missingModels.length > 0) {
     const videoModels = missingModels.filter((m) => ['genai', 'deepfake'].includes(m))
     if (videoModels.length > 0) {
-      sightengineResult = await detectAiVideo(buffer, detectedMime, originalName || `video.${ext}`, videoModels)
-      if (sightengineResult != null) {
-        const mergedResults = { ...(cachedResults ?? {}), ...extractNewFromSightengine(sightengineResult, videoModels) }
+      const extracted = await extractKeyframes(buffer, ext, { intervalSec: 2, maxFrames: 15 })
+      if (extracted?.frames?.length > 0) {
+        const aiScores = []
+        const dfScores = []
+        for (let i = 0; i < extracted.frames.length; i++) {
+          const frameRes = await detectAiImage(
+            extracted.frames[i],
+            'image/jpeg',
+            `frame-${i + 1}.jpg`,
+            videoModels
+          )
+          if (frameRes?.type) {
+            if (frameRes.type.ai_generated != null) aiScores.push(Number(frameRes.type.ai_generated))
+            if (frameRes.type.deepfake != null) dfScores.push(Number(frameRes.type.deepfake))
+          }
+        }
+        const avgAi = aiScores.length ? aiScores.reduce((a, b) => a + b, 0) / aiScores.length : 0
+        const avgDf = dfScores.length ? dfScores.reduce((a, b) => a + b, 0) / dfScores.length : 0
+        const consolidated = {
+          type: {
+            ...(videoModels.includes('genai') && { ai_generated: avgAi }),
+            ...(videoModels.includes('deepfake') && { deepfake: avgDf }),
+          },
+          data: { frames: extracted.frames.map((_, i) => ({ index: i })) },
+        }
+        sightengineResult = consolidated
+        const mergedResults = { ...(cachedResults ?? {}), ...extractNewFromSightengine(consolidated, videoModels) }
         mergedShape = buildSightengineShapeFromResults(mergedResults, models)
       }
     }
@@ -223,10 +248,8 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
     sizeFormatted: formatFileSize(fileSize),
     createdAt: exifResult?.tags?.DateTimeOriginal || exifResult?.tags?.DateTime || null,
   }
-  if (isVideo && sightengineResult?.media) {
-    metadata.videoId = sightengineResult.media.id
-    const frameCount = sightengineResult.data?.frames?.length ?? 0
-    if (frameCount > 0) metadata.framesAnalyzed = frameCount
+  if (isVideo && sightengineResult?.data?.frames?.length > 0) {
+    metadata.framesAnalyzed = sightengineResult.data.frames.length
   }
 
   const source = mergedShape || sightengineResult

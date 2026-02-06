@@ -197,15 +197,22 @@ export function generateScanPdf(opts) {
   y += 20
 
   const isVideo = metadata?.mediaCategory === 'video'
-  const modelLabels = isVideo
-    ? { genai: 'Temporal Consistency', deepfake: 'Frame Integrity', type: 'Metadata Check', quality: 'Image Quality' }
-    : { genai: 'AI Pixel Analysis', deepfake: 'Deepfake Detection', type: 'Metadata Check', quality: 'Image Quality' }
-  const modelRows = [
-    [modelLabels.genai, getModelStatus('genai', scannedModels, modelScores, aiSignatures)],
-    [modelLabels.deepfake, getModelStatus('deepfake', scannedModels, modelScores, aiSignatures)],
-    [modelLabels.type, getModelStatus('type', scannedModels, modelScores, aiSignatures)],
-    [modelLabels.quality, getModelStatus('quality', scannedModels, modelScores, aiSignatures)],
-  ]
+  const hasVideoModels = Array.isArray(scannedModels) && scannedModels.some((m) => ['genai', 'deepfake'].includes(m))
+  const modelRows = isVideo && hasVideoModels
+    ? [
+        ['AI Detection Across Frames', (() => {
+          const ag = modelScores?.ai_generated != null ? Number(modelScores.ai_generated) : 0
+          const df = modelScores?.deepfake != null ? Number(modelScores.deepfake) : 0
+          const consolidated = Math.max(ag, df)
+          return toDisplayScore(consolidated) ?? 'Not Applicable'
+        })()],
+      ]
+    : [
+        ['AI Pixel Analysis', getModelStatus('genai', scannedModels, modelScores, aiSignatures)],
+        ['Deepfake Detection', getModelStatus('deepfake', scannedModels, modelScores, aiSignatures)],
+        ['Metadata Check', getModelStatus('type', scannedModels, modelScores, aiSignatures)],
+        ['Image Quality', getModelStatus('quality', scannedModels, modelScores, aiSignatures)],
+      ]
   autoTable(doc, {
     startY: y,
     head: [['Analysis Type', 'Status']],
@@ -223,7 +230,6 @@ export function generateScanPdf(opts) {
   y = doc.lastAutoTable.finalY + 20
 
   // Metadata snippet (image or video)
-  const isVideo = metadata?.mediaCategory === 'video'
   if (metadata && (metadata.fileType || metadata.sizeFormatted || metadata.extension)) {
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
