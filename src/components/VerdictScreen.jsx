@@ -23,8 +23,8 @@ export default function VerdictScreen({ score = 0, status, modelScores, metadata
   const fileType = mediaCategory ?? metadata?.mediaCategory
 
   return (
-    <div className="w-full max-w-4xl flex flex-col gap-6 animate-fade-in">
-      <RealTimeAnalysis isComplete fileType={fileType} scannedModels={scannedModels} modelScores={modelScores} />
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 animate-fade-in">
+      <RealTimeAnalysis isComplete fileType={fileType} scannedModels={scannedModels} modelScores={modelScores} aiSignatures={aiSignatures} />
       {metadata && (
         <section className="w-full rounded-xl bg-slate-800/60 border border-slate-600/60 p-4">
           <h3 className="text-sm font-medium text-slate-300 mb-3">{t('verdict.metadata_title')}</h3>

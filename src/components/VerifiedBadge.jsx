@@ -9,7 +9,7 @@ const CheckIcon = () => (
 export default function VerifiedBadge({ probability = 15 }) {
   const { t } = useTranslation()
   return (
-    <section className="w-full max-w-2xl">
+    <section className="w-full max-w-4xl">
       <h2 className="text-base font-medium text-white mb-4">{t('verified.result')}</h2>
       <div className="flex items-center gap-4 p-4 bg-green-600 rounded-xl">
         <span className="flex items-center justify-center w-12 h-12 rounded-full bg-white/20 text-white flex-shrink-0">

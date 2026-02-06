@@ -66,7 +66,17 @@ function getScoreForModel(modelId, modelScores) {
   return null
 }
 
-function getSubtitleAndStatus(item, modelScores) {
+function getSubtitleAndStatus(item, modelScores, aiSignatures) {
+  if (item.modelId === MODEL_IDS.type && aiSignatures) {
+    const parts = []
+    if (aiSignatures.missingExif) parts.push('Missing EXIF')
+    if (aiSignatures.suspiciousResolution) parts.push(`Suspicious resolution: ${aiSignatures.suspiciousResolution}`)
+    if (aiSignatures.softwareTags?.length) parts.push(`AI software: ${aiSignatures.softwareTags.join(', ')}`)
+    if (parts.length > 0) {
+      return { subtitle: parts.join('. '), isFail: true }
+    }
+    return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
+  }
   const raw = getScoreForModel(item.modelId, modelScores)
   if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
   const pct = Math.round(Number(raw) * 100)
@@ -86,19 +96,19 @@ function getItemsForScannedModels(mediaCategory, scannedModels) {
   return allItems.map((item) => ({ ...item, modelId: undefined }))
 }
 
-export default function RealTimeAnalysis({ isComplete = true, fileType, scannedModels, modelScores }) {
+export default function RealTimeAnalysis({ isComplete = true, fileType, scannedModels, modelScores, aiSignatures }) {
   const mediaCategory = getMediaCategory(fileType)
   const items = getItemsForScannedModels(mediaCategory, scannedModels)
 
   if (items.length === 0) return null
 
   return (
-    <section className="w-full max-w-4xl">
+    <section className="w-full max-w-4xl mx-auto">
       <h2 className="text-base font-medium text-white mb-4">Real-Time Analysis:</h2>
       <div className="space-y-4">
         {items.map((item, i) => {
           const Icon = item.icon
-          const { subtitle, isFail } = getSubtitleAndStatus(item, modelScores)
+          const { subtitle, isFail } = getSubtitleAndStatus(item, modelScores, aiSignatures)
           const StatusIcon = isFail ? XIcon : CheckIcon
           return (
             <div
