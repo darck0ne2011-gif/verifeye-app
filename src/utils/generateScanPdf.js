@@ -5,6 +5,27 @@ const DARK_BLUE = '#1e3a5f'
 const ACCENT_BLUE = '#2563eb'
 const DARK_GRAY = '#374151'
 const LIGHT_GRAY = '#6b7280'
+const VERDICT_REAL = '#047857'
+const VERDICT_FAKE = '#b91c1c'
+
+const MODEL_LABELS = {
+  ai_generated: 'AI Pixel Analysis',
+  deepfake: 'Deepfake Detection',
+  quality: 'Image Quality',
+  type: 'Metadata Check',
+}
+
+/**
+ * Convert raw model score to display percentage (matches UI: RealTimeAnalysis uses raw * 100).
+ * API returns 0-1 for ai_generated, deepfake, quality. Returns 'N/A' for null/undefined.
+ */
+function toDisplayScore(raw) {
+  if (raw == null || raw === undefined) return 'N/A'
+  const n = Number(raw)
+  if (Number.isNaN(n)) return 'N/A'
+  if (n <= 1 && n >= 0) return `${Math.round(n * 100)}%`
+  return `${Math.round(n)}%`
+}
 
 /**
  * Build detection signals list from aiSignatures for PDF display.
@@ -119,15 +140,13 @@ export function generateScanPdf(opts) {
   doc.text('Verdict', margin, y)
   y += 22
 
-  const resultColor = status === 'REAL' ? '#059669' : '#dc2626'
-  doc.setFontSize(18)
+  const resultColor = status === 'REAL' ? VERDICT_REAL : VERDICT_FAKE
+  doc.setFontSize(22)
+  doc.setFont('helvetica', 'bold')
   doc.setTextColor(resultColor)
   doc.text(status, margin, y)
-  doc.setFontSize(10)
-  doc.setTextColor(LIGHT_GRAY)
-  doc.setFont('helvetica', 'normal')
-  doc.text(`Score: ${score}%`, margin + 55, y + 4)
-  y += 35
+  doc.text(`${score}%`, margin + 70, y)
+  y += 40
 
   // Detection signals
   const signals = getDetectionSignals(aiSignatures, t)
@@ -152,7 +171,7 @@ export function generateScanPdf(opts) {
     y = doc.lastAutoTable.finalY + 20
   }
 
-  // Model scores (if available)
+  // Model scores – use exact same winningScore logic as UI (0-1 → display %)
   if (modelScores && typeof modelScores === 'object' && Object.keys(modelScores).length > 0) {
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
@@ -160,25 +179,29 @@ export function generateScanPdf(opts) {
     doc.text('Analysis Breakdown', margin, y)
     y += 20
 
-    const modelRows = Object.entries(modelScores).map(([model, val]) => [
-      String(model),
-      typeof val === 'number' ? `${Math.round(val)}%` : String(val),
-    ])
-    autoTable(doc, {
-      startY: y,
-      head: [['Model', 'Score']],
-      body: modelRows,
-      theme: 'striped',
-      headStyles: { fillColor: DARK_BLUE, textColor: '#fff', fontStyle: 'bold' },
-      bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
-      columnStyles: {
-        0: { cellWidth: pageWidth - margin * 2 - 80 },
-        1: { cellWidth: 70, halign: 'right' },
-      },
-      margin: { left: margin },
-      tableWidth: pageWidth - margin * 2,
-    })
-    y = doc.lastAutoTable.finalY + 20
+    const modelRows = []
+    for (const key of ['ai_generated', 'deepfake', 'quality']) {
+      const raw = modelScores[key]
+      const label = MODEL_LABELS[key] || key
+      modelRows.push([label, toDisplayScore(raw)])
+    }
+    if (modelRows.length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Model', 'Score']],
+        body: modelRows,
+        theme: 'striped',
+        headStyles: { fillColor: DARK_BLUE, textColor: '#fff', fontStyle: 'bold' },
+        bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
+        columnStyles: {
+          0: { cellWidth: pageWidth - margin * 2 - 80 },
+          1: { cellWidth: 70, halign: 'right' },
+        },
+        margin: { left: margin },
+        tableWidth: pageWidth - margin * 2,
+      })
+      y = doc.lastAutoTable.finalY + 20
+    }
   }
 
   // Metadata snippet

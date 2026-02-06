@@ -273,7 +273,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
                 onClearFile={() => setSelectedFile(null)}
               />
             </div>
-            <div className="w-full shrink-0 mt-4">
+            <div className="w-full shrink-0 mt-4 self-stretch flex flex-col items-stretch">
               <GlobalAlerts />
             </div>
           </>
