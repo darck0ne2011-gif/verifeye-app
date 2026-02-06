@@ -215,6 +215,7 @@ export default function ScanPage({ onSettingsClick }) {
         />
 
       <main className="flex-1 flex flex-col items-center px-4 pt-6 pb-8 overflow-y-auto min-h-0">
+        <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
         {(view === 'idle' || view === 'verdict') && (
           <OverlayButton
             onClick={handleOverlayClick}
@@ -230,7 +231,7 @@ export default function ScanPage({ onSettingsClick }) {
           </p>
         )}
 
-        <div className="flex-1 w-full max-w-4xl mx-auto mt-8 flex flex-col items-center gap-4 min-h-0">
+        <div className="flex-1 w-full mt-8 flex flex-col items-center gap-4 min-h-0">
           {view === 'scanning' && (
             <div className="w-full animate-fade-in">
               <CircularProgressLoader progress={scanProgress} fileType={selectedFile} />
@@ -253,7 +254,7 @@ export default function ScanPage({ onSettingsClick }) {
 
         {view === 'idle' && (
           <>
-            <div className="w-full max-w-4xl mx-auto pt-4 shrink-0">
+            <div className="w-full pt-4 shrink-0">
               <DropZone
                 disabled={scansCount < creditsNeeded}
                 selectedFile={selectedFile}
@@ -262,11 +263,12 @@ export default function ScanPage({ onSettingsClick }) {
                 onClearFile={() => setSelectedFile(null)}
               />
             </div>
-            <div className="w-full max-w-4xl mx-auto shrink-0 mt-4">
+            <div className="w-full shrink-0 mt-4">
               <GlobalAlerts />
             </div>
           </>
         )}
+        </div>
       </main>
 
       <input

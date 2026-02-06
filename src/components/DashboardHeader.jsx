@@ -24,8 +24,8 @@ export default function DashboardHeader({ scansCount = 0, userEmail, onSettingsC
       >
         <MenuIcon />
       </button>
-      <div className="flex items-center gap-3 min-w-0 justify-end">
-        <div className="flex flex-col items-end min-w-0">
+      <div className="flex items-center gap-3 min-w-[160px] justify-end shrink-0">
+        <div className="flex flex-col items-end min-w-0 overflow-hidden">
           {userEmail && (
             <span className="text-slate-400 text-sm truncate max-w-[140px]" title={userEmail}>
               {userEmail.length > 24 ? userEmail.slice(0, 21) + '...' : userEmail}
