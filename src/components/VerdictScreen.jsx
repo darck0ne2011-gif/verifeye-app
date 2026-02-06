@@ -106,6 +106,18 @@ export default function VerdictScreen({
                 <dd className="text-white">{metadata.framesAnalyzed}</dd>
               </div>
             )}
+            {metadata.mediaCategory === 'video' && metadata.audioAnalysis?.vocalicImprint != null && (
+              <div className="flex justify-between">
+                <dt className="text-slate-500">Vocalic Imprint</dt>
+                <dd className="text-white">{Math.round(metadata.audioAnalysis.vocalicImprint * 100)}%</dd>
+              </div>
+            )}
+            {metadata.mediaCategory === 'video' && metadata.lipSyncIntegrity != null && (
+              <div className="flex justify-between">
+                <dt className="text-slate-500">Lip-Sync Integrity</dt>
+                <dd className="text-white">{Math.round(metadata.lipSyncIntegrity * 100)}%</dd>
+              </div>
+            )}
           </dl>
           {aiSignatures && (aiSignatures.missingExif || aiSignatures.suspiciousResolution || (aiSignatures.softwareTags?.length > 0)) && (
             <div className="mt-3 pt-3 border-t border-slate-600/60">

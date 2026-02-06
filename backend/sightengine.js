@@ -137,3 +137,61 @@ export async function detectAiVideo(buffer, mimeType, originalName, models = ['g
     return null
   }
 }
+
+/**
+ * Call Sightengine with audio buffer for voice/synthetic speech detection.
+ * Uses check.json with genai/deepfake models (same API as images).
+ * @param {Buffer} buffer - Audio file buffer (e.g. mp3)
+ * @param {string} mimeType - e.g. audio/mpeg
+ * @param {string} originalName - Original filename
+ * @param {string[]} models - e.g. ['genai', 'deepfake']
+ * @returns {{ type?: { ai_generated?, deepfake? } } | null}
+ */
+export async function detectAiAudio(buffer, mimeType, originalName, models = ['genai', 'deepfake']) {
+  const apiUser = process.env.SIGHTENGINE_USER || process.env.SIGHTENGINE_API_USER
+  const apiSecret = process.env.SIGHTENGINE_SECRET || process.env.SIGHTENGINE_API_SECRET
+
+  if (!apiUser || !apiSecret) {
+    console.warn('Sightengine: Missing credentials for audio detection.')
+    return null
+  }
+
+  const validModels = ['deepfake', 'genai']
+  const modelsParam = models.filter((m) => validModels.includes(m))
+  if (modelsParam.length === 0) modelsParam.push('genai')
+
+  try {
+    const form = new FormData()
+    form.append('media', buffer, {
+      filename: originalName || 'audio.mp3',
+      contentType: mimeType || 'audio/mpeg',
+    })
+    form.append('models', modelsParam.join(','))
+    form.append('api_user', apiUser)
+    form.append('api_secret', apiSecret)
+
+    const res = await axios.post(SIGHTENGINE_IMAGE_URL, form, {
+      headers: form.getHeaders(),
+      timeout: 45000,
+      maxBodyLength: Infinity,
+      maxContentLength: Infinity,
+    })
+
+    const data = res.data
+    if (data.status !== 'success') return null
+
+    return {
+      type: {
+        ...(modelsParam.includes('genai') && data.type?.ai_generated != null && { ai_generated: data.type.ai_generated }),
+        ...(modelsParam.includes('deepfake') && data.type?.deepfake != null && { deepfake: data.type.deepfake }),
+      },
+    }
+  } catch (err) {
+    const status = err.response?.status
+    const respData = err.response?.data
+    const isRateLimit = status === 429
+    const errMsg = respData?.message || respData?.error?.message || respData?.error || err.message
+    console.warn('Sightengine Audio:', isRateLimit ? 'Rate limit reached' : errMsg)
+    return null
+  }
+}

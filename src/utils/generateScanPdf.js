@@ -206,6 +206,12 @@ export function generateScanPdf(opts) {
           const consolidated = Math.max(ag, df)
           return toDisplayScore(consolidated) ?? 'Not Applicable'
         })()],
+        ...(metadata?.audioAnalysis?.vocalicImprint != null
+          ? [['Vocalic Imprint (Audio)', toDisplayScore(metadata.audioAnalysis.vocalicImprint) ?? '—']]
+          : []),
+        ...(metadata?.lipSyncIntegrity != null
+          ? [['Lip-Sync Integrity', toDisplayScore(metadata.lipSyncIntegrity) ?? '—']]
+          : []),
       ]
     : [
         ['AI Pixel Analysis', getModelStatus('genai', scannedModels, modelScores, aiSignatures)],
@@ -228,6 +234,35 @@ export function generateScanPdf(opts) {
     tableWidth: pageWidth - margin * 2,
   })
   y = doc.lastAutoTable.finalY + 20
+
+  // Audio Analysis section (video with dual-track / Elite)
+  if (isVideo && metadata?.audioAnalysis) {
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(DARK_BLUE)
+    doc.text('Audio Analysis', margin, y)
+    y += 20
+
+    const vocalic = metadata.audioAnalysis.vocalicImprint
+    const vocalicPct = vocalic != null ? `${Math.round(vocalic * 100)}%` : 'Not Applicable'
+    const audioRows = [['Vocalic Imprint', vocalicPct]]
+    if (metadata.lipSyncIntegrity != null) {
+      audioRows.push(['Lip-Sync Integrity', `${Math.round(metadata.lipSyncIntegrity * 100)}%`])
+    }
+    autoTable(doc, {
+      startY: y,
+      body: audioRows,
+      theme: 'plain',
+      bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
+      columnStyles: {
+        0: { cellWidth: 120, fontStyle: 'bold' },
+        1: { cellWidth: pageWidth - margin * 2 - 140 },
+      },
+      margin: { left: margin },
+      tableWidth: pageWidth - margin * 2,
+    })
+    y = doc.lastAutoTable.finalY + 20
+  }
 
   // Metadata snippet (image or video)
   if (metadata && (metadata.fileType || metadata.sizeFormatted || metadata.extension)) {

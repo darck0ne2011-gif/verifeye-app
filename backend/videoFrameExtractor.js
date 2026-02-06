@@ -23,13 +23,13 @@ try {
 }
 
 /**
- * Extract frames from video buffer at regular intervals.
+ * Extract both keyframes and audio track from video (dual-track extraction).
  * @param {Buffer} buffer - Video file buffer
  * @param {string} ext - File extension (mp4, mov, etc.)
  * @param {object} options - { intervalSec: number, maxFrames: number }
- * @returns {{ frames: Buffer[], count: number } | null}
+ * @returns {{ frames: Buffer[], audio: Buffer | null, count: number } | null}
  */
-export async function extractKeyframes(buffer, ext = 'mp4', options = {}) {
+export async function extractVideoTracks(buffer, ext = 'mp4', options = {}) {
   const { intervalSec = 2, maxFrames = 15 } = options
   const tmpDir = path.join(
     process.env.TMPDIR || process.env.TEMP || os.tmpdir(),
@@ -37,14 +37,14 @@ export async function extractKeyframes(buffer, ext = 'mp4', options = {}) {
   )
   const inputPath = path.join(tmpDir, `input.${ext}`)
   const outputPattern = path.join(tmpDir, 'frame-%04d.jpg')
+  const audioPath = path.join(tmpDir, 'audio.mp3')
 
   try {
     fs.mkdirSync(tmpDir, { recursive: true })
     fs.writeFileSync(inputPath, buffer)
 
-    const frames = await new Promise((resolve, reject) => {
-      const collected = []
-      const proc = ffmpeg(inputPath)
+    await new Promise((resolve, reject) => {
+      ffmpeg(inputPath)
         .outputOptions([
           '-vf',
           `fps=1/${intervalSec}`,
@@ -54,29 +54,38 @@ export async function extractKeyframes(buffer, ext = 'mp4', options = {}) {
           '2',
         ])
         .output(outputPattern)
-        .on('end', async () => {
-          try {
-            const files = fs.readdirSync(tmpDir).filter((f) => f.startsWith('frame-') && f.endsWith('.jpg'))
-            files.sort()
-            for (const f of files) {
-              const buf = fs.readFileSync(path.join(tmpDir, f))
-              collected.push(buf)
-            }
-            resolve(collected)
-          } catch (e) {
-            reject(e)
-          }
-        })
-        .on('error', (err) => {
-          reject(new Error(`FFmpeg extraction failed: ${err.message}`))
-        })
-
-      proc.run()
+        .on('end', () => resolve())
+        .on('error', (err) => reject(new Error(`FFmpeg frames failed: ${err.message}`)))
+        .run()
     })
 
-    return { frames, count: frames.length }
+    let audioBuffer = null
+    try {
+      await new Promise((resolve, reject) => {
+        ffmpeg(inputPath)
+          .noVideo()
+          .format('mp3')
+          .audioCodec('libmp3lame')
+          .audioBitrate('128k')
+          .output(audioPath)
+          .on('end', () => resolve())
+          .on('error', (err) => reject(err))
+          .run()
+      })
+      if (fs.existsSync(audioPath)) {
+        audioBuffer = fs.readFileSync(audioPath)
+      }
+    } catch (e) {
+      // No audio track or extraction failed - continue without audio
+    }
+
+    const files = fs.readdirSync(tmpDir).filter((f) => f.startsWith('frame-') && f.endsWith('.jpg'))
+    files.sort()
+    const frames = files.map((f) => fs.readFileSync(path.join(tmpDir, f)))
+
+    return { frames, audio: audioBuffer, count: frames.length }
   } catch (err) {
-    console.warn('Video frame extraction error:', err.message)
+    console.warn('Video dual-track extraction error:', err.message)
     return null
   } finally {
     try {
@@ -84,8 +93,18 @@ export async function extractKeyframes(buffer, ext = 'mp4', options = {}) {
         fs.readdirSync(tmpDir).forEach((f) => fs.unlinkSync(path.join(tmpDir, f)))
         fs.rmdirSync(tmpDir)
       }
-    } catch {
-      // ignore cleanup errors
-    }
+    } catch {}
   }
+}
+
+/**
+ * Extract frames only (legacy / non-dual path).
+ * @param {Buffer} buffer - Video file buffer
+ * @param {string} ext - File extension (mp4, mov, etc.)
+ * @param {object} options - { intervalSec: number, maxFrames: number }
+ * @returns {{ frames: Buffer[], count: number } | null}
+ */
+export async function extractKeyframes(buffer, ext = 'mp4', options = {}) {
+  const out = await extractVideoTracks(buffer, ext, options)
+  return out ? { frames: out.frames, count: out.count } : null
 }

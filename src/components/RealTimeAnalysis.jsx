@@ -53,9 +53,11 @@ const AUDIO_ITEMS = [
   { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Neural Synthesis Check', passSubtitle: 'Vocal patterns verified', failSubtitle: 'Neural synthesis detected' },
 ]
 
-// Video: single consolidated signal (frame-by-frame AI detection via Image API)
+// Video: frame + optional Elite dual-track (audio, lip-sync)
 const VIDEO_ITEMS = [
   { modelId: 'video_ai', icon: ImageLayersIcon, title: 'AI Detection Across Frames', passSubtitle: 'No AI-generated content detected in sampled frames', failSubtitle: 'AI-generated or manipulated content detected' },
+  { modelId: 'voice_clone', icon: FaceIcon, title: 'Vocalic Imprint', passSubtitle: 'No voice cloning or synthetic speech detected', failSubtitle: 'Voice cloning or synthetic speech detected', scannedKey: 'voice_clone' },
+  { modelId: 'lip_sync', icon: ImageLayersIcon, title: 'Lip-Sync Integrity', passSubtitle: 'Audio-visual sync verified', failSubtitle: 'Lip-sync anomalies detected', scannedKey: 'lip_sync' },
 ]
 
 function getScoreForModel(modelId, modelScores) {
@@ -65,6 +67,8 @@ function getScoreForModel(modelId, modelScores) {
     const df = modelScores.deepfake != null ? Number(modelScores.deepfake) : 0
     return Math.max(ag, df)
   }
+  if (modelId === 'voice_clone') return modelScores.vocalic_imprint
+  if (modelId === 'lip_sync') return modelScores.lip_sync_integrity != null ? 1 - modelScores.lip_sync_integrity : null
   if (modelId === MODEL_IDS.genai) return modelScores.ai_generated
   if (modelId === MODEL_IDS.deepfake) return modelScores.deepfake
   if (modelId === MODEL_IDS.quality) return modelScores.quality
@@ -74,6 +78,22 @@ function getScoreForModel(modelId, modelScores) {
 function getSubtitleAndStatus(item, modelScores, aiSignatures) {
   if (item.modelId === 'video_ai') {
     const raw = getScoreForModel('video_ai', modelScores)
+    if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
+    const pct = Math.round(Number(raw) * 100)
+    const isFail = raw > 0.5
+    const subtitle = isFail ? `${item.failSubtitle} (${pct}%)` : `Analysis complete: ${item.passSubtitle}`
+    return { subtitle, isFail, pct }
+  }
+  if (item.modelId === 'voice_clone') {
+    const raw = getScoreForModel('voice_clone', modelScores)
+    if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
+    const pct = Math.round(Number(raw) * 100)
+    const isFail = raw > 0.5
+    const subtitle = isFail ? `${item.failSubtitle} (${pct}%)` : `Analysis complete: ${item.passSubtitle}`
+    return { subtitle, isFail, pct }
+  }
+  if (item.modelId === 'lip_sync') {
+    const raw = getScoreForModel('lip_sync', modelScores)
     if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
     const pct = Math.round(Number(raw) * 100)
     const isFail = raw > 0.5
@@ -105,7 +125,13 @@ function getItemsForScannedModels(mediaCategory, scannedModels) {
   if (scanned) {
     if (mediaCategory === 'video') {
       const hasVideoModels = scanned.some((m) => ['genai', 'deepfake'].includes(m))
-      return hasVideoModels ? VIDEO_ITEMS : []
+      if (!hasVideoModels) return []
+      const items = VIDEO_ITEMS.filter((item) => {
+        if (item.modelId === 'video_ai') return hasVideoModels
+        if (item.scannedKey) return scanned.includes(item.scannedKey)
+        return true
+      })
+      return items
     }
     return allItems.filter((item) => scanned.includes(item.modelId))
   }

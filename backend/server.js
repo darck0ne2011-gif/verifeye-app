@@ -285,7 +285,12 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
 
     const rawModels = req.body?.models || req.body?.modelsString || 'genai'
     const modelsList = typeof rawModels === 'string' ? rawModels.split(',').map((m) => m.trim()).filter(Boolean) : []
-    const models = modelsList.length ? modelsList : ['genai']
+    let models = modelsList.length ? modelsList : ['genai']
+    const isVideo = /^video\//i.test(req.file?.mimetype || '')
+    if (isVideo && !isElite) {
+      models = models.filter((m) => ['genai', 'deepfake'].includes(m))
+      if (models.length === 0) models = ['genai']
+    }
     const creditsToCharge = models.length
 
     if (!isElite && getCredits(userId) < creditsToCharge) {
@@ -307,7 +312,8 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
         file.originalname,
         file.mimetype,
         models,
-        cached.results
+        cached.results,
+        { isElite }
       )
       if (!isElite) {
         const credits = getCredits(userId)
@@ -348,7 +354,8 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       file.originalname,
       file.mimetype,
       models,
-      cached?.results ?? null
+      cached?.results ?? null,
+      { isElite }
     )
 
     if (analysis.sightengineRaw) {

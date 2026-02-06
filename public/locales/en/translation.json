@@ -84,6 +84,8 @@
     "model_temporal_ai": "Temporal AI Consistency",
     "model_video_deepfake": "Video Deepfake Detection",
     "model_frame_integrity": "Frame Integrity Analysis",
+    "model_video_voice_clone": "Voice Clone Detection",
+    "model_video_lip_sync": "Lip-Sync Integrity",
     "model_voice_cloning": "Voice Cloning Detection",
     "model_synthetic_speech": "Synthetic Speech Analysis",
     "model_background_noise": "Background Noise Integrity"

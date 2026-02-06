@@ -15,6 +15,8 @@ const VIDEO_OPTIONS = [
   { id: 'temporal_ai', labelKey: 'scan_settings.model_temporal_ai' },
   { id: 'video_deepfake', labelKey: 'scan_settings.model_video_deepfake' },
   { id: 'frame_integrity', labelKey: 'scan_settings.model_frame_integrity' },
+  { id: 'video_voice_clone', labelKey: 'scan_settings.model_video_voice_clone', eliteOnly: true },
+  { id: 'video_lip_sync', labelKey: 'scan_settings.model_video_lip_sync', eliteOnly: true },
 ]
 
 const AUDIO_OPTIONS = [
@@ -43,12 +45,19 @@ function ToggleSwitch({ checked, onChange }) {
   )
 }
 
-function SectionToggle({ id, labelKey, isOn, onToggle, t }) {
+function SectionToggle({ id, labelKey, isOn, onToggle, t, disabled, eliteBadge }) {
   return (
-    <li className="w-full flex justify-between items-center p-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-      <span className="text-white font-medium flex-1 min-w-0">{t(labelKey)}</span>
+    <li className={`w-full flex justify-between items-center p-4 rounded-xl border ${disabled ? 'bg-slate-800/30 border-slate-700/30 opacity-75' : 'bg-slate-800/50 border-slate-700/50'}`}>
+      <span className="text-white font-medium flex-1 min-w-0 flex items-center gap-2">
+        {t(labelKey)}
+        {eliteBadge && (
+          <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
+            Elite
+          </span>
+        )}
+      </span>
       <div className="shrink-0">
-        <ToggleSwitch checked={isOn} onChange={() => onToggle(id)} />
+        <ToggleSwitch checked={disabled ? false : isOn} onChange={() => !disabled && onToggle(id)} />
       </div>
     </li>
   )
@@ -155,16 +164,22 @@ export default function ScanSettingsPage({ onSettingsClick }) {
               {t('scan_settings.section_video')}
             </h2>
             <ul className="space-y-3 w-full">
-              {VIDEO_OPTIONS.map((opt) => (
-                <SectionToggle
-                  key={opt.id}
-                  id={opt.id}
-                  labelKey={opt.labelKey}
-                  isOn={videoModels.includes(opt.id)}
-                  onToggle={toggleVideo}
-                  t={t}
-                />
-              ))}
+              {VIDEO_OPTIONS.map((opt) => {
+                const isElite = user?.subscriptionTier === 'elite'
+                const isDisabled = opt.eliteOnly && !isElite
+                return (
+                  <SectionToggle
+                    key={opt.id}
+                    id={opt.id}
+                    labelKey={opt.labelKey}
+                    isOn={videoModels.includes(opt.id)}
+                    onToggle={toggleVideo}
+                    t={t}
+                    disabled={isDisabled}
+                    eliteBadge={opt.eliteOnly}
+                  />
+                )
+              })}
             </ul>
           </section>
         )}
