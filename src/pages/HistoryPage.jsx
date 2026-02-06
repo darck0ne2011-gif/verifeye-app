@@ -136,18 +136,20 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
             </p>
           </div>
         ) : (
-          <div className="space-y-3 max-w-2xl">
+          <div className="space-y-3 max-w-2xl w-full">
             {history.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center gap-4 p-4 bg-slate-800/60 rounded-xl border border-slate-700/50"
+                className="w-full flex justify-between items-center p-4 bg-slate-800/60 rounded-xl border border-slate-700/50"
               >
-                <FileIcon type={getFileType(item.fileName)} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{item.fileName}</p>
-                  <p className="text-slate-400 text-sm">{formatDate(item.date)}</p>
+                <div className="flex items-center gap-4 min-w-0 flex-1">
+                  <FileIcon type={getFileType(item.fileName)} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-white font-medium truncate">{item.fileName}</p>
+                    <p className="text-slate-400 text-sm">{formatDate(item.date)}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <div className="flex flex-col items-end gap-0.5">
                     <span
                       className={`text-sm font-bold ${
