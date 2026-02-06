@@ -28,7 +28,7 @@ function AlertCard({ alert }) {
   return (
     <div
       className={`
-        flex items-start gap-3 p-4 rounded-xl border backdrop-blur-md
+        w-full flex items-start gap-3 p-4 rounded-xl border backdrop-blur-md
         transition-colors
         ${isHighAlert
           ? 'bg-black/20 border-red-500/30 hover:border-red-500/50'
@@ -70,7 +70,7 @@ export default function GlobalAlerts() {
 
   if (loading) {
     return (
-      <div className="w-full max-w-2xl mt-6 pt-2">
+      <div className="w-full max-w-4xl mx-auto mt-6 pt-2">
         <p className="text-slate-500 text-sm">{t('alerts.loading')}</p>
       </div>
     )
@@ -79,9 +79,9 @@ export default function GlobalAlerts() {
   if (alerts.length === 0) return null
 
   return (
-    <div className="w-full max-w-2xl mt-6 shrink-0">
+    <div className="w-full max-w-4xl mx-auto mt-6 shrink-0">
       <div
-        className="space-y-3 max-h-[180px] overflow-y-auto pr-1 pb-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600/50"
+        className="space-y-3 max-h-[180px] overflow-y-auto pr-2 pb-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600/50"
         style={{ scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch', scrollBehavior: 'smooth' }}
       >
         {alerts.map((alert, i) => (
