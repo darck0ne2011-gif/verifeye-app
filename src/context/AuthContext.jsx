@@ -101,6 +101,7 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(() => {
     localStorage.removeItem(REDIRECT_PATH_KEY)
+    sessionStorage.removeItem('verifeye_nav')
     setToken(null)
   }, [setToken])
 

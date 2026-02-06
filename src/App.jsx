@@ -17,8 +17,18 @@ function App() {
   useEffect(() => {
     document.title = t('app.title')
   }, [t, i18n.language])
-  const [activeTab, setActiveTab] = useState('home')
-  const [showSettings, setShowSettings] = useState(false)
+  const initNav = () => {
+    try {
+      const s = sessionStorage.getItem('verifeye_nav')
+      if (s) {
+        const p = JSON.parse(s)
+        return { tab: p.tab || 'home', settings: !!p.settings }
+      }
+    } catch {}
+    return { tab: 'home', settings: false }
+  }
+  const [activeTab, setActiveTab] = useState(() => initNav().tab)
+  const [showSettings, setShowSettings] = useState(() => initNav().settings)
   const [authMode, setAuthMode] = useState('login')
   const [authError, setAuthError] = useState('')
   const [authLoading, setAuthLoading] = useState(false)
@@ -34,6 +44,7 @@ function App() {
       }
       setActiveTab('home')
       setShowSettings(false)
+      sessionStorage.setItem('verifeye_nav', JSON.stringify({ tab: 'home', settings: false }))
       window.history.replaceState({}, '', '/')
     } catch (err) {
       setAuthError(err.message)
@@ -43,11 +54,10 @@ function App() {
   }
 
   useEffect(() => {
-    if (!user) {
-      setActiveTab('home')
-      setShowSettings(false)
+    if (user) {
+      sessionStorage.setItem('verifeye_nav', JSON.stringify({ tab: activeTab, settings: showSettings }))
     }
-  }, [user])
+  }, [user, activeTab, showSettings])
 
   if (loading) {
     return (
