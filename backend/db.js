@@ -262,7 +262,7 @@ export function ensureAdminElite(email) {
   const user = data.users.find((u) => u.email === normalized)
   if (!user) return null
   user.subscriptionTier = 'elite'
-  user.scanCredits = 9999
+  user.scanCredits = 999999
   user.isPremium = true
   save(data)
   return user.id
@@ -279,7 +279,7 @@ export function findOrCreateAdminUser(email, hashedPassword) {
     id: data.nextId++,
     email: normalized,
     password: hashedPassword,
-    scanCredits: 9999,
+    scanCredits: 999999,
     subscriptionTier: 'elite',
     isPremium: true,
     createdAt: new Date().toISOString(),

@@ -121,6 +121,7 @@ export default function UpgradePage({ onSettingsClick }) {
       <DashboardHeader
         scansCount={scansCount}
         userEmail={user?.email}
+        subscriptionTier={user?.subscriptionTier}
         onSettingsClick={onSettingsClick}
       />
 

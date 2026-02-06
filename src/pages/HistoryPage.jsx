@@ -138,6 +138,7 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
       <DashboardHeader
         scansCount={scansCount}
         userEmail={user?.email}
+        subscriptionTier={user?.subscriptionTier}
         onSettingsClick={onSettingsClick}
       />
 

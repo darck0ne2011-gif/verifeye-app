@@ -63,10 +63,16 @@ export async function register(req, res) {
     const user = findById(userId)
     const token = signToken(userId)
 
+    const tier = user.subscriptionTier ?? 'starter'
     res.json({
       success: true,
       token,
-      user: { id: user.id, email: user.email, scanCredits: user.scanCredits },
+      user: {
+        id: user.id,
+        email: user.email,
+        scanCredits: tier === 'elite' ? 999999 : (user.scanCredits ?? 0),
+        subscriptionTier: tier,
+      },
     })
   } catch (err) {
     console.error(err)
@@ -106,7 +112,7 @@ export async function login(req, res) {
       user: {
         id: updated.id,
         email: updated.email,
-        scanCredits: tier === 'elite' ? 9999 : (updated.scanCredits ?? 0),
+        scanCredits: tier === 'elite' ? 999999 : (updated.scanCredits ?? 0),
         subscriptionTier: tier,
         isPremium: updated.isPremium ?? false,
       },

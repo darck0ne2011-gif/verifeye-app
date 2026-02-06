@@ -12,9 +12,10 @@ const UserIcon = () => (
   </svg>
 )
 
-export default function DashboardHeader({ scansCount = 0, userEmail, onSettingsClick }) {
+export default function DashboardHeader({ scansCount = 0, userEmail, onSettingsClick, subscriptionTier }) {
   const { t } = useTranslation()
-  const scansLabel = scansCount >= 999999 ? t('header.scans_unlimited') : t('header.scans', { count: scansCount })
+  const isElite = subscriptionTier === 'elite' || scansCount >= 999999
+  const scansLabel = isElite ? t('header.scans_unlimited') : t('header.scans', { count: scansCount })
   return (
     <header className="flex items-center justify-between w-full px-4 py-4 max-w-4xl mx-auto">
       <button

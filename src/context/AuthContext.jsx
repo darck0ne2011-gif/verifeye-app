@@ -71,6 +71,15 @@ export function AuthProvider({ children }) {
     }
   }, [token, fetchUser, setToken])
 
+  useEffect(() => {
+    if (!token) return
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') fetchUser()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [token, fetchUser])
+
   const login = useCallback(async (email, password) => {
     const res = await fetch(`${API_BASE}/api/auth/login`, {
       method: 'POST',

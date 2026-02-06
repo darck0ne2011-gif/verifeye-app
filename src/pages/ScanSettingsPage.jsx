@@ -53,6 +53,7 @@ export default function ScanSettingsPage({ onSettingsClick }) {
       <DashboardHeader
         scansCount={user?.scanCredits ?? 0}
         userEmail={user?.email}
+        subscriptionTier={user?.subscriptionTier}
         onSettingsClick={onSettingsClick}
       />
       <main className="flex-1 flex flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-8 overflow-y-auto">
