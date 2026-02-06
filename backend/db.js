@@ -7,9 +7,19 @@ const dbPath = path.join(__dirname, 'verifeye-data.json')
 
 function load() {
   try {
+    if (!fs.existsSync(dbPath)) {
+      const initial = { users: [], past_scans: [], nextId: 1 }
+      try {
+        fs.writeFileSync(dbPath, JSON.stringify(initial, null, 2), 'utf8')
+      } catch {
+        // disk may be read-only on some hosts; return in-memory default
+      }
+      return initial
+    }
     const data = fs.readFileSync(dbPath, 'utf8')
     const parsed = JSON.parse(data)
     if (!Array.isArray(parsed.past_scans)) parsed.past_scans = []
+    if (!Array.isArray(parsed.users)) parsed.users = []
     return parsed
   } catch {
     return { users: [], past_scans: [], nextId: 1 }

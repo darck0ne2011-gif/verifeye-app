@@ -272,6 +272,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       return res.status(402).json({ success: false, error: `Need ${creditsToCharge} credits (1 per model). You have ${getCredits(userId)}.` })
     }
 
+    // SHA-256 is deterministic: same file buffer always yields same hash → consistent cache hits
     const fileHash = crypto.createHash('sha256').update(file.buffer).digest('hex')
     const cached = findScanByHash(fileHash)
 
