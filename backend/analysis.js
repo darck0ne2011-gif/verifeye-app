@@ -6,6 +6,7 @@ import { classifyAudioWithSightengine } from './services/audioScanner.js'
 import { extractVideoTracks } from './videoFrameExtractor.js'
 import { extractTextFromImage, extractTextFromFrames } from './services/ocrTextExtractor.js'
 import { analyzeNewsCredibility } from './services/deepseekAnalyst.js'
+import { analyzePhotoPostFactCheck } from './services/factChecker.js'
 
 // Known AI-generation resolutions (DALL-E, Midjourney, Stable Diffusion, etc.)
 const AI_SUSPICIOUS_RESOLUTIONS = new Set([
@@ -371,10 +372,34 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
           }
         }
       }
-      const lipSyncForCred = isVideo ? (sightengineResult?.lipSyncIntegrity ?? null) : null
-      const credibility = await analyzeNewsCredibility(extractedText, lipSyncForCred)
-      if (credibility) {
-        metadata.credibility = { score: credibility.score, reasoning: credibility.reasoning }
+      if (isImage) {
+        // Photo posts: use factChecker with extracted text + Sightengine AI Pixel Analysis score
+        const aiPixelScore = source?.type?.ai_generated != null
+          ? Math.round(Number(source.type.ai_generated) * 100)
+          : aiProbability
+        const factCheck = await analyzePhotoPostFactCheck(extractedText, aiPixelScore, options.language)
+        if (factCheck) {
+          metadata.credibility = {
+            score: factCheck.score,
+            reasoning: factCheck.reasoning,
+            ...(factCheck.error && { error: factCheck.error }),
+            ...(!factCheck.error && {
+              credibilityRating: factCheck.credibilityRating,
+              redFlags: factCheck.redFlags || [],
+            }),
+          }
+        }
+      } else {
+        // Videos: use existing analyzeNewsCredibility (text + lipSync)
+        const lipSyncForCred = sightengineResult?.lipSyncIntegrity ?? null
+        const credibility = await analyzeNewsCredibility(extractedText, lipSyncForCred, options.language)
+        if (credibility) {
+          metadata.credibility = {
+            score: credibility.score,
+            reasoning: credibility.reasoning,
+            ...(credibility.error && { error: credibility.error }),
+          }
+        }
       }
     } catch (err) {
       console.warn('Fake News Detection:', err.message)

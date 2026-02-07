@@ -59,7 +59,7 @@ function formatDate(isoString) {
 }
 
 export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user, getAuthHeaders } = useAuth()
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
@@ -122,6 +122,7 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
         expertSummary: item.metadata?.expertSummary ?? item.expertSummary ?? null,
         mediaCategory: item.mediaCategory ?? item.metadata?.mediaCategory,
         t,
+        language: i18n.language,
       })
       const safeName = (item.fileName || 'report').replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 40)
       doc.save(`VerifEye-Report-${safeName}.pdf`)

@@ -22,7 +22,7 @@ function getMinScanDurationMs(file) {
 const PROGRESS_UPDATE_INTERVAL_MS = 30
 
 export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user, getAuthHeaders, refreshUser, logout } = useAuth()
   const scansCount = user?.scanCredits ?? 0
 
@@ -91,6 +91,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
         const formData = new FormData()
         formData.append('file', file)
         formData.append('models', models.join(','))
+        formData.append('language', i18n.language || 'en')
         if (getMediaCategory(file) === 'video') {
           formData.append('videoAnalysisEngine', getVideoAnalysisEngine())
           formData.append('videoModelIds', getActiveModelsForCategory('video').join(','))

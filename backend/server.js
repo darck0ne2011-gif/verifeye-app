@@ -284,6 +284,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       return res.status(400).json({ success: false, error: 'No file uploaded' })
     }
 
+    const language = req.body?.language || 'en'
     const rawModels = req.body?.models || req.body?.modelsString || 'genai'
     const modelsList = typeof rawModels === 'string' ? rawModels.split(',').map((m) => m.trim()).filter(Boolean) : []
     let models = modelsList.length ? modelsList : ['genai']
@@ -322,7 +323,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
         file.mimetype,
         models,
         cached.results,
-        { isElite, videoAnalysisEngine, videoModelIds }
+        { isElite, videoAnalysisEngine, videoModelIds, language }
       )
       {
         const fp = analysis.fakeProbability ?? 0
@@ -336,6 +337,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
           status,
           aiScore: fp,
           lipSyncScore: lipSync,
+          language,
         })
         if (expertSummary && analysis.metadata) {
           analysis.metadata.expertSummary = expertSummary
@@ -385,7 +387,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       file.mimetype,
       models,
       cached?.results ?? null,
-      { isElite, videoAnalysisEngine, videoModelIds }
+      { isElite, videoAnalysisEngine, videoModelIds, language }
     )
 
     let expertSummary = null
@@ -401,6 +403,7 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
         status,
         aiScore: fp,
         lipSyncScore: lipSync,
+        language,
       })
       if (expertSummary && analysis.metadata) {
         analysis.metadata.expertSummary = expertSummary

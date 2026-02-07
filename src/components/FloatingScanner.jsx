@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import { getActiveModels, getActiveModelsForCategory, getMaxCreditsPerScan, getVideoAnalysisEngine } from '../utils/scanSettings'
@@ -89,6 +90,7 @@ function getDefaultPosition() {
 }
 
 export default function FloatingScanner() {
+  const { i18n } = useTranslation()
   const { user, getAuthHeaders, refreshUser, logout } = useAuth()
   const [expanded, setExpanded] = useState(false)
   const [scanning, setScanning] = useState(false)
@@ -156,6 +158,7 @@ export default function FloatingScanner() {
         const formData = new FormData()
         formData.append('file', file)
         formData.append('models', getActiveModels(getMediaCategory(file)).join(','))
+        formData.append('language', i18n.language || 'en')
         if (getMediaCategory(file) === 'video') {
           formData.append('videoAnalysisEngine', getVideoAnalysisEngine())
           formData.append('videoModelIds', getActiveModelsForCategory('video').join(','))
