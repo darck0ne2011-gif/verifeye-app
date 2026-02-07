@@ -1,4 +1,4 @@
-﻿{
+{
   "app": {
     "title": "VerifEye - Verificare Realitate",
     "brand": "VerifEye",
@@ -216,6 +216,7 @@
     "credibility_score": "Scor",
     "ai_expert": "Interpretare expert AI (DeepSeek Analyst)",
     "detection_signals": "Semnal detectat",
+    "signal_column": "Semnal",
     "analysis_breakdown": "Detaliu analiză",
     "analysis_type": "Tip analiză",
     "status": "Status",

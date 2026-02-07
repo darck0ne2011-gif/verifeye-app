@@ -1,4 +1,4 @@
-﻿{
+{
   "app": {
     "title": "VerifEye - Reality Verification",
     "brand": "VerifEye",
@@ -262,6 +262,7 @@
     "credibility_score": "Score",
     "ai_expert": "AI Expert Interpretation (DeepSeek Analyst)",
     "detection_signals": "Detection Signals",
+    "signal_column": "Signal",
     "analysis_breakdown": "Analysis Breakdown",
     "analysis_type": "Analysis Type",
     "status": "Status",
