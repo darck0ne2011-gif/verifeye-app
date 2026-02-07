@@ -1,4 +1,4 @@
-{
+﻿{
   "app": { "title": "VerifEye - التحقق من الواقع", "brand": "VerifEye", "tagline": "Truth Layer" },
   "auth": {
     "sign_in": "تسجيل الدخول",
@@ -52,7 +52,7 @@
     "feature_10_scans": "10 عمليات مسح",
     "feature_credits_never_expire": "الائتمانات لا تنتهي صلاحيتها",
     "feature_50_scans": "50 عملية مسح شهرياً",
-    "feature_forensic_pdf": "تقارير PDF جنائية",
+    "feature_pdf_reports": "تقارير PDF",
     "feature_priority": "تحليل ذو أولوية",
     "feature_unlimited": "عمليات مسح غير محدودة",
     "feature_ai_processing": "معالجة AI ذات أولوية"

@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "title": "VerifEye - Verificare Realitate",
     "brand": "VerifEye",
@@ -56,7 +56,7 @@
     "feature_10_scans": "10 scanări",
     "feature_credits_never_expire": "Creditele nu expiră",
     "feature_50_scans": "50 scanări pe lună",
-    "feature_forensic_pdf": "Rapoarte PDF forense",
+    "feature_pdf_reports": "Rapoarte PDF",
     "feature_priority": "Analiză prioritără",
     "feature_unlimited": "Scanări nelimitate",
     "feature_ai_processing": "Procesare AI prioritară"
@@ -65,6 +65,9 @@
     "home": "Acasă",
     "history": "Istoric",
     "upgrade": "Upgrade"
+  },
+  "scan_settings": {
+    "model_fake_news": "Detecție Fake News / Credibilitate"
   },
   "header": {
     "scans": "{{count}} Scanări",
@@ -88,7 +91,11 @@
   },
   "verdict": {
     "view_source": "Vezi sursa originală",
-    "api_error": "Eroare API (folosind fallback): {{error}}"
+    "api_error": "Eroare API (folosind fallback): {{error}}",
+    "credibility_meter": "Indicator Credibilitate",
+    "ai_expert_interpretation": "Interpretare expert AI",
+    "credibility_error_unavailable": "Analiza credibilității nu a putut fi realizată.",
+    "credibility_error_rate_limit": "Limită API atinsă. Încearcă mai târziu."
   },
   "deepfake": {
     "why_fake": "De ce este fals?",
@@ -198,6 +205,23 @@
     "section_responsibilities": "3. Responsabilitățile utilizatorului",
     "section_liability": "4. Limitarea răspunderii",
     "section_ip": "5. Proprietate intelectuală"
+  },
+  "pdf": {
+    "report_title": "Raport Verificare Media",
+    "file_name": "Nume fișier:",
+    "file_hash": "Hash fișier (SHA-256):",
+    "date_time": "Data și ora:",
+    "verdict": "Verdict",
+    "credibility_meter": "Indicator Credibilitate (Detecție Fake News)",
+    "credibility_score": "Scor",
+    "ai_expert": "Interpretare expert AI (DeepSeek Analyst)",
+    "detection_signals": "Semnal detectat",
+    "analysis_breakdown": "Detaliu analiză",
+    "analysis_type": "Tip analiză",
+    "status": "Status",
+    "video_metadata": "Metadata video",
+    "file_metadata": "Metadata fișier",
+    "credibility_unavailable": "Analiza credibilității nu a putut fi realizată."
   },
   "alerts": {
     "loading": "Se încarcă alertele...",

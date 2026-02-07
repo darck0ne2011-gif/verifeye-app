@@ -1,4 +1,4 @@
-{
+﻿{
   "app": { "title": "VerifEye - Verificação de Realidade", "brand": "VerifEye", "tagline": "Truth Layer" },
   "auth": {
     "sign_in": "Entrar",
@@ -52,7 +52,7 @@
     "feature_10_scans": "10 varreduras",
     "feature_credits_never_expire": "Créditos nunca expiram",
     "feature_50_scans": "50 varreduras por mês",
-    "feature_forensic_pdf": "Relatórios PDF forenses",
+    "feature_pdf_reports": "Relatórios PDF",
     "feature_priority": "Análise prioritária",
     "feature_unlimited": "Varreduras ilimitadas",
     "feature_ai_processing": "Processamento AI prioritário"

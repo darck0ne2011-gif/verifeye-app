@@ -35,19 +35,35 @@ async function run() {
 
   const { fakeProbability, metadata, modelScores, scannedModels } = result
 
-  // Per-test results (from modelScores + metadata)
-  console.log('--- Rezultate pe teste ---')
+  // Per-test results (from modelScores + metadata) + source
+  console.log('--- Rezultate pe teste (cu sursă) ---\n')
   const aiGen = modelScores?.ai_generated
   const deepfake = modelScores?.deepfake
   const lipSync = metadata?.lipSyncIntegrity ?? modelScores?.lip_sync_integrity
   const voiceReason = metadata?.audioAnalysis?.voiceCloneReasoning ?? modelScores?.voice_clone_reasoning
+  const voiceSource = metadata?.audioAnalysis?.source ?? 'deepseek'
 
-  console.log(`1. Temporal AI Consistency:     ${aiGen != null ? `${Math.round((aiGen || 0) * 100)}%` : 'N/A'}`)
-  console.log(`2. Video Deepfake Detection:    ${deepfake != null ? `${Math.round((deepfake || 0) * 100)}%` : 'N/A'}`)
-  console.log(`3. Frame Integrity:             ${aiGen != null ? `${Math.round((aiGen || 0) * 100)}%` : 'N/A'}`)
-  console.log(`4. Voice Clone Detection:       ${voiceReason ? voiceReason.slice(0, 80) + '...' : 'N/A'}`)
-  console.log(`5. Lip-Sync Integrity:          ${lipSync != null ? `${Math.round((lipSync || 0) * 100)}%` : 'N/A'}`)
-  console.log(`\nFrames analizate: ${metadata?.framesAnalyzed ?? '—'}`)
+  console.log(`1. Temporal AI Consistency`)
+  console.log(`   Rezultat: ${aiGen != null ? `${Math.round((aiGen || 0) * 100)}%` : 'N/A'}`)
+  console.log(`   Sursă: Sightengine Video API (api.sightengine.com/1.0/video/check-sync.json, model genai)\n`)
+
+  console.log(`2. Video Deepfake Detection`)
+  console.log(`   Rezultat: ${deepfake != null ? `${Math.round((deepfake || 0) * 100)}%` : 'N/A'}`)
+  console.log(`   Sursă: Sightengine Video API (model deepfake)\n`)
+
+  console.log(`3. Frame Integrity`)
+  console.log(`   Rezultat: ${aiGen != null ? `${Math.round((aiGen || 0) * 100)}%` : 'N/A'}`)
+  console.log(`   Sursă: Sightengine Video API (model genai)\n`)
+
+  console.log(`4. Voice Clone Detection`)
+  console.log(`   Rezultat: ${voiceReason || 'N/A'}`)
+  console.log(`   Sursă: ${voiceSource === 'deepseek' ? 'DeepSeek (ffprobe metadata + lip-sync → api.deepseek.com)' : voiceSource}\n`)
+
+  console.log(`5. Lip-Sync Integrity`)
+  console.log(`   Rezultat: ${lipSync != null ? `${Math.round((lipSync || 0) * 100)}%` : 'N/A'}`)
+  console.log(`   Sursă: Calcul local (FFmpeg extractVideoTracks – ratio audio/frames)\n`)
+
+  console.log(`Frames analizate: ${metadata?.framesAnalyzed ?? '—'}`)
 
   // Verdict (exactly as in app)
   const status = fakeProbability >= 50 ? 'FAKE' : 'REAL'

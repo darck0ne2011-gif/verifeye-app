@@ -1,4 +1,4 @@
-{
+﻿{
   "app": { "title": "VerifEye - 真实性验证", "brand": "VerifEye", "tagline": "Truth Layer" },
   "auth": {
     "sign_in": "登录",
@@ -52,7 +52,7 @@
     "feature_10_scans": "10 次扫描",
     "feature_credits_never_expire": "积分永不过期",
     "feature_50_scans": "每月 50 次扫描",
-    "feature_forensic_pdf": "法证 PDF 报告",
+    "feature_pdf_reports": "PDF 报告",
     "feature_priority": "优先分析",
     "feature_unlimited": "无限扫描",
     "feature_ai_processing": "优先 AI 处理"

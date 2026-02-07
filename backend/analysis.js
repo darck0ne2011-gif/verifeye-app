@@ -4,6 +4,8 @@ import { detectAiImage, detectAiVideo } from './sightengine.js'
 import { analyzeVideoSequential } from './services/videoScanner.js'
 import { classifyAudioWithSightengine } from './services/audioScanner.js'
 import { extractVideoTracks } from './videoFrameExtractor.js'
+import { extractTextFromImage, extractTextFromFrames } from './services/ocrTextExtractor.js'
+import { analyzeNewsCredibility } from './services/deepseekAnalyst.js'
 
 // Known AI-generation resolutions (DALL-E, Midjourney, Stable Diffusion, etc.)
 const AI_SUSPICIOUS_RESOLUTIONS = new Set([
@@ -125,7 +127,7 @@ function extractNewFromSightengine(se, modelsReq) {
 /**
  * Full file analysis: metadata extraction + AI signature detection + fake probability.
  * Modular Memory: uses cached per-model results; only calls Sightengine for missing models.
- * For video + Elite: runs dual-track (frames + audio), audio forensics, lip-sync check.
+ * For video + Elite: runs dual-track (frames + audio), audio analysis, lip-sync check.
  * @param {Buffer} buffer - File buffer
  * @param {string} originalName - Original filename
  * @param {string} mimeType - MIME type
@@ -234,7 +236,10 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
               ...(frameModels.includes('genai') && { ai_generated: avgAi }),
               ...(frameModels.includes('deepfake') && { deepfake: avgDf }),
             },
-            data: { frames: extracted.frames.map((_, i) => ({ index: i })) },
+            data: {
+              frames: extracted.frames.map((_, i) => ({ index: i })),
+              frameBuffers: extracted.frames, // Reuse for OCR (Fake News)
+            },
           }
         }
       }
@@ -253,10 +258,14 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
           const frameCount = consolidated.data.frames.length
           const estimatedDuration = frameCount * intervalSec
           const hasAudio = extracted.audio.length > 256
-          if (hasAudio && frameCount >= 2) {
-            const ratio = Math.min(1.2, extracted.audio.length / (estimatedDuration * 1000 || 1))
-            lipSyncIntegrity = ratio > 0.3 ? Math.min(1, 1 - (ratio - 0.5) * 0.3) : 0.5
-            lipSyncIntegrity = Math.max(0, Math.min(1, lipSyncIntegrity))
+          if (hasAudio && frameCount >= 2 && estimatedDuration > 0) {
+            // Audio bytes per second (typical speech ~10-20 KB/s)
+            const bytesPerSec = extracted.audio.length / estimatedDuration
+            const ratio = bytesPerSec / 1000 // normalize
+            // Map ratio to 0-1: values 8-25 KB/s = good, outside = lower. Varies per video.
+            const ideal = 16
+            const deviation = Math.abs(Math.log10(Math.max(0.1, ratio)) - Math.log10(ideal))
+            lipSyncIntegrity = Math.max(0, Math.min(1, 1 - deviation * 0.4))
           } else {
             lipSyncIntegrity = 0.5
           }
@@ -342,6 +351,34 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
   }
   if (sightengineResult?.lipSyncIntegrity != null) {
     metadata.lipSyncIntegrity = sightengineResult.lipSyncIntegrity
+  }
+
+  // Fake News / Credibility Detection (Elite + enabled: images + videos with extractable text)
+  const wantsFakeNews = Array.isArray(models) && models.includes('fake_news')
+  if (options.isElite && wantsFakeNews && (isImage || isVideo)) {
+    try {
+      let extractedText = ''
+      if (isImage) {
+        extractedText = await extractTextFromImage(buffer)
+      } else if (isVideo) {
+        const frameBuffers = sightengineResult?.data?.frameBuffers
+        if (Array.isArray(frameBuffers) && frameBuffers.length > 0) {
+          extractedText = await extractTextFromFrames(frameBuffers, 5)
+        } else {
+          const tracks = await extractVideoTracks(buffer, ext, { intervalSec: 2, maxFrames: 5 })
+          if (tracks?.frames?.length > 0) {
+            extractedText = await extractTextFromFrames(tracks.frames, 5)
+          }
+        }
+      }
+      const lipSyncForCred = isVideo ? (sightengineResult?.lipSyncIntegrity ?? null) : null
+      const credibility = await analyzeNewsCredibility(extractedText, lipSyncForCred)
+      if (credibility) {
+        metadata.credibility = { score: credibility.score, reasoning: credibility.reasoning }
+      }
+    } catch (err) {
+      console.warn('Fake News Detection:', err.message)
+    }
   }
 
   const result = {

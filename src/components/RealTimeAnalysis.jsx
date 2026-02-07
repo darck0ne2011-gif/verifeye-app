@@ -56,7 +56,7 @@ const AUDIO_ITEMS = [
 // Video: frame + optional Elite dual-track (audio, lip-sync)
 const VIDEO_ITEMS = [
   { modelId: 'video_ai', icon: ImageLayersIcon, title: 'AI Detection Across Frames', passSubtitle: 'No AI-generated content detected in sampled frames', failSubtitle: 'AI-generated or manipulated content detected' },
-  { modelId: 'voice_clone', icon: FaceIcon, title: 'Voice Clone Detection', passSubtitle: 'No forensic suspicion of synthetic voice cloning', failSubtitle: 'Forensic suspicion of synthetic voice cloning', scannedKey: 'voice_clone' },
+  { modelId: 'voice_clone', icon: FaceIcon, title: 'Voice Clone Detection', passSubtitle: 'No indication of synthetic voice cloning', failSubtitle: 'Indication of synthetic voice cloning', scannedKey: 'voice_clone' },
   { modelId: 'lip_sync', icon: ImageLayersIcon, title: 'Lip-Sync Integrity', passSubtitle: 'Audio-visual sync verified', failSubtitle: 'Lip-sync anomalies detected', scannedKey: 'lip_sync' },
 ]
 
@@ -87,7 +87,7 @@ function getSubtitleAndStatus(item, modelScores, aiSignatures, metadata) {
   if (item.modelId === 'voice_clone') {
     const reasoning = metadata?.audioAnalysis?.voiceCloneReasoning ?? modelScores?.voice_clone_reasoning
     if (!reasoning) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
-    const hasSuspicion = /suspicion|yes|likely|probable|synthetic|cloned/i.test(reasoning) && !/no (forensic )?suspicion|low suspicion|unlikely/i.test(reasoning)
+    const hasSuspicion = /suspicion|yes|likely|probable|synthetic|cloned/i.test(reasoning) && !/no suspicion|low suspicion|unlikely/i.test(reasoning)
     return { subtitle: reasoning, isFail: hasSuspicion }
   }
   if (item.modelId === 'lip_sync') {

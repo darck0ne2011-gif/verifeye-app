@@ -1,4 +1,4 @@
-{
+﻿{
   "app": {
     "title": "VerifEye - Verificación de Realidad",
     "brand": "VerifEye",
@@ -56,7 +56,7 @@
     "feature_10_scans": "10 escaneos",
     "feature_credits_never_expire": "Los créditos no expiran",
     "feature_50_scans": "50 escaneos al mes",
-    "feature_forensic_pdf": "Informes PDF forenses",
+    "feature_pdf_reports": "Informes PDF",
     "feature_priority": "Análisis prioritario",
     "feature_unlimited": "Escaneos ilimitados",
     "feature_ai_processing": "Procesamiento AI prioritario"

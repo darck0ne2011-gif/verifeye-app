@@ -1,4 +1,4 @@
-{
+﻿{
   "app": { "title": "VerifEye - Проверка реальности", "brand": "VerifEye", "tagline": "Truth Layer" },
   "auth": {
     "sign_in": "Войти",
@@ -52,7 +52,7 @@
     "feature_10_scans": "10 сканирований",
     "feature_credits_never_expire": "Кредиты не истекают",
     "feature_50_scans": "50 сканирований в месяц",
-    "feature_forensic_pdf": "Криминалистические PDF-отчёты",
+    "feature_pdf_reports": "PDF-отчёты",
     "feature_priority": "Приоритетный анализ",
     "feature_unlimited": "Безлимитные сканирования",
     "feature_ai_processing": "Приоритетная AI-обработка"

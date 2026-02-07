@@ -1,4 +1,4 @@
-{
+﻿{
   "app": { "title": "VerifEye - Vérification de la réalité", "brand": "VerifEye", "tagline": "Truth Layer" },
   "auth": {
     "sign_in": "Connexion",
@@ -52,7 +52,7 @@
     "feature_10_scans": "10 analyses",
     "feature_credits_never_expire": "Les crédits n'expirent jamais",
     "feature_50_scans": "50 analyses par mois",
-    "feature_forensic_pdf": "Rapports PDF médico-légaux",
+    "feature_pdf_reports": "Rapports PDF",
     "feature_priority": "Analyse prioritaire",
     "feature_unlimited": "Analyses illimitées",
     "feature_ai_processing": "Traitement IA prioritaire"

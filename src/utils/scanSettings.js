@@ -2,8 +2,8 @@ const STORAGE_KEY = 'verifeye_scan_models'
 const VIDEO_ENGINE_KEY = 'verifeye_video_analysis_engine'
 
 // Backend model IDs (used by API)
-const PHOTO_IDS = ['deepfake', 'genai', 'type', 'quality']
-const VIDEO_IDS = ['temporal_ai', 'video_deepfake', 'frame_integrity']
+const PHOTO_IDS = ['deepfake', 'genai', 'type', 'quality', 'fake_news']
+const VIDEO_IDS = ['temporal_ai', 'video_deepfake', 'frame_integrity', 'fake_news']
 const AUDIO_IDS = ['voice_cloning', 'synthetic_speech', 'background_noise']
 
 const DEFAULTS = {
@@ -25,6 +25,7 @@ const TO_API_MAP = {
   frame_integrity: 'genai',  // AI Pixel / Frame Integrity -> genai for sequential
   video_voice_clone: 'voice_clone',
   video_lip_sync: 'lip_sync',
+  fake_news: 'fake_news',
   // Audio: maps to genai/deepfake
   voice_cloning: 'deepfake',
   synthetic_speech: 'genai',

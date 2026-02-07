@@ -1,4 +1,4 @@
-{
+﻿{
   "app": { "title": "VerifEye - Verifikasi Realitas", "brand": "VerifEye", "tagline": "Truth Layer" },
   "auth": {
     "sign_in": "Masuk",
@@ -52,7 +52,7 @@
     "feature_10_scans": "10 pemindaian",
     "feature_credits_never_expire": "Kredit tidak pernah kedaluwarsa",
     "feature_50_scans": "50 pemindaian per bulan",
-    "feature_forensic_pdf": "Laporan PDF forensik",
+    "feature_pdf_reports": "Laporan PDF",
     "feature_priority": "Analisis prioritas",
     "feature_unlimited": "Pemindaian tak terbatas",
     "feature_ai_processing": "Pemrosesan AI prioritas"

@@ -27,7 +27,7 @@ function buildPdf(doc, data) {
     .fontSize(10)
     .fillColor(LIGHT_GRAY)
     .font('Helvetica')
-    .text('Forensic Media Verification Report', 50, y)
+    .text('Media Verification Report', 50, y)
   y += 30
 
   doc

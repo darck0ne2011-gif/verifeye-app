@@ -151,7 +151,7 @@ export function generateScanPdf(opts) {
   doc.setFontSize(10)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(LIGHT_GRAY)
-  doc.text('Forensic Media Verification Report', margin, y)
+  doc.text(t?.('pdf.report_title') || 'Media Verification Report', margin, y)
   y += 30
 
   // Divider
@@ -168,14 +168,14 @@ export function generateScanPdf(opts) {
   doc.setFontSize(11)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(DARK_GRAY)
-  doc.text('File Name:', margin, y)
+  doc.text(t?.('pdf.file_name') || 'File Name:', margin, y)
   doc.setFont('helvetica', 'normal')
   doc.text(fileName || '—', margin + 90, y)
   y += 20
 
   if (fileHash) {
     doc.setFont('helvetica', 'bold')
-    doc.text('File Hash (SHA-256):', margin, y)
+    doc.text(t?.('pdf.file_hash') || 'File Hash (SHA-256):', margin, y)
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9)
     doc.text(fileHash, margin + 110, y, { maxWidth: pageWidth - margin - 120 })
@@ -184,7 +184,7 @@ export function generateScanPdf(opts) {
   }
 
   doc.setFont('helvetica', 'bold')
-  doc.text('Date & Time:', margin, y)
+  doc.text(t?.('pdf.date_time') || 'Date & Time:', margin, y)
   doc.setFont('helvetica', 'normal')
   doc.text(dateFormatted, margin + 90, y)
   y += 28
@@ -193,7 +193,7 @@ export function generateScanPdf(opts) {
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(DARK_BLUE)
-  doc.text('Verdict', margin, y)
+  doc.text(t?.('pdf.verdict') || 'Verdict', margin, y)
   y += 22
 
   const resultColor = status === 'REAL' ? VERDICT_REAL : VERDICT_FAKE
@@ -204,13 +204,38 @@ export function generateScanPdf(opts) {
   doc.text(`${score}%`, margin + 70, y)
   y += 40
 
+  // Credibility Meter (Fake News Detection)
+  if (metadata?.credibility) {
+    doc.setFontSize(11)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(DARK_BLUE)
+    doc.text(t?.('pdf.credibility_meter') || 'Credibility Meter (Fake News Detection)', margin, y)
+    y += 16
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(DARK_GRAY)
+    const scoreLabel = t?.('pdf.credibility_score') || 'Score'
+    const scoreVal = metadata.credibility.error
+      ? (t?.('pdf.credibility_unavailable') || 'N/A')
+      : `${metadata.credibility.score}%`
+    doc.text(`${scoreLabel}: ${scoreVal}`, margin, y)
+    y += 14
+    if (metadata.credibility.reasoning && !metadata.credibility.error) {
+      const credLines = doc.splitTextToSize(metadata.credibility.reasoning, pageWidth - margin * 2)
+      doc.text(credLines, margin, y)
+      y += credLines.length * 12 + 20
+    } else {
+      y += 20
+    }
+  }
+
   // AI Expert Interpretation (DeepSeek) - directly under Verdict line
   const summary = expertSummary || metadata?.expertSummary
   if (summary) {
     doc.setFontSize(11)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(DARK_BLUE)
-    doc.text('AI Expert Interpretation (DeepSeek Forensic Analyst)', margin, y)
+    doc.text(t?.('pdf.ai_expert') || 'AI Expert Interpretation (DeepSeek Analyst)', margin, y)
     y += 16
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
@@ -226,7 +251,7 @@ export function generateScanPdf(opts) {
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(DARK_BLUE)
-    doc.text('Detection Signals', margin, y)
+    doc.text(t?.('pdf.detection_signals') || 'Detection Signals', margin, y)
     y += 20
 
     autoTable(doc, {
@@ -247,7 +272,7 @@ export function generateScanPdf(opts) {
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(DARK_BLUE)
-  doc.text('Analysis Breakdown', margin, y)
+  doc.text(t?.('pdf.analysis_breakdown') || 'Analysis Breakdown', margin, y)
   y += 20
 
   const modelRows = isVideo
@@ -266,7 +291,7 @@ export function generateScanPdf(opts) {
       ]
   autoTable(doc, {
     startY: y,
-    head: [['Analysis Type', 'Status']],
+    head: [[t?.('pdf.analysis_type') || 'Analysis Type', t?.('pdf.status') || 'Status']],
     body: modelRows,
     theme: 'striped',
     headStyles: { fillColor: DARK_BLUE, textColor: '#fff', fontStyle: 'bold' },
@@ -286,7 +311,7 @@ export function generateScanPdf(opts) {
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(DARK_BLUE)
-    doc.text(isVideo ? 'Video Metadata' : 'File Metadata', margin, y)
+    doc.text(isVideo ? (t?.('pdf.video_metadata') || 'Video Metadata') : (t?.('pdf.file_metadata') || 'File Metadata'), margin, y)
     y += 20
 
     const metaRows = []

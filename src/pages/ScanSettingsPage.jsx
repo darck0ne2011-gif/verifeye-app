@@ -9,6 +9,7 @@ const PHOTO_OPTIONS = [
   { id: 'genai', labelKey: 'scan_settings.model_genai' },
   { id: 'type', labelKey: 'scan_settings.model_metadata' },
   { id: 'quality', labelKey: 'scan_settings.model_quality' },
+  { id: 'fake_news', labelKey: 'scan_settings.model_fake_news', eliteOnly: true },
 ]
 
 const VIDEO_OPTIONS = [
@@ -17,6 +18,7 @@ const VIDEO_OPTIONS = [
   { id: 'frame_integrity', labelKey: 'scan_settings.model_frame_integrity' },
   { id: 'video_voice_clone', labelKey: 'scan_settings.model_video_voice_clone', eliteOnly: true },
   { id: 'video_lip_sync', labelKey: 'scan_settings.model_video_lip_sync', eliteOnly: true },
+  { id: 'fake_news', labelKey: 'scan_settings.model_fake_news', eliteOnly: true },
 ]
 
 const AUDIO_OPTIONS = [
@@ -66,6 +68,7 @@ function SectionToggle({ id, labelKey, isOn, onToggle, t, disabled, eliteBadge }
 export default function ScanSettingsPage({ onSettingsClick }) {
   const { t } = useTranslation()
   const { user } = useAuth()
+  const isElite = user?.subscriptionTier === 'elite' || user?.isPremium === true
   const [activeTab, setActiveTab] = useState('photo')
 
   const [photoModels, setPhotoModels] = useState(() => getActiveModelsForCategory('photo'))
@@ -153,6 +156,8 @@ export default function ScanSettingsPage({ onSettingsClick }) {
                   isOn={photoModels.includes(opt.id)}
                   onToggle={togglePhoto}
                   t={t}
+                  disabled={opt.eliteOnly && !isElite}
+                  eliteBadge={opt.eliteOnly}
                 />
               ))}
             </ul>
@@ -202,6 +207,8 @@ export default function ScanSettingsPage({ onSettingsClick }) {
                   isOn={videoModels.includes(opt.id)}
                   onToggle={toggleVideo}
                   t={t}
+                  disabled={opt.eliteOnly && !isElite}
+                  eliteBadge={opt.eliteOnly}
                 />
               ))}
             </ul>

@@ -95,6 +95,33 @@ export default function VerdictScreen({
           <p className="text-sm text-slate-300 leading-relaxed">{summary}</p>
         </section>
       )}
+      {metadata?.credibility && (
+        <section className="w-full rounded-xl bg-slate-800/60 border border-amber-500/40 p-4">
+          <h3 className="text-sm font-medium text-amber-400 mb-3">{t('verdict.credibility_meter')}</h3>
+          {metadata.credibility.error ? (
+            <p className="text-sm text-amber-400/90">
+              {t(metadata.credibility.reasoning === 'credibility_error_rate_limit' ? 'verdict.credibility_error_rate_limit' : 'verdict.credibility_error_unavailable')}
+            </p>
+          ) : (
+            <>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex-1 h-4 bg-slate-700 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      metadata.credibility.score >= 70 ? 'bg-emerald-500' : metadata.credibility.score >= 40 ? 'bg-amber-500' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${metadata.credibility.score}%` }}
+                  />
+                </div>
+                <span className="text-white font-bold tabular-nums shrink-0">{metadata.credibility.score}%</span>
+              </div>
+              {metadata.credibility.reasoning && (
+                <p className="text-sm text-slate-400 leading-relaxed">{metadata.credibility.reasoning}</p>
+              )}
+            </>
+          )}
+        </section>
+      )}
       <RealTimeAnalysis isComplete fileType={fileType} scannedModels={scannedModels} modelScores={modelScores} aiSignatures={aiSignatures} metadata={metadata} />
       {metadata && (
         <section className="w-full rounded-xl bg-slate-800/60 border border-slate-600/60 p-4">
