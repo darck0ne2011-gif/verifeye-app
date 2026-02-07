@@ -4,10 +4,6 @@ import { detectAiImage, detectAiVideo } from './sightengine.js'
 import { analyzeVideoSequential } from './services/videoScanner.js'
 import { classifyAudioWithSightengine } from './services/audioScanner.js'
 import { extractVideoTracks } from './videoFrameExtractor.js'
-import { extractTextFromImage, extractTextFromFrames } from './services/ocrTextExtractor.js'
-import { analyzeNewsCredibility } from './services/deepseekAnalyst.js'
-import { analyzePhotoPostFactCheck } from './services/factChecker.js'
-
 // Known AI-generation resolutions (DALL-E, Midjourney, Stable Diffusion, etc.)
 const AI_SUSPICIOUS_RESOLUTIONS = new Set([
   '512x512', '512x768', '768x512', '768x768',
@@ -239,7 +235,6 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
             },
             data: {
               frames: extracted.frames.map((_, i) => ({ index: i })),
-              frameBuffers: extracted.frames, // Reuse for OCR (Fake News)
             },
           }
         }
@@ -352,58 +347,6 @@ export async function analyzeFile(buffer, originalName, mimeType, models = ['gen
   }
   if (sightengineResult?.lipSyncIntegrity != null) {
     metadata.lipSyncIntegrity = sightengineResult.lipSyncIntegrity
-  }
-
-  // Fake News / Credibility Detection (Elite + enabled: images + videos with extractable text)
-  const wantsFakeNews = Array.isArray(models) && models.includes('fake_news')
-  if (options.isElite && wantsFakeNews && (isImage || isVideo)) {
-    try {
-      let extractedText = ''
-      if (isImage) {
-        extractedText = await extractTextFromImage(buffer)
-      } else if (isVideo) {
-        const frameBuffers = sightengineResult?.data?.frameBuffers
-        if (Array.isArray(frameBuffers) && frameBuffers.length > 0) {
-          extractedText = await extractTextFromFrames(frameBuffers, 5)
-        } else {
-          const tracks = await extractVideoTracks(buffer, ext, { intervalSec: 2, maxFrames: 5 })
-          if (tracks?.frames?.length > 0) {
-            extractedText = await extractTextFromFrames(tracks.frames, 5)
-          }
-        }
-      }
-      if (isImage) {
-        // Photo posts: use factChecker with extracted text + Sightengine AI Pixel Analysis score
-        const aiPixelScore = source?.type?.ai_generated != null
-          ? Math.round(Number(source.type.ai_generated) * 100)
-          : aiProbability
-        const factCheck = await analyzePhotoPostFactCheck(extractedText, aiPixelScore, options.language)
-        if (factCheck) {
-          metadata.credibility = {
-            score: factCheck.score,
-            reasoning: factCheck.reasoning,
-            ...(factCheck.error && { error: factCheck.error }),
-            ...(!factCheck.error && {
-              credibilityRating: factCheck.credibilityRating,
-              redFlags: factCheck.redFlags || [],
-            }),
-          }
-        }
-      } else {
-        // Videos: use existing analyzeNewsCredibility (text + lipSync)
-        const lipSyncForCred = sightengineResult?.lipSyncIntegrity ?? null
-        const credibility = await analyzeNewsCredibility(extractedText, lipSyncForCred, options.language)
-        if (credibility) {
-          metadata.credibility = {
-            score: credibility.score,
-            reasoning: credibility.reasoning,
-            ...(credibility.error && { error: credibility.error }),
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('Fake News Detection:', err.message)
-    }
   }
 
   const result = {

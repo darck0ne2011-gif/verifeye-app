@@ -232,46 +232,6 @@ export function generateScanPdf(opts) {
   doc.text(`${score}%`, margin + 70, y)
   y += 40
 
-  // Credibility Meter (Fake News Detection)
-  if (metadata?.credibility) {
-    doc.setFontSize(11)
-    doc.setFont('helvetica', 'bold')
-    doc.setTextColor(DARK_BLUE)
-    doc.text(toPdfSafe(t?.('pdf.credibility_meter') || 'Credibility Meter (Fake News Detection)'), margin, y)
-    y += 16
-    doc.setFontSize(10)
-    doc.setFont('helvetica', 'normal')
-    doc.setTextColor(DARK_GRAY)
-    const scoreLabel = toPdfSafe(t?.('pdf.credibility_score') || 'Score')
-    const scoreVal = metadata.credibility.error
-      ? toPdfSafe(t?.('pdf.credibility_unavailable') || 'N/A')
-      : `${metadata.credibility.score}%`
-    doc.text(`${scoreLabel}: ${scoreVal}`, margin, y)
-    y += 14
-    if (metadata.credibility.reasoning && !metadata.credibility.error) {
-      const credLines = doc.splitTextToSize(toPdfSafe(metadata.credibility.reasoning), pageWidth - margin * 2)
-      doc.text(credLines, margin, y)
-      y += credLines.length * 12
-    }
-    if (metadata.credibility.redFlags?.length > 0 && !metadata.credibility.error) {
-      y += 8
-      doc.setFont('helvetica', 'bold')
-      doc.setTextColor(180, 0, 0)
-      doc.text(toPdfSafe(t?.('verdict.fact_check_results') || 'Fact-Check Results'), margin, y)
-      y += 12
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(DARK_GRAY)
-      for (const flag of metadata.credibility.redFlags) {
-        const flagLines = doc.splitTextToSize(toPdfSafe(flag), pageWidth - margin * 2 - 8)
-        doc.text(flagLines, margin + 4, y)
-        y += flagLines.length * 10 + 4
-      }
-      y += 12
-    } else {
-      y += 20
-    }
-  }
-
   // AI Expert Interpretation (DeepSeek) - directly under Verdict line
   const summary = expertSummary || metadata?.expertSummary
   if (summary) {

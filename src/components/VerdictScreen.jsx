@@ -96,64 +96,6 @@ export default function VerdictScreen({
           <p className="text-sm text-slate-300 leading-relaxed">{summary}</p>
         </section>
       )}
-      {metadata?.credibility && (
-        <>
-          <section className="w-full rounded-xl bg-slate-800/60 border border-amber-500/40 p-4">
-            <h3 className="text-sm font-medium text-amber-400 mb-3">{t('verdict.credibility_meter')}</h3>
-            {metadata.credibility.error ? (
-              <p className="text-sm text-amber-400/90">
-                {t(metadata.credibility.reasoning === 'credibility_error_rate_limit' ? 'verdict.credibility_error_rate_limit' : 'verdict.credibility_error_unavailable')}
-              </p>
-            ) : (
-              <>
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="flex-1 h-4 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${
-                        metadata.credibility.score >= 70 ? 'bg-emerald-500' : metadata.credibility.score >= 40 ? 'bg-amber-500' : 'bg-red-500'
-                      }`}
-                      style={{ width: `${metadata.credibility.score}%` }}
-                    />
-                  </div>
-                  <span className="text-white font-bold tabular-nums shrink-0">{metadata.credibility.score}%</span>
-                </div>
-                {metadata.credibility.credibilityRating && (
-                  <p className="text-sm font-medium text-slate-300 mb-2">
-                    {t('verdict.fact_check_rating')}:{' '}
-                    <span
-                      className={
-                        metadata.credibility.credibilityRating === 'High'
-                          ? 'text-emerald-400'
-                          : metadata.credibility.credibilityRating === 'Medium'
-                            ? 'text-amber-400'
-                            : 'text-red-400'
-                      }
-                    >
-                      {t(`verdict.credibility_${metadata.credibility.credibilityRating.toLowerCase()}`)}
-                    </span>
-                  </p>
-                )}
-                {metadata.credibility.reasoning && (
-                  <p className="text-sm text-slate-400 leading-relaxed">{metadata.credibility.reasoning}</p>
-                )}
-              </>
-            )}
-          </section>
-          {metadata.credibility.redFlags?.length > 0 && (
-            <section className="w-full rounded-xl bg-slate-800/60 border border-red-500/40 p-4">
-              <h3 className="text-sm font-medium text-red-400 mb-3">{t('verdict.fact_check_results')}</h3>
-              <ul className="space-y-2">
-                {metadata.credibility.redFlags.map((flag, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <span className="text-red-400 shrink-0 mt-0.5" aria-hidden>⚠</span>
-                    <span className="text-slate-300">{flag}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-        </>
-      )}
       <RealTimeAnalysis isComplete fileType={fileType} scannedModels={scannedModels} modelScores={modelScores} aiSignatures={aiSignatures} metadata={metadata} />
       {metadata && (
         <section className="w-full rounded-xl bg-slate-800/60 border border-slate-600/60 p-4">

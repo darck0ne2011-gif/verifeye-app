@@ -9,7 +9,6 @@ const PHOTO_OPTIONS = [
   { id: 'genai', labelKey: 'scan_settings.model_genai' },
   { id: 'type', labelKey: 'scan_settings.model_metadata' },
   { id: 'quality', labelKey: 'scan_settings.model_quality' },
-  { id: 'fake_news', labelKey: 'scan_settings.model_fake_news', eliteOnly: true },
 ]
 
 const VIDEO_OPTIONS = [
@@ -18,7 +17,6 @@ const VIDEO_OPTIONS = [
   { id: 'frame_integrity', labelKey: 'scan_settings.model_frame_integrity' },
   { id: 'video_voice_clone', labelKey: 'scan_settings.model_video_voice_clone', eliteOnly: true },
   { id: 'video_lip_sync', labelKey: 'scan_settings.model_video_lip_sync', eliteOnly: true },
-  { id: 'fake_news', labelKey: 'scan_settings.model_fake_news', eliteOnly: true },
 ]
 
 const AUDIO_OPTIONS = [
