@@ -142,7 +142,7 @@
     "why_fake": "Why is this a fake?",
     "probability": "{{value}}% PROBABILITY OF DEEPFAKE",
     "reason": "Reason: {{reason}}",
-    "reason_default": "At 0:04, the lighting on the face (98% ElevenLabs match) moves inconsistently with the head's movement, a clear sign of digital manipulation."
+    "reason_default": "AI-generated or manipulated content detected based on frame analysis and integrity scores."
   },
   "verified": {
     "result": "Verification Result",

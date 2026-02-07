@@ -54,6 +54,9 @@ export default function VerdictScreen({
 
   const summary = expertSummary ?? metadata?.expertSummary
 
+  // For videos: use expertSummary as reason (scan-specific). For images: use aiSignatures.
+  const deepfakeReason = reasonFromSignatures ?? (fileType === 'video' && summary ? summary : null)
+
   const handleDownloadPdf = () => {
     if (!canDownloadPdf && onUpgradeClick) {
       onUpgradeClick()
@@ -183,7 +186,7 @@ export default function VerdictScreen({
         </button>
       </div>
       {isDeepfake ? (
-        <DeepfakeAlert probability={score} reason={reasonFromSignatures} />
+        <DeepfakeAlert probability={score} reason={deepfakeReason} />
       ) : (
         <VerifiedBadge probability={score} />
       )}

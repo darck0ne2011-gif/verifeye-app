@@ -50,16 +50,23 @@ function getModelStatus(modelId, scannedModels, modelScores, aiSignatures) {
  * Get display value for a video analysis model in the breakdown.
  * Maps: genai → ai_generated, deepfake → deepfake, voice_clone → voiceCloneReasoning, lip_sync → lipSyncIntegrity.
  */
+/**
+ * Video scannedModels from API: genai, deepfake, voice_clone, lip_sync.
+ * temporal_ai + frame_integrity both map to genai.
+ */
 function getVideoModelStatus(modelId, scannedModels, modelScores, metadata) {
-  const wasRequested = Array.isArray(scannedModels) && scannedModels.includes(modelId)
+  const wasRequested = Array.isArray(scannedModels) && (
+    scannedModels.includes(modelId) ||
+    (modelId === 'genai' && scannedModels.some((m) => ['genai', 'temporal_ai', 'frame_integrity'].includes(m)))
+  )
   if (!wasRequested) return 'Not Requested'
 
   if (modelId === 'voice_clone') {
-    const v = metadata?.audioAnalysis?.voiceCloneReasoning
+    const v = metadata?.audioAnalysis?.voiceCloneReasoning ?? modelScores?.voice_clone_reasoning
     return (typeof v === 'string' && v.trim()) ? v : 'Not Applicable'
   }
   if (modelId === 'lip_sync') {
-    const v = metadata?.lipSyncIntegrity
+    const v = metadata?.lipSyncIntegrity ?? modelScores?.lip_sync_integrity
     return toDisplayScore(v) ?? 'Not Applicable'
   }
   const key = modelId === 'genai' ? 'ai_generated' : modelId === 'deepfake' ? 'deepfake' : null
@@ -245,10 +252,11 @@ export function generateScanPdf(opts) {
 
   const modelRows = isVideo
     ? [
-        ['Temporal AI Consistency', getVideoModelStatus('genai', scannedModels, modelScores)],
-        ['Video Deepfake Detection', getVideoModelStatus('deepfake', scannedModels, modelScores)],
-        ['Voice Clone Detection', getVideoModelStatus('voice_clone', scannedModels, metadata)],
-        ['Lip-Sync Integrity', getVideoModelStatus('lip_sync', scannedModels, metadata)],
+        ['Temporal AI Consistency', getVideoModelStatus('genai', scannedModels, modelScores, metadata)],
+        ['Video Deepfake Detection', getVideoModelStatus('deepfake', scannedModels, modelScores, metadata)],
+        ['Frame Integrity', getVideoModelStatus('genai', scannedModels, modelScores, metadata)],
+        ['Voice Clone Detection', getVideoModelStatus('voice_clone', scannedModels, modelScores, metadata)],
+        ['Lip-Sync Integrity', getVideoModelStatus('lip_sync', scannedModels, modelScores, metadata)],
       ]
     : [
         ['Deepfake Detection', getModelStatus('deepfake', scannedModels, modelScores, aiSignatures)],
@@ -264,8 +272,8 @@ export function generateScanPdf(opts) {
     headStyles: { fillColor: DARK_BLUE, textColor: '#fff', fontStyle: 'bold' },
     bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
     columnStyles: {
-      0: { cellWidth: pageWidth - margin * 2 - 100 },
-      1: { cellWidth: 100, halign: 'right' },
+      0: { cellWidth: 150 },
+      1: { cellWidth: pageWidth - margin * 2 - 150, cellPadding: 4 },
     },
     margin: { left: margin },
     tableWidth: pageWidth - margin * 2,
@@ -300,8 +308,11 @@ export function generateScanPdf(opts) {
       if (metadata?.frameRate != null) metaRows.push(['Frame Rate', `${metadata.frameRate} fps`])
       metaRows.push(['Frames Analyzed', metadata?.framesAnalyzed != null ? String(metadata.framesAnalyzed) : '—'])
       metaRows.push(['Analysis Method', metadata?.analysisMethod === 'native_video' ? 'Native Video (Sequential)' : metadata?.analysisMethod === 'frame_based' ? 'Frame-Based (Fast)' : '—'])
-      if (metadata?.audioAnalysis) {
-        metaRows.push(['Voice Authenticity', 'Sightengine Audio Engine'])
+      if (metadata?.lipSyncIntegrity != null) {
+        metaRows.push(['Lip-Sync Integrity', toDisplayScore(metadata.lipSyncIntegrity) ?? '—'])
+      }
+      if (metadata?.audioAnalysis?.voiceCloneReasoning) {
+        metaRows.push(['Voice Clone', 'DeepSeek (metadata + lip-sync)'])
       }
     }
     if (metaRows.length > 0) {

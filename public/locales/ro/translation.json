@@ -94,7 +94,7 @@
     "why_fake": "De ce este fals?",
     "probability": "{{value}}% PROBABILITATE DEEPFAKE",
     "reason": "Motiv: {{reason}}",
-    "reason_default": "La 0:04, iluminatul feței (98% match ElevenLabs) se mișcă inconsistent cu mișcarea capului, un semn clar de manipulare digitală."
+    "reason_default": "Conținut AI-generat sau manipulat detectat pe baza analizei cadrelor și a scorurilor de integritate."
   },
   "verified": {
     "result": "Rezultat verificare",
