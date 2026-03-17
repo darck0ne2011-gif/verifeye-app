@@ -67,36 +67,7 @@ function getModelStatus(modelId, scannedModels, modelScores, aiSignatures, t) {
   return score ?? na
 }
 
-/**
- * Get display value for a video analysis model in the breakdown.
- * Maps: genai → ai_generated, deepfake → deepfake, voice_clone → voiceCloneReasoning, lip_sync → lipSyncIntegrity.
- */
-/**
- * Video scannedModels from API: genai, deepfake, voice_clone, lip_sync.
- * temporal_ai + frame_integrity both map to genai.
- */
-function getVideoModelStatus(modelId, scannedModels, modelScores, metadata, t) {
-  const wasRequested = Array.isArray(scannedModels) && (
-    scannedModels.includes(modelId) ||
-    (modelId === 'genai' && scannedModels.some((m) => ['genai', 'temporal_ai', 'frame_integrity'].includes(m)))
-  )
-  const nr = t?.('pdf.not_requested') || 'Not Requested'
-  const na = t?.('pdf.not_applicable') || 'N/A'
-  if (!wasRequested) return nr
-
-  if (modelId === 'voice_clone') {
-    const v = metadata?.audioAnalysis?.voiceCloneReasoning ?? modelScores?.voice_clone_reasoning
-    return (typeof v === 'string' && v.trim()) ? v : na
-  }
-  if (modelId === 'lip_sync') {
-    const v = metadata?.lipSyncIntegrity ?? modelScores?.lip_sync_integrity
-    return toDisplayScore(v) ?? na
-  }
-  const key = modelId === 'genai' ? 'ai_generated' : modelId === 'deepfake' ? 'deepfake' : null
-  if (!key || !modelScores) return na
-  const score = toDisplayScore(modelScores[key])
-  return score ?? na
-}
+// Video/audio PDF helpers removed (photo-only mode).
 
 /**
  * Build detection signals list from aiSignatures for PDF display.
@@ -158,7 +129,7 @@ export function generateScanPdf(opts) {
   } = opts
 
   const mediaType = mediaCategory ?? metadata?.mediaCategory ?? 'image'
-  const isVideo = mediaType === 'video'
+  const isVideo = false
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
@@ -279,20 +250,12 @@ export function generateScanPdf(opts) {
   y += 20
 
   const tval = (k, d) => toPdfSafe(t?.(k) || d)
-  const modelRows = isVideo
-    ? [
-        [tval('pdf.analysis_temporal_ai', 'Temporal AI Consistency'), getVideoModelStatus('genai', scannedModels, modelScores, metadata, t)],
-        [tval('pdf.analysis_video_deepfake', 'Video Deepfake Detection'), getVideoModelStatus('deepfake', scannedModels, modelScores, metadata, t)],
-        [tval('pdf.analysis_frame_integrity', 'Frame Integrity'), getVideoModelStatus('genai', scannedModels, modelScores, metadata, t)],
-        [tval('pdf.analysis_voice_clone', 'Voice Clone Detection'), getVideoModelStatus('voice_clone', scannedModels, modelScores, metadata, t)],
-        [tval('pdf.analysis_lip_sync', 'Lip-Sync Integrity'), getVideoModelStatus('lip_sync', scannedModels, modelScores, metadata, t)],
-      ]
-    : [
-        [tval('pdf.analysis_deepfake', 'Deepfake Detection'), getModelStatus('deepfake', scannedModels, modelScores, aiSignatures, t)],
-        [tval('pdf.analysis_genai', 'AI Pixel Analysis'), getModelStatus('genai', scannedModels, modelScores, aiSignatures, t)],
-        [tval('pdf.analysis_metadata', 'Metadata Check'), getModelStatus('type', scannedModels, modelScores, aiSignatures, t)],
-        [tval('pdf.analysis_quality', 'Image Quality'), getModelStatus('quality', scannedModels, modelScores, aiSignatures, t)],
-      ]
+  const modelRows = [
+    [tval('pdf.analysis_deepfake', 'Deepfake Detection'), getModelStatus('deepfake', scannedModels, modelScores, aiSignatures, t)],
+    [tval('pdf.analysis_genai', 'AI Pixel Analysis'), getModelStatus('genai', scannedModels, modelScores, aiSignatures, t)],
+    [tval('pdf.analysis_metadata', 'Metadata Check'), getModelStatus('type', scannedModels, modelScores, aiSignatures, t)],
+    [tval('pdf.analysis_quality', 'Image Quality'), getModelStatus('quality', scannedModels, modelScores, aiSignatures, t)],
+  ]
   autoTable(doc, {
     startY: y,
     head: [[toPdfSafe(t?.('pdf.analysis_type') || 'Analysis Type'), toPdfSafe(t?.('pdf.status') || 'Status')]],
@@ -309,13 +272,13 @@ export function generateScanPdf(opts) {
   })
   y = doc.lastAutoTable.finalY + 20
 
-  // Metadata snippet (image or video)
-  const hasMetadata = metadata && (metadata.fileType || metadata.sizeFormatted || metadata.extension || isVideo)
+  // Metadata snippet (image only)
+  const hasMetadata = metadata && (metadata.fileType || metadata.sizeFormatted || metadata.extension)
   if (hasMetadata) {
     doc.setFontSize(12)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(DARK_BLUE)
-    doc.text(toPdfSafe(isVideo ? (t?.('pdf.video_metadata') || 'Video Metadata') : (t?.('pdf.file_metadata') || 'File Metadata')), margin, y)
+    doc.text(toPdfSafe(t?.('pdf.file_metadata') || 'File Metadata'), margin, y)
     y += 20
 
     const mt = (k, d) => toPdfSafe(t?.(k) || d)
@@ -326,25 +289,11 @@ export function generateScanPdf(opts) {
     if (metadata?.sizeFormatted || metadata?.size != null) {
       metaRows.push([mt('pdf.meta_size', 'Size'), metadata.sizeFormatted || `${metadata.size ?? 0} B`])
     }
-    if (!isVideo && metadata?.resolution) {
+    if (metadata?.resolution) {
       metaRows.push([mt('pdf.meta_resolution', 'Resolution'), metadata.resolution])
     }
-    if (!isVideo && metadata?.createdAt) {
+    if (metadata?.createdAt) {
       metaRows.push([mt('pdf.meta_created', 'Created'), String(metadata.createdAt)])
-    }
-    if (isVideo) {
-      if (metadata?.duration != null) metaRows.push([mt('pdf.meta_duration', 'Duration'), String(metadata.duration)])
-      if (metadata?.resolution) metaRows.push([mt('pdf.meta_resolution', 'Resolution'), String(metadata.resolution)])
-      if (metadata?.frameRate != null) metaRows.push([mt('pdf.meta_frame_rate', 'Frame Rate'), `${metadata.frameRate} fps`])
-      metaRows.push([mt('pdf.meta_frames_analyzed', 'Frames Analyzed'), metadata?.framesAnalyzed != null ? String(metadata.framesAnalyzed) : '—'])
-      const am = metadata?.analysisMethod === 'native_video' ? mt('pdf.analysis_method_native', 'Native Video (Sequential)') : metadata?.analysisMethod === 'frame_based' ? mt('pdf.analysis_method_frame', 'Frame-Based (Fast)') : '—'
-      metaRows.push([mt('pdf.meta_analysis_method', 'Analysis Method'), am])
-      if (metadata?.lipSyncIntegrity != null) {
-        metaRows.push([mt('pdf.meta_lip_sync', 'Lip-Sync Integrity'), toDisplayScore(metadata.lipSyncIntegrity) ?? '—'])
-      }
-      if (metadata?.audioAnalysis?.voiceCloneReasoning) {
-        metaRows.push([mt('pdf.meta_voice_clone', 'Voice Clone'), 'DeepSeek (metadata + lip-sync)'])
-      }
     }
     if (metaRows.length > 0) {
       autoTable(doc, {

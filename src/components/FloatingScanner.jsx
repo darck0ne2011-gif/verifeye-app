@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
-import { getActiveModels, getActiveModelsForCategory, getMaxCreditsPerScan, getVideoAnalysisEngine } from '../utils/scanSettings'
+import { getActiveModels, getMaxCreditsPerScan } from '../utils/scanSettings'
 import { getMediaCategory } from '../utils/fileType'
 import { getWinningDisplay } from '../utils/verdictScore'
 
@@ -118,23 +118,11 @@ export default function FloatingScanner() {
     setScanning(true)
     setMiniResult(null)
 
-    const mediaTags = document.querySelectorAll('video, audio')
-    const count = mediaTags.length
-
     await new Promise((r) => setTimeout(r, MIN_SCAN_DURATION_MS))
 
-    const simulatedFakeProb = count > 0 ? Math.floor(Math.random() * 40) + 10 : 0
-    const { status, displayScore: simulatedScore } = getWinningDisplay(simulatedFakeProb)
-    const fileName = count > 0
-      ? `Page media (${count} element${count > 1 ? 's' : ''})`
-      : 'No media on page'
-
     setMiniResult({
-      status,
-      score: simulatedScore,
-      message: count > 0
-        ? `${status} — ${simulatedScore}%`
-        : 'No video or audio found on this page',
+      status: 'INFO',
+      message: 'Quick Scan is currently photo-only. Use Quick Upload to scan an image.',
     })
     setScanning(false)
     await refreshUser()
@@ -159,10 +147,6 @@ export default function FloatingScanner() {
         formData.append('file', file)
         formData.append('models', getActiveModels(getMediaCategory(file)).join(','))
         formData.append('language', i18n.language || 'en')
-        if (getMediaCategory(file) === 'video') {
-          formData.append('videoAnalysisEngine', getVideoAnalysisEngine())
-          formData.append('videoModelIds', getActiveModelsForCategory('video').join(','))
-        }
 
         const startTime = Date.now()
         const res = await fetch(`${API_BASE}/api/analyze`, {
@@ -215,7 +199,7 @@ export default function FloatingScanner() {
       const files = e.dataTransfer?.files
       if (files?.length && hasCredits) {
         const file = files[0]
-        if (/^(video|audio|image)\//.test(file.type)) {
+        if (/^image\//.test(file.type)) {
           setShowDropZone(false)
           processFile(file)
         }
@@ -440,7 +424,7 @@ export default function FloatingScanner() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="video/*,audio/*,image/*"
+        accept="image/*"
         className="hidden"
         onChange={handleFileChange}
       />

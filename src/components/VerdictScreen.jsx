@@ -54,8 +54,7 @@ export default function VerdictScreen({
 
   const summary = expertSummary ?? metadata?.expertSummary
 
-  // For videos: use expertSummary as reason (scan-specific). For images: use aiSignatures.
-  const deepfakeReason = reasonFromSignatures ?? (fileType === 'video' && summary ? summary : null)
+  const deepfakeReason = reasonFromSignatures ?? (summary ? summary : null)
 
   const handleDownloadPdf = () => {
     if (!canDownloadPdf && onUpgradeClick) {
@@ -115,32 +114,7 @@ export default function VerdictScreen({
                 <dd className="text-white">{metadata.createdAt}</dd>
               </div>
             )}
-            {metadata.mediaCategory === 'video' && metadata.framesAnalyzed != null && (
-              <div className="flex justify-between">
-                <dt className="text-slate-500">Frames Analyzed</dt>
-                <dd className="text-white">{metadata.framesAnalyzed}</dd>
-              </div>
-            )}
-            {metadata.mediaCategory === 'video' && metadata.audioAnalysis?.voiceCloneReasoning && (
-              <div className="flex flex-col gap-1">
-                <dt className="text-slate-500">Voice Clone Detection</dt>
-                <dd className="text-white text-sm">{metadata.audioAnalysis.voiceCloneReasoning}</dd>
-              </div>
-            )}
-            {metadata.mediaCategory === 'video' && metadata.lipSyncIntegrity != null && (
-              <div className="flex justify-between">
-                <dt className="text-slate-500">Lip-Sync Integrity</dt>
-                <dd className="text-white">{Math.round(metadata.lipSyncIntegrity * 100)}%</dd>
-              </div>
-            )}
-            {metadata.mediaCategory === 'video' && metadata.analysisMethod && (
-              <div className="flex justify-between">
-                <dt className="text-slate-500">{t('verdict.analysis_method')}</dt>
-                <dd className="text-white">
-                  {metadata.analysisMethod === 'native_video' ? t('verdict.analysis_native_video') : t('verdict.analysis_frame_based')}
-                </dd>
-              </div>
-            )}
+            {/* Video/audio fields disabled (photo-only mode) */}
           </dl>
           {aiSignatures && (aiSignatures.missingExif || aiSignatures.suspiciousResolution || (aiSignatures.softwareTags?.length > 0)) && (
             <div className="mt-3 pt-3 border-t border-slate-600/60">

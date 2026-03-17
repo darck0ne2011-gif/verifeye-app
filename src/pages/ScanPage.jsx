@@ -8,17 +8,11 @@ import OverlayButton from '../components/OverlayButton'
 import GlobalAlerts from '../components/GlobalAlerts'
 import DropZone from '../components/DropZone'
 import CircularProgressLoader from '../components/CircularProgressLoader'
-import { getActiveModels, getActiveModelsForCategory, getMaxCreditsPerScan, getVideoAnalysisEngine } from '../utils/scanSettings'
+import { getActiveModels, getMaxCreditsPerScan } from '../utils/scanSettings'
 import { getMediaCategory } from '../utils/fileType'
 import { getWinningDisplay } from '../utils/verdictScore'
 import VerdictScreen from '../components/VerdictScreen'
 const MIN_SCAN_DURATION_MS = 3000
-const MIN_SCAN_DURATION_MS_VIDEO = 8000
-
-function getMinScanDurationMs(file) {
-  const isVideo = file?.type && /^video\//i.test(file.type)
-  return isVideo ? MIN_SCAN_DURATION_MS_VIDEO : MIN_SCAN_DURATION_MS
-}
 const PROGRESS_UPDATE_INTERVAL_MS = 30
 
 export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
@@ -68,6 +62,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
     const file = files?.[0]
     if (!file) return
     if (scansCountRef.current <= 0) return
+    if (!/^image\//i.test(file.type || '')) return
 
     setSelectedFile(file)
     setUploadError(null)
@@ -92,10 +87,6 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
         formData.append('file', file)
         formData.append('models', models.join(','))
         formData.append('language', i18n.language || 'en')
-        if (getMediaCategory(file) === 'video') {
-          formData.append('videoAnalysisEngine', getVideoAnalysisEngine())
-          formData.append('videoModelIds', getActiveModelsForCategory('video').join(','))
-        }
 
         const res = await fetch(`${API_BASE}/api/analyze`, {
           method: 'POST',
@@ -147,7 +138,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
       }
     }
 
-    const minDuration = getMinScanDurationMs(file)
+    const minDuration = MIN_SCAN_DURATION_MS
     const startTime = Date.now()
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - startTime
@@ -305,7 +296,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
       <input
         ref={fileInputRef}
         type="file"
-        accept="video/mp4,video/quicktime,video/x-msvideo,video/webm,.mp4,.mov,.avi,.webm,audio/*,image/*"
+        accept="image/*"
         className="hidden"
         onChange={(e) => {
           const files = e.target.files

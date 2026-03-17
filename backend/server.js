@@ -41,11 +41,11 @@ const upload = multer({
   storage,
   limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    const allowed = /video|audio|image/i
-    if (allowed.test(file.mimetype)) {
+    const allowed = /^image\//i
+    if (allowed.test(file.mimetype || '')) {
       cb(null, true)
     } else {
-      cb(new Error('Only video, audio, or image files are allowed'), false)
+      cb(new Error('Only image files are allowed'), false)
     }
   },
 })
@@ -288,18 +288,19 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
     const rawModels = req.body?.models || req.body?.modelsString || 'genai'
     const modelsList = typeof rawModels === 'string' ? rawModels.split(',').map((m) => m.trim()).filter(Boolean) : []
     let models = modelsList.length ? modelsList : ['genai']
-    const isVideo = /^video\//i.test(req.file?.mimetype || '')
-    // All video models allowed for all users (testing)
     const creditsToCharge = models.length
 
     if (!isElite && getCredits(userId) < creditsToCharge) {
       return res.status(402).json({ success: false, error: `Need ${creditsToCharge} credits (1 per model). You have ${getCredits(userId)}.` })
     }
 
-    const hasSightengineCreds = !!(process.env.SIGHTENGINE_USER || process.env.SIGHTENGINE_API_USER) && !!(process.env.SIGHTENGINE_SECRET || process.env.SIGHTENGINE_API_SECRET)
     const isImage = /^image\//i.test(file.mimetype || '')
-    const isAudio = /^audio\//i.test(file.mimetype || '')
-    if ((isVideo || isImage || isAudio) && !hasSightengineCreds) {
+    if (!isImage) {
+      return res.status(400).json({ success: false, error: 'Only photo (image) scans are supported right now.' })
+    }
+
+    const hasSightengineCreds = !!(process.env.SIGHTENGINE_USER || process.env.SIGHTENGINE_API_USER) && !!(process.env.SIGHTENGINE_SECRET || process.env.SIGHTENGINE_API_SECRET)
+    if (!hasSightengineCreds) {
       return res.status(503).json({ success: false, error: 'API Configuration Missing', code: 'API_CONFIG_MISSING' })
     }
 
@@ -313,17 +314,13 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
 
     if (missingModels.length === 0 && cached?.results) {
       console.log('--- Modular Memory: full cache hit (all models cached) ---')
-      const videoAnalysisEngine = isElite ? (req.body?.videoAnalysisEngine || 'frame_based') : 'frame_based'
-      const videoModelIds = isVideo && req.body?.videoModelIds
-        ? String(req.body.videoModelIds).split(',').map((m) => m.trim()).filter(Boolean)
-        : []
       const analysis = await analyzeFile(
         file.buffer,
         file.originalname,
         file.mimetype,
         models,
         cached.results,
-        { isElite, videoAnalysisEngine, videoModelIds, language }
+        { isElite, language }
       )
       {
         const fp = analysis.fakeProbability ?? 0
@@ -377,17 +374,13 @@ app.post('/api/analyze', authMiddleware, upload.single('file'), async (req, res)
       })
     }
 
-    const videoAnalysisEngine = isElite ? (req.body?.videoAnalysisEngine || 'frame_based') : 'frame_based'
-    const videoModelIds = isVideo && req.body?.videoModelIds
-      ? String(req.body.videoModelIds).split(',').map((m) => m.trim()).filter(Boolean)
-      : []
     const analysis = await analyzeFile(
       file.buffer,
       file.originalname,
       file.mimetype,
       models,
       cached?.results ?? null,
-      { isElite, videoAnalysisEngine, videoModelIds, language }
+      { isElite, language }
     )
 
     let expertSummary = null
