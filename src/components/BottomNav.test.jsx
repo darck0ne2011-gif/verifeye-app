@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import BottomNav from './BottomNav'
 
 vi.mock('react-i18next', () => ({
@@ -7,17 +8,17 @@ vi.mock('react-i18next', () => ({
 }))
 
 describe('BottomNav', () => {
-  it('renders every tab with its icon and switches tabs', () => {
-    const onTabChange = vi.fn()
-    render(<BottomNav activeTab="home" onTabChange={onTabChange} />)
-
+  it('renders every tab with its icon and marks the active route', () => {
+    render(
+      <MemoryRouter initialEntries={['/history']}>
+        <BottomNav />
+      </MemoryRouter>
+    )
     for (const key of ['nav.home', 'nav.history', 'nav.scan_settings', 'nav.upgrade']) {
       expect(screen.getByText(key)).toBeInTheDocument()
     }
-    // One SVG icon per tab.
     expect(document.querySelectorAll('svg')).toHaveLength(4)
-
-    fireEvent.click(screen.getByText('nav.history'))
-    expect(onTabChange).toHaveBeenCalledWith('history')
+    expect(screen.getByText('nav.history').closest('a')).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByText('nav.home').closest('a')).not.toHaveAttribute('aria-current')
   })
 })

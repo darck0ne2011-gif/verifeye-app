@@ -18,8 +18,8 @@ export default class ErrorBoundary extends Component {
   render() {
     if (!this.state.error) return this.props.children
     return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center px-6">
-        <div className="max-w-md w-full rounded-xl bg-slate-800/60 border border-red-500/40 p-6 text-center">
+      <div className="min-h-screen bg-bg flex items-center justify-center px-6">
+        <div className="max-w-md w-full rounded-xl card border-ai/40 p-6 text-center">
           <h1 className="text-white font-semibold text-lg mb-2">Something went wrong</h1>
           <p className="text-slate-400 text-sm mb-4">
             The app hit an unexpected error. Reloading usually fixes it; if it keeps happening, please report it.
@@ -30,7 +30,7 @@ export default class ErrorBoundary extends Component {
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium"
+            className="px-4 py-2 rounded-lg bg-accent text-bg hover:bg-accent-hover text-sm font-medium"
           >
             Reload
           </button>

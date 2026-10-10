@@ -2,19 +2,19 @@ import { useTranslation } from 'react-i18next'
 import { getMediaCategory } from '../utils/fileType.js'
 
 const XIcon = () => (
-  <svg className="w-6 h-6 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-6 h-6 flex-shrink-0 text-ai" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
   </svg>
 )
 
 const CheckIcon = () => (
-  <svg className="w-6 h-6 flex-shrink-0 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-6 h-6 flex-shrink-0 text-real" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
   </svg>
 )
 
 const DashIcon = () => (
-  <svg className="w-6 h-6 flex-shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-6 h-6 flex-shrink-0 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
   </svg>
 )
@@ -132,7 +132,7 @@ export default function RealTimeAnalysis({ fileType, scannedModels, modelScores,
 
   return (
     <section className="w-full max-w-4xl mx-auto">
-      <h2 className="text-base font-medium text-white mb-4">{t('analysis.title')}</h2>
+      <h2 className="text-sm font-semibold text-muted uppercase tracking-wide mb-3">{t('analysis.title')}</h2>
       <div className="space-y-4">
         {items.map((item) => {
           const Icon = item.icon
@@ -143,19 +143,19 @@ export default function RealTimeAnalysis({ fileType, scannedModels, modelScores,
               key={item.modelId}
               className={`flex items-start justify-between gap-3 py-3 px-4 rounded-xl border ${
                 state === 'fail'
-                  ? 'bg-red-950/30 border-red-500/40'
+                  ? 'bg-ai-soft border-ai/40'
                   : state === 'skipped'
-                    ? 'bg-slate-800/40 border-slate-700/40 opacity-80'
-                    : 'bg-verifeye-card border-slate-700/50'
+                    ? 'bg-surface border-line opacity-70'
+                    : 'bg-surface border-line'
               }`}
             >
               <div className="flex items-start gap-3 flex-1 min-w-0">
                 <Icon />
                 <div>
-                  <p className="text-white font-medium">{t(`analysis.${item.key}.title`)}</p>
+                  <p className="text-fg font-medium">{t(`analysis.${item.key}.title`)}</p>
                   <p
                     className={`text-sm mt-0.5 ${
-                      state === 'fail' ? 'text-red-400' : state === 'info' ? 'text-amber-300/90' : 'text-slate-400'
+                      state === 'fail' ? 'text-ai' : state === 'info' ? 'text-unclear' : 'text-muted'
                     }`}
                   >
                     {subtitle}

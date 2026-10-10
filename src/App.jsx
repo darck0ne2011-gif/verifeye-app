@@ -1,116 +1,56 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from './context/AuthContext'
-import ScanPage from './pages/ScanPage'
+import AppShell from './layouts/AppShell'
+import RequireAuth from './components/RequireAuth'
+import HomePage from './pages/HomePage'
+import ScanResultPage from './pages/ScanResultPage'
 import HistoryPage from './pages/HistoryPage'
+import HistoryDetailPage from './pages/HistoryDetailPage'
 import ScanSettingsPage from './pages/ScanSettingsPage'
 import UpgradePage from './pages/UpgradePage'
 import SettingsPage from './pages/SettingsPage'
 import AuthPage from './pages/AuthPage'
-import BottomNav from './components/BottomNav'
-import FloatingScanner from './components/FloatingScanner'
+import LegalRoute from './pages/LegalRoute'
 
-function App() {
+const Splash = () => (
+  <div className="min-h-screen bg-bg flex items-center justify-center">
+    <div className="w-10 h-10 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+  </div>
+)
+
+export default function App() {
   const { t, i18n } = useTranslation()
-  const { user, loading, login, register, oauthError, clearOauthError } = useAuth()
+  const { user, loading } = useAuth()
 
   useEffect(() => {
     document.title = t('app.title')
+    document.documentElement.lang = (i18n.language || 'en').split('-')[0]
   }, [t, i18n.language])
-  const initNav = () => {
-    try {
-      const s = sessionStorage.getItem('verifeye_nav')
-      if (s) {
-        const p = JSON.parse(s)
-        return { tab: p.tab || 'home', settings: !!p.settings }
-      }
-    } catch {}
-    return { tab: 'home', settings: false }
-  }
-  const [activeTab, setActiveTab] = useState(() => initNav().tab)
-  const [showSettings, setShowSettings] = useState(() => initNav().settings)
-  const [authMode, setAuthMode] = useState('login')
-  const [authError, setAuthError] = useState('')
-  const [authLoading, setAuthLoading] = useState(false)
 
-  const handleAuthSubmit = async (email, password) => {
-    setAuthError('')
-    setAuthLoading(true)
-    try {
-      if (authMode === 'login') {
-        await login(email, password)
-      } else {
-        await register(email, password)
-      }
-      setActiveTab('home')
-      setShowSettings(false)
-      sessionStorage.setItem('verifeye_nav', JSON.stringify({ tab: 'home', settings: false }))
-      window.history.replaceState({}, '', '/')
-    } catch (err) {
-      setAuthError(err.message)
-    } finally {
-      setAuthLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    if (user) {
-      sessionStorage.setItem('verifeye_nav', JSON.stringify({ tab: activeTab, settings: showSettings }))
-    }
-  }, [user, activeTab, showSettings])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center">
-        <div className="w-10 h-10 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin" />
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <AuthPage
-        mode={authMode}
-        onSwitch={() => {
-          setAuthMode((m) => (m === 'login' ? 'register' : 'login'))
-          setAuthError('')
-          clearOauthError()
-        }}
-        onSubmit={handleAuthSubmit}
-        error={authError || oauthError}
-        loading={authLoading}
-      />
-    )
-  }
-
-  if (showSettings) {
-    return (
-      <SettingsPage
-        onBack={() => setShowSettings(false)}
-        onNavigate={(tab) => {
-          setActiveTab(tab)
-          setShowSettings(false)
-        }}
-      />
-    )
-  }
+  if (loading) return <Splash />
 
   return (
-    <>
-      <FloatingScanner />
-      <div className="pb-[100px] min-h-[100dvh]">
-        {activeTab === 'home' && (
-          <ScanPage onSettingsClick={() => setShowSettings(true)} onUpgradeClick={() => setActiveTab('upgrade')} />
-        )}
-        {activeTab === 'upgrade' && <UpgradePage onSettingsClick={() => setShowSettings(true)} />}
-        {activeTab === 'history' && (
-          <HistoryPage onSettingsClick={() => setShowSettings(true)} onUpgradeClick={() => setActiveTab('upgrade')} />
-        )}
-        {activeTab === 'scan_settings' && <ScanSettingsPage onSettingsClick={() => setShowSettings(true)} />}
-      </div>
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-    </>
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <AuthPage mode="login" />} />
+      <Route path="/register" element={user ? <Navigate to="/" replace /> : <AuthPage mode="register" />} />
+      <Route path="/legal/:type" element={<LegalRoute />} />
+
+      <Route element={<RequireAuth />}>
+        <Route element={<AppShell />}>
+          <Route index element={<HomePage />} />
+          <Route path="scan/:jobId" element={<ScanResultPage />} />
+          <Route path="history" element={<HistoryPage />} />
+          <Route path="history/:id" element={<HistoryDetailPage />} />
+          <Route path="models" element={<ScanSettingsPage />} />
+          <Route path="upgrade" element={<UpgradePage />} />
+        </Route>
+        <Route path="account" element={<SettingsPage />} />
+        <Route path="account/:tab" element={<SettingsPage />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
-
-export default App

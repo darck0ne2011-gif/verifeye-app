@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const AudioIcon = () => (
-  <svg className="w-10 h-10 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-10 h-10 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 12h2l2-6 3 12 3-9 2 6 2-3h2" />
   </svg>
 )
@@ -28,7 +28,7 @@ export default function MediaPreview({ file, mediaCategory, fileName, className 
   const name = fileName || file.name
 
   return (
-    <figure className={`w-full rounded-xl overflow-hidden bg-slate-900/80 border border-slate-700/60 ${className}`}>
+    <figure className={`w-full rounded-xl overflow-hidden bg-black/40 border border-line ${className}`}>
       {category === 'image' && <img src={url} alt={name} className="w-full max-h-72 object-contain bg-black" />}
       {category === 'video' && (
         <video src={url} controls playsInline preload="metadata" className="w-full max-h-72 bg-black" />
@@ -39,7 +39,7 @@ export default function MediaPreview({ file, mediaCategory, fileName, className 
           <audio src={url} controls preload="metadata" className="w-full" />
         </div>
       )}
-      <figcaption className="px-3 py-2 text-xs text-slate-400 truncate">{name}</figcaption>
+      <figcaption className="px-3 py-2 text-xs text-muted truncate">{name}</figcaption>
     </figure>
   )
 }

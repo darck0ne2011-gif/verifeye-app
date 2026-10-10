@@ -66,7 +66,8 @@
     "home": "Home",
     "history": "History",
     "scan_settings": "Scan Settings",
-    "upgrade": "Upgrade"
+    "upgrade": "Upgrade",
+    "main": "Main navigation"
   },
   "scan_settings": {
     "title": "Scan Settings",
@@ -142,8 +143,13 @@
       "processing": "Processing…",
       "done": "Done"
     },
-    "hint_pick_file": "Choose a photo, video or audio file to check it for AI generation or manipulation.",
-    "hint_ready": "Press Start Scanning to analyze this file."
+    "step": {
+      "uploading": "Upload",
+      "queued": "Queue",
+      "analyzing": "Analysis",
+      "scoring": "Verdict",
+      "done": "Done"
+    }
   },
   "dropzone": {
     "file_ready": "File Ready",
@@ -152,11 +158,6 @@
     "or_click": "or click to browse",
     "credits_hint": "This scan will use {{count}} credit(s)",
     "take_photo": "Take a photo"
-  },
-  "overlay": {
-    "out_of_credits": "Out of Credits",
-    "new_search": "NEW SEARCH",
-    "start_scanning": "START SCANNING"
   },
   "verdict": {
     "view_source": "View Original Source",
@@ -210,7 +211,8 @@
     "audio_track": "Audio track",
     "analyzed_seconds": "Audio analyzed",
     "source": "Source",
-    "source_screenshot": "Screenshot"
+    "source_screenshot": "Screenshot",
+    "ai_probability_label": "AI probability"
   },
   "deepfake": {
     "why_fake": "Why is this a fake?",
@@ -236,7 +238,16 @@
     "confirm_delete": "Delete",
     "cancel": "Cancel",
     "delete_failed": "Could not delete this entry",
-    "load_failed": "Could not load your history"
+    "load_failed": "Could not load your history",
+    "subtitle": "{{count}} scans",
+    "search": "Search by file name",
+    "filter_all": "All",
+    "filter_image": "Photos",
+    "filter_video": "Videos",
+    "filter_audio": "Audio",
+    "retry": "Try again",
+    "no_matches": "No scans match your filter.",
+    "start_first": "Verify your first file"
   },
   "settings": {
     "title": "Settings",
@@ -420,5 +431,33 @@
       "pass": "No synthetic speech detected",
       "fail": "Synthetic speech detected"
     }
+  },
+  "shell": {
+    "account": "Account"
+  },
+  "home": {
+    "title": "Verify a file",
+    "subtitle": "Photos, videos and voice recordings — find out whether they were generated or manipulated with AI.",
+    "analyze": "Analyze",
+    "starting": "Uploading…",
+    "change_file": "Change file",
+    "change_models": "Change models",
+    "cost": "This scan uses {{count}} credit(s)",
+    "balance": "you have {{count}}",
+    "no_credits": "You have no credits left. See the plans to get more.",
+    "unsupported_file": "Only photos, videos and audio files can be analyzed.",
+    "shared_unsupported": "The shared item is not a photo, video or audio file.",
+    "shared_links_soon": "Checking links is coming soon. Share the file itself (from the gallery or the app) instead.",
+    "recent": "Recent",
+    "see_all": "See all",
+    "category_image": "Photo",
+    "category_video": "Video",
+    "category_audio": "Audio"
+  },
+  "result": {
+    "title": "Verification result",
+    "analyzing": "Analyzing…",
+    "analyzing_hint": "You can leave this page; the result is saved in your history.",
+    "new_scan": "New scan"
   }
 }
