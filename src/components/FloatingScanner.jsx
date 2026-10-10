@@ -36,28 +36,43 @@ function saveFabPosition(x, y) {
 
 function snapToEdge(x) {
   const mid = typeof window !== 'undefined' ? window.innerWidth / 2 : 400
-  return x < mid ? PADDING : Math.max(PADDING, (typeof window !== 'undefined' ? window.innerWidth : 800) - FAB_SIZE - PADDING)
+  return x < mid
+    ? PADDING
+    : Math.max(PADDING, (typeof window !== 'undefined' ? window.innerWidth : 800) - FAB_SIZE - PADDING)
 }
 
-const VerifEyeLogo = () => (
-  <span className="text-white font-bold text-xl">V</span>
-)
+const VerifEyeLogo = () => <span className="text-white font-bold text-xl">V</span>
 
 const ScanIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+    />
   </svg>
 )
 
 const UploadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+    />
   </svg>
 )
 
 const StatusIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
   </svg>
 )
 
@@ -97,8 +112,8 @@ export default function FloatingScanner() {
   const [miniResult, setMiniResult] = useState(null)
   const [showDropZone, setShowDropZone] = useState(false)
   const [position, setPosition] = useState(() => loadFabPosition() ?? getDefaultPosition())
-  const [isDragging, setIsDragging] = useState(false)
-  const [isSnapping, setIsSnapping] = useState(false)
+  const [, setIsDragging] = useState(false)
+  const [, setIsSnapping] = useState(false)
   const fileInputRef = useRef(null)
   const dragStartRef = useRef(null)
   const hasDraggedRef = useRef(false)
@@ -232,50 +247,44 @@ export default function FloatingScanner() {
     [position, scanning]
   )
 
-  const handlePointerMove = useCallback(
-    (e) => {
-      const start = dragStartRef.current
-      if (!start) return
+  const handlePointerMove = useCallback((e) => {
+    const start = dragStartRef.current
+    if (!start) return
 
-      const dx = e.clientX - start.clientX
-      const dy = start.clientY - e.clientY
-      if (!hasDraggedRef.current && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
-        hasDraggedRef.current = true
-      }
+    const dx = e.clientX - start.clientX
+    const dy = start.clientY - e.clientY
+    if (!hasDraggedRef.current && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+      hasDraggedRef.current = true
+    }
 
-      const w = typeof window !== 'undefined' ? window.innerWidth : 800
-      const h = typeof window !== 'undefined' ? window.innerHeight : 600
-      const newX = Math.max(PADDING, Math.min(w - FAB_SIZE - PADDING, start.posX + dx))
-      const newY = Math.max(BOTTOM_NAV_HEIGHT, Math.min(h - FAB_SIZE - PADDING, start.posY + dy))
-      setPosition({ x: newX, y: newY })
-    },
-    []
-  )
+    const w = typeof window !== 'undefined' ? window.innerWidth : 800
+    const h = typeof window !== 'undefined' ? window.innerHeight : 600
+    const newX = Math.max(PADDING, Math.min(w - FAB_SIZE - PADDING, start.posX + dx))
+    const newY = Math.max(BOTTOM_NAV_HEIGHT, Math.min(h - FAB_SIZE - PADDING, start.posY + dy))
+    setPosition({ x: newX, y: newY })
+  }, [])
 
-  const handlePointerUp = useCallback(
-    (e) => {
-      e.currentTarget.releasePointerCapture?.(e.pointerId)
-      const start = dragStartRef.current
-      const didDrag = hasDraggedRef.current
-      dragStartRef.current = null
-      setIsDragging(false)
+  const handlePointerUp = useCallback((e) => {
+    e.currentTarget.releasePointerCapture?.(e.pointerId)
+    const start = dragStartRef.current
+    const didDrag = hasDraggedRef.current
+    dragStartRef.current = null
+    setIsDragging(false)
 
-      if (!start) return
+    if (!start) return
 
-      if (didDrag) {
-        setPosition((prev) => {
-          const snappedX = snapToEdge(prev.x)
-          saveFabPosition(snappedX, prev.y)
-          return { ...prev, x: snappedX }
-        })
-        setIsSnapping(true)
-        setTimeout(() => setIsSnapping(false), 350)
-      }
-    },
-    []
-  )
+    if (didDrag) {
+      setPosition((prev) => {
+        const snappedX = snapToEdge(prev.x)
+        saveFabPosition(snappedX, prev.y)
+        return { ...prev, x: snappedX }
+      })
+      setIsSnapping(true)
+      setTimeout(() => setIsSnapping(false), 350)
+    }
+  }, [])
 
-  const handleFabClick = useCallback((e) => {
+  const handleFabClick = useCallback(() => {
     if (hasDraggedRef.current) return
     setExpanded((prev) => !prev)
   }, [])
@@ -395,7 +404,8 @@ export default function FloatingScanner() {
           className="relative flex items-center justify-center w-14 h-14 rounded-full transition-all duration-300 ease-out group touch-none select-none"
           style={{
             background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.1)',
+            boxShadow:
+              '0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.1)',
             backdropFilter: 'blur(12px)',
           }}
           aria-label={expanded ? 'Close scanner' : 'Open scanner'}
@@ -421,13 +431,7 @@ export default function FloatingScanner() {
         </button>
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileChange}
-      />
+      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
 
       <style>{`
         @keyframes fab-pulse {

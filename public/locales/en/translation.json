@@ -14,7 +14,7 @@
     "password": "Password",
     "email_placeholder": "you@example.com",
     "password_placeholder_login": "••••••••",
-    "password_placeholder_register": "At least 6 characters",
+    "password_placeholder_register": "At least 8 characters",
     "show_password": "Show password",
     "hide_password": "Hide password",
     "please_wait": "Please wait...",
@@ -195,7 +195,7 @@
     "new_password": "New Password",
     "confirm_password": "Confirm New Password",
     "passwords_no_match": "New passwords do not match",
-    "password_min_length": "New password must be at least 6 characters",
+    "password_min_length": "New password must be at least 8 characters",
     "password_updated": "Password updated successfully.",
     "updating": "Updating...",
     "change_password": "Change Password",
@@ -311,11 +311,5 @@
     "verified": "Verified",
     "analysis_method_frame": "Frame-Based (Fast)",
     "analysis_method_native": "Native Video (Sequential)"
-  },
-  "alerts": {
-    "loading": "Loading alerts...",
-    "fallback_1": "Video with Marcel Ciolacu marked as FAKE 1,200 times today.",
-    "fallback_2": "News about car tax VERIFIED. Source: Guvernul.ro",
-    "fallback_3": "Viral clip with Klaus Iohannis marked as FAKE 890 times."
   }
 }

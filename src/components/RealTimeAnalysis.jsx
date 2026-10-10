@@ -10,28 +10,48 @@ const XIcon = () => (
 // deepfake -> Face/User icon
 const FaceIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+    />
   </svg>
 )
 
 // genai -> Image/Layers icon
 const ImageLayersIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+    />
   </svg>
 )
 
 // type -> File/Info icon
 const FileInfoIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+    />
   </svg>
 )
 
 // quality -> Check/Stars icon
 const QualityStarsIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+    />
   </svg>
 )
 
@@ -42,22 +62,78 @@ const CheckIcon = () => (
 )
 
 const IMAGE_ITEMS = [
-  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Deepfake Detection', passSubtitle: 'No face swap detected', failSubtitle: 'Deepfake detected' },
-  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'AI Pixel Analysis', passSubtitle: 'No AI generation detected', failSubtitle: 'AI generation detected' },
-  { modelId: MODEL_IDS.type, icon: FileInfoIcon, title: 'Metadata Check', passSubtitle: 'EXIF and file structure verified', failSubtitle: 'Metadata anomalies' },
-  { modelId: MODEL_IDS.quality, icon: QualityStarsIcon, title: 'Image Quality', passSubtitle: 'Quality score verified', failSubtitle: 'Low quality score' },
+  {
+    modelId: MODEL_IDS.deepfake,
+    icon: FaceIcon,
+    title: 'Deepfake Detection',
+    passSubtitle: 'No face swap detected',
+    failSubtitle: 'Deepfake detected',
+  },
+  {
+    modelId: MODEL_IDS.genai,
+    icon: ImageLayersIcon,
+    title: 'AI Pixel Analysis',
+    passSubtitle: 'No AI generation detected',
+    failSubtitle: 'AI generation detected',
+  },
+  {
+    modelId: MODEL_IDS.type,
+    icon: FileInfoIcon,
+    title: 'Metadata Check',
+    passSubtitle: 'EXIF and file structure verified',
+    failSubtitle: 'Metadata anomalies',
+  },
+  {
+    modelId: MODEL_IDS.quality,
+    icon: QualityStarsIcon,
+    title: 'Image Quality',
+    passSubtitle: 'Quality score verified',
+    failSubtitle: 'Low quality score',
+  },
 ]
 
 const AUDIO_ITEMS = [
-  { modelId: MODEL_IDS.genai, icon: ImageLayersIcon, title: 'Voice Frequency', passSubtitle: 'No synthetic voice detected', failSubtitle: 'Synthetic voice detected' },
-  { modelId: MODEL_IDS.deepfake, icon: FaceIcon, title: 'Neural Synthesis Check', passSubtitle: 'Vocal patterns verified', failSubtitle: 'Neural synthesis detected' },
+  {
+    modelId: MODEL_IDS.genai,
+    icon: ImageLayersIcon,
+    title: 'Voice Frequency',
+    passSubtitle: 'No synthetic voice detected',
+    failSubtitle: 'Synthetic voice detected',
+  },
+  {
+    modelId: MODEL_IDS.deepfake,
+    icon: FaceIcon,
+    title: 'Neural Synthesis Check',
+    passSubtitle: 'Vocal patterns verified',
+    failSubtitle: 'Neural synthesis detected',
+  },
 ]
 
 // Video: frame + optional Elite dual-track (audio, lip-sync)
 const VIDEO_ITEMS = [
-  { modelId: 'video_ai', icon: ImageLayersIcon, title: 'AI Detection Across Frames', passSubtitle: 'No AI-generated content detected in sampled frames', failSubtitle: 'AI-generated or manipulated content detected' },
-  { modelId: 'voice_clone', icon: FaceIcon, title: 'Voice Clone Detection', passSubtitle: 'No indication of synthetic voice cloning', failSubtitle: 'Indication of synthetic voice cloning', scannedKey: 'voice_clone' },
-  { modelId: 'lip_sync', icon: ImageLayersIcon, title: 'Lip-Sync Integrity', passSubtitle: 'Audio-visual sync verified', failSubtitle: 'Lip-sync anomalies detected', scannedKey: 'lip_sync' },
+  {
+    modelId: 'video_ai',
+    icon: ImageLayersIcon,
+    title: 'AI Detection Across Frames',
+    passSubtitle: 'No AI-generated content detected in sampled frames',
+    failSubtitle: 'AI-generated or manipulated content detected',
+  },
+  {
+    modelId: 'voice_clone',
+    icon: FaceIcon,
+    title: 'Voice Clone Detection',
+    passSubtitle: 'No indication of synthetic voice cloning',
+    failSubtitle: 'Indication of synthetic voice cloning',
+    scannedKey: 'voice_clone',
+  },
+  {
+    modelId: 'lip_sync',
+    icon: ImageLayersIcon,
+    title: 'Lip-Sync Integrity',
+    passSubtitle: 'Audio-visual sync verified',
+    failSubtitle: 'Lip-sync anomalies detected',
+    scannedKey: 'lip_sync',
+  },
 ]
 
 function getScoreForModel(modelId, modelScores) {
@@ -87,7 +163,9 @@ function getSubtitleAndStatus(item, modelScores, aiSignatures, metadata) {
   if (item.modelId === 'voice_clone') {
     const reasoning = metadata?.audioAnalysis?.voiceCloneReasoning ?? modelScores?.voice_clone_reasoning
     if (!reasoning) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
-    const hasSuspicion = /suspicion|yes|likely|probable|synthetic|cloned/i.test(reasoning) && !/no suspicion|low suspicion|unlikely/i.test(reasoning)
+    const hasSuspicion =
+      /suspicion|yes|likely|probable|synthetic|cloned/i.test(reasoning) &&
+      !/no suspicion|low suspicion|unlikely/i.test(reasoning)
     return { subtitle: reasoning, isFail: hasSuspicion }
   }
   if (item.modelId === 'lip_sync') {
@@ -137,7 +215,7 @@ function getItemsForScannedModels(mediaCategory, scannedModels) {
   return allItems.map((item) => ({ ...item, modelId: undefined }))
 }
 
-export default function RealTimeAnalysis({ isComplete = true, fileType, scannedModels, modelScores, aiSignatures, metadata }) {
+export default function RealTimeAnalysis({ fileType, scannedModels, modelScores, aiSignatures, metadata }) {
   const mediaCategory = getMediaCategory(fileType)
   const items = getItemsForScannedModels(mediaCategory, scannedModels)
 

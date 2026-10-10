@@ -5,7 +5,6 @@ import { API_BASE } from '../config.js'
 import { getLastScanResult, setLastScanResult, clearLastScanResult } from '../utils/lastScanResult'
 import DashboardHeader from '../components/DashboardHeader'
 import OverlayButton from '../components/OverlayButton'
-import GlobalAlerts from '../components/GlobalAlerts'
 import DropZone from '../components/DropZone'
 import CircularProgressLoader from '../components/CircularProgressLoader'
 import { getActiveModels, getMaxCreditsPerScan } from '../utils/scanSettings'
@@ -184,7 +183,6 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
       expertSummary: apiResult.expertSummary ?? null,
       error: apiResult.error ?? null,
     })
-
   }, [selectedFile, getAuthHeaders, refreshUser, logout, t])
 
   const handleBackToScan = useCallback(() => {
@@ -208,7 +206,11 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
   const handleOverlayClick = useCallback(() => {
     if (view === 'verdict') {
       handleBackToScan()
-    } else if (view === 'idle' && selectedFile && scansCountRef.current >= getActiveModels(getMediaCategory(selectedFile)).length) {
+    } else if (
+      view === 'idle' &&
+      selectedFile &&
+      scansCountRef.current >= getActiveModels(getMediaCategory(selectedFile)).length
+    ) {
       handleStartScan()
     }
   }, [view, selectedFile, handleBackToScan, handleStartScan])
@@ -225,71 +227,66 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
   return (
     <div className="min-h-screen bg-[#0d0d0d] flex flex-col pb-20">
       <DashboardHeader
-          scansCount={scansCount}
-          userEmail={user?.email}
-          subscriptionTier={user?.subscriptionTier}
-          onSettingsClick={onSettingsClick}
-        />
+        scansCount={scansCount}
+        userEmail={user?.email}
+        subscriptionTier={user?.subscriptionTier}
+        onSettingsClick={onSettingsClick}
+      />
 
       <main className="flex-1 flex flex-col items-center px-4 pt-6 pb-8 overflow-y-auto min-h-0">
         <div className="w-full max-w-4xl mx-auto flex flex-col items-center">
-        {(view === 'idle' || view === 'verdict') && (
-          <OverlayButton
-            onClick={handleOverlayClick}
-            disabled={view === 'verdict' ? false : overlayDisabled}
-            faded={view === 'verdict' ? false : overlayFaded}
-            mode={view === 'verdict' ? 'newScan' : 'default'}
-          />
-        )}
-
-        {view === 'idle' && (
-          <p className="mt-6 text-slate-400 text-sm text-center max-w-xs shrink-0">
-            {t('scan.protection_active')}
-          </p>
-        )}
-
-        <div className="flex-1 w-full mt-8 flex flex-col items-center gap-4 min-h-0">
-          {view === 'scanning' && (
-            <div className="w-full animate-fade-in">
-              <CircularProgressLoader progress={scanProgress} fileType={selectedFile} />
-            </div>
-          )}
-          {view === 'verdict' && verdictVisible && (
-            <VerdictScreen
-              score={deepfakeScore}
-              status={verdictStatus}
-              modelScores={verdictModelScores}
-              metadata={verdictMetadata}
-              aiSignatures={verdictAiSignatures}
-              mediaCategory={verdictMediaCategory}
-              scannedModels={verdictScannedModels}
-              fileHash={verdictFileHash}
-              fileName={verdictFileName}
-              expertSummary={verdictExpertSummary}
-              error={uploadError}
-              canDownloadPdf={true}
-              onUpgradeClick={onUpgradeClick}
-              onBack={handleBackToScan}
+          {(view === 'idle' || view === 'verdict') && (
+            <OverlayButton
+              onClick={handleOverlayClick}
+              disabled={view === 'verdict' ? false : overlayDisabled}
+              faded={view === 'verdict' ? false : overlayFaded}
+              mode={view === 'verdict' ? 'newScan' : 'default'}
             />
           )}
-        </div>
 
-        {view === 'idle' && (
-          <>
-            <div className="w-full pt-4 shrink-0">
-              <DropZone
-                disabled={scansCount < creditsNeeded}
-                selectedFile={selectedFile}
-                onDrop={(files) => handleFileSelect(files)}
-                onTriggerClick={triggerFileSelect}
-                onClearFile={() => setSelectedFile(null)}
+          {view === 'idle' && (
+            <p className="mt-6 text-slate-400 text-sm text-center max-w-xs shrink-0">{t('scan.protection_active')}</p>
+          )}
+
+          <div className="flex-1 w-full mt-8 flex flex-col items-center gap-4 min-h-0">
+            {view === 'scanning' && (
+              <div className="w-full animate-fade-in">
+                <CircularProgressLoader progress={scanProgress} fileType={selectedFile} />
+              </div>
+            )}
+            {view === 'verdict' && verdictVisible && (
+              <VerdictScreen
+                score={deepfakeScore}
+                status={verdictStatus}
+                modelScores={verdictModelScores}
+                metadata={verdictMetadata}
+                aiSignatures={verdictAiSignatures}
+                mediaCategory={verdictMediaCategory}
+                scannedModels={verdictScannedModels}
+                fileHash={verdictFileHash}
+                fileName={verdictFileName}
+                expertSummary={verdictExpertSummary}
+                error={uploadError}
+                canDownloadPdf={true}
+                onUpgradeClick={onUpgradeClick}
+                onBack={handleBackToScan}
               />
-            </div>
-            <div className="w-full max-w-4xl mx-auto shrink-0 mt-4">
-              <GlobalAlerts />
-            </div>
-          </>
-        )}
+            )}
+          </div>
+
+          {view === 'idle' && (
+            <>
+              <div className="w-full pt-4 shrink-0">
+                <DropZone
+                  disabled={scansCount < creditsNeeded}
+                  selectedFile={selectedFile}
+                  onDrop={(files) => handleFileSelect(files)}
+                  onTriggerClick={triggerFileSelect}
+                  onClearFile={() => setSelectedFile(null)}
+                />
+              </div>
+            </>
+          )}
         </div>
       </main>
 

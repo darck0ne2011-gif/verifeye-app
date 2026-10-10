@@ -14,7 +14,7 @@
     "password": "Parolă",
     "email_placeholder": "tu@exemplu.com",
     "password_placeholder_login": "••••••••",
-    "password_placeholder_register": "Minim 6 caractere",
+    "password_placeholder_register": "Minim 8 caractere",
     "show_password": "Arată parola",
     "hide_password": "Ascunde parola",
     "please_wait": "Te rugăm așteaptă...",
@@ -140,7 +140,7 @@
     "new_password": "Parola nouă",
     "confirm_password": "Confirmă parola nouă",
     "passwords_no_match": "Parolele noi nu coincid",
-    "password_min_length": "Parola nouă trebuie să aibă minim 6 caractere",
+    "password_min_length": "Parola nouă trebuie să aibă minim 8 caractere",
     "password_updated": "Parola a fost actualizată.",
     "updating": "Se actualizează...",
     "change_password": "Schimbă parola",
@@ -256,11 +256,5 @@
     "verified": "Verificat",
     "analysis_method_frame": "Bazat pe cadre (rapid)",
     "analysis_method_native": "Video nativ (secvențial)"
-  },
-  "alerts": {
-    "loading": "Se încarcă alertele...",
-    "fallback_1": "Video cu Marcel Ciolacu marcat ca FAKE de 1.200 de ori azi.",
-    "fallback_2": "Știre despre taxa auto VERIFICATĂ. Sursa: Guvernul.ro",
-    "fallback_3": "Clip viral cu Klaus Iohannis marcat ca FAKE de 890 de ori."
   }
 }

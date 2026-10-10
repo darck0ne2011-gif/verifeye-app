@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { API_BASE } from '../config.js'
 import DashboardHeader from '../components/DashboardHeader'
 
 function getTiers(t) {
@@ -64,48 +63,24 @@ const StarIcon = ({ className = '' }) => (
 
 export default function UpgradePage({ onSettingsClick }) {
   const { t } = useTranslation()
-  const { user, refreshUser, getAuthHeaders } = useAuth()
+  const { user } = useAuth()
   const TIERS = getTiers(t)
-  const [quickBoostLoading, setQuickBoostLoading] = useState(false)
+  const [paymentNotice, setPaymentNotice] = useState(false)
   const scansCount = user?.scanCredits ?? 0
   const currentTier = user?.subscriptionTier ?? 'starter'
 
-  const handleSelectPlan = async (tierId) => {
+  // Payments are not wired up yet (Stripe comes in a later phase); selecting
+  // a paid plan only shows the notice.
+  const handleSelectPlan = (tierId) => {
     if (tierId === 'starter' || (tierId === currentTier && tierId !== 'quick_boost')) return
-    if (tierId === 'quick_boost') {
-      if (quickBoostLoading) return
-      setQuickBoostLoading(true)
-      try {
-        const res = await fetch(`${API_BASE}/api/purchase-quick-boost`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-        })
-        const data = await res.json()
-        if (data.success) {
-          await refreshUser()
-        } else {
-          console.error('Quick Boost failed:', data.error)
-        }
-      } catch (err) {
-        console.error('Quick Boost error:', err)
-      } finally {
-        setQuickBoostLoading(false)
-      }
-      return
-    }
-    // TODO: Integrate payment for Pro/Elite (Stripe, etc.)
-    console.log('Select plan:', tierId)
+    setPaymentNotice(true)
   }
 
   const getButtonClasses = (tier) => {
     const isCurrent = tier.id === 'starter' ? currentTier === 'starter' : currentTier === tier.id
     const isQuickBoost = tier.id === 'quick_boost'
-    const isLoading = isQuickBoost && quickBoostLoading
     if (isCurrent && !isQuickBoost) {
       return 'bg-slate-700/60 text-slate-400 border border-slate-600/60 cursor-default'
-    }
-    if (isLoading) {
-      return 'bg-slate-600/80 text-white border border-slate-500 cursor-wait opacity-90'
     }
     if (tier.elite) {
       return 'bg-gradient-to-r from-amber-600 to-amber-500 text-black cursor-pointer hover:from-amber-500 hover:to-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:opacity-95'
@@ -128,26 +103,24 @@ export default function UpgradePage({ onSettingsClick }) {
       <main className="flex-1 px-4 pt-6 pb-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mb-2">{t('pricing.title')}</h1>
-          <p className="text-slate-400 text-sm">
-            {t('pricing.subtitle')}
-          </p>
+          <p className="text-slate-400 text-sm">{t('pricing.subtitle')}</p>
         </div>
 
         <div className="grid gap-4 max-w-4xl mx-auto sm:grid-cols-2">
           {TIERS.map((tier) => {
             const isElite = tier.elite
-            const isCurrent = currentTier === tier.id
 
             return (
               <div
                 key={tier.id}
                 className={`
                   relative flex flex-col h-full rounded-2xl border-2 overflow-hidden transition-all duration-300
-                  ${isElite
-                    ? 'bg-[#050508] border-[#d4af37]/60 shadow-[0_0_40px_rgba(212,175,55,0.12),inset_0_1px_0_rgba(212,175,55,0.08)]'
-                    : tier.highlighted
-                      ? 'bg-slate-800/80 border-cyan-500/50'
-                      : 'bg-slate-800/40 border-slate-700/60'
+                  ${
+                    isElite
+                      ? 'bg-[#050508] border-[#d4af37]/60 shadow-[0_0_40px_rgba(212,175,55,0.12),inset_0_1px_0_rgba(212,175,55,0.08)]'
+                      : tier.highlighted
+                        ? 'bg-slate-800/80 border-cyan-500/50'
+                        : 'bg-slate-800/40 border-slate-700/60'
                   }
                   ${isElite ? 'ring-1 ring-[#d4af37]/25' : ''}
                 `}
@@ -163,44 +136,22 @@ export default function UpgradePage({ onSettingsClick }) {
                 )}
 
                 <div className={`flex flex-col h-full p-6 ${isElite ? 'pt-8' : ''}`}>
-                  <h3
-                    className={`text-lg font-bold mb-1 ${
-                      isElite ? 'text-amber-400' : 'text-white'
-                    }`}
-                  >
-                    {tier.name}
-                  </h3>
+                  <h3 className={`text-lg font-bold mb-1 ${isElite ? 'text-amber-400' : 'text-white'}`}>{tier.name}</h3>
                   <div className="flex items-baseline gap-1 mb-1">
-                    <span
-                      className={`text-2xl font-bold ${
-                        isElite ? 'text-amber-400' : 'text-white'
-                      }`}
-                    >
+                    <span className={`text-2xl font-bold ${isElite ? 'text-amber-400' : 'text-white'}`}>
                       {tier.price}
                     </span>
-                    <span className={isElite ? 'text-amber-400/80' : 'text-slate-400'}>
-                      {tier.subtext}
-                    </span>
+                    <span className={isElite ? 'text-amber-400/80' : 'text-slate-400'}>{tier.subtext}</span>
                   </div>
-                  <p
-                    className={`text-sm mb-4 ${
-                      isElite ? 'text-amber-300/90' : 'text-cyan-400'
-                    }`}
-                  >
-                    {tier.scans}
-                  </p>
+                  <p className={`text-sm mb-4 ${isElite ? 'text-amber-300/90' : 'text-cyan-400'}`}>{tier.scans}</p>
 
                   <ul className="space-y-2.5 mb-6">
                     {tier.featureKeys.map((key, i) => (
                       <li
                         key={i}
-                        className={`flex items-center gap-2 text-sm ${
-                          isElite ? 'text-slate-300' : 'text-slate-400'
-                        }`}
+                        className={`flex items-center gap-2 text-sm ${isElite ? 'text-slate-300' : 'text-slate-400'}`}
                       >
-                        <CheckIcon
-                          className={isElite ? 'text-amber-500' : 'text-cyan-500'}
-                        />
+                        <CheckIcon className={isElite ? 'text-amber-500' : 'text-cyan-500'} />
                         {t(`pricing.${key}`)}
                       </li>
                     ))}
@@ -210,11 +161,7 @@ export default function UpgradePage({ onSettingsClick }) {
                     onClick={() => handleSelectPlan(tier.id)}
                     className={`mt-auto w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${getButtonClasses(tier)}`}
                   >
-                    {quickBoostLoading && tier.id === 'quick_boost'
-                      ? t('pricing.adding')
-                      : currentTier === tier.id
-                        ? t('pricing.current_plan')
-                        : tier.cta}
+                    {currentTier === tier.id ? t('pricing.current_plan') : tier.cta}
                   </button>
                 </div>
 
@@ -226,7 +173,10 @@ export default function UpgradePage({ onSettingsClick }) {
           })}
         </div>
 
-        <p className="text-slate-500 text-xs text-center mt-6">
+        <p
+          className={`text-xs text-center mt-6 transition-colors ${paymentNotice ? 'text-cyan-300' : 'text-slate-500'}`}
+          role="status"
+        >
           {t('pricing.payment_coming_soon')}
         </p>
       </main>

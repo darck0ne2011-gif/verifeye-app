@@ -6,13 +6,23 @@ import VerifiedBadge from './VerifiedBadge'
 
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+    />
   </svg>
 )
 
 const LockIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+    />
   </svg>
 )
 
@@ -43,7 +53,6 @@ export default function VerdictScreen({
   error,
   canDownloadPdf = false,
   onUpgradeClick,
-  onBack,
 }) {
   const { t, i18n } = useTranslation()
   const [downloading, setDownloading] = useState(false)
@@ -95,7 +104,14 @@ export default function VerdictScreen({
           <p className="text-sm text-slate-300 leading-relaxed">{summary}</p>
         </section>
       )}
-      <RealTimeAnalysis isComplete fileType={fileType} scannedModels={scannedModels} modelScores={modelScores} aiSignatures={aiSignatures} metadata={metadata} />
+      <RealTimeAnalysis
+        isComplete
+        fileType={fileType}
+        scannedModels={scannedModels}
+        modelScores={modelScores}
+        aiSignatures={aiSignatures}
+        metadata={metadata}
+      />
       {metadata && (
         <section className="w-full rounded-xl bg-slate-800/60 border border-slate-600/60 p-4">
           <h3 className="text-sm font-medium text-slate-300 mb-3">{t('verdict.metadata_title')}</h3>
@@ -116,20 +132,23 @@ export default function VerdictScreen({
             )}
             {/* Video/audio fields disabled (photo-only mode) */}
           </dl>
-          {aiSignatures && (aiSignatures.missingExif || aiSignatures.suspiciousResolution || (aiSignatures.softwareTags?.length > 0)) && (
-            <div className="mt-3 pt-3 border-t border-slate-600/60">
-              <h4 className="text-xs font-medium text-amber-400/90 mb-2">{t('verdict.ai_signatures')}</h4>
-              <ul className="text-xs text-slate-400 space-y-1">
-                {aiSignatures.missingExif && <li>• {t('verdict.ai_missing_exif')}</li>}
-                {aiSignatures.suspiciousResolution && (
-                  <li>• {t('verdict.ai_suspicious_resolution', { res: aiSignatures.suspiciousResolution })}</li>
-                )}
-                {aiSignatures.softwareTags?.length > 0 && (
-                  <li>• {t('verdict.ai_software_detected', { tags: aiSignatures.softwareTags.join(', ') })}</li>
-                )}
-              </ul>
-            </div>
-          )}
+          {aiSignatures &&
+            (aiSignatures.missingExif ||
+              aiSignatures.suspiciousResolution ||
+              aiSignatures.softwareTags?.length > 0) && (
+              <div className="mt-3 pt-3 border-t border-slate-600/60">
+                <h4 className="text-xs font-medium text-amber-400/90 mb-2">{t('verdict.ai_signatures')}</h4>
+                <ul className="text-xs text-slate-400 space-y-1">
+                  {aiSignatures.missingExif && <li>• {t('verdict.ai_missing_exif')}</li>}
+                  {aiSignatures.suspiciousResolution && (
+                    <li>• {t('verdict.ai_suspicious_resolution', { res: aiSignatures.suspiciousResolution })}</li>
+                  )}
+                  {aiSignatures.softwareTags?.length > 0 && (
+                    <li>• {t('verdict.ai_software_detected', { tags: aiSignatures.softwareTags.join(', ') })}</li>
+                  )}
+                </ul>
+              </div>
+            )}
         </section>
       )}
       <div className="flex gap-3 flex-wrap">
@@ -147,7 +166,11 @@ export default function VerdictScreen({
           {downloading ? (
             <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
           ) : canDownloadPdf ? (
             <DownloadIcon />
