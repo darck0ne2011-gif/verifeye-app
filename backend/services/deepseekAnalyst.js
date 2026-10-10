@@ -22,6 +22,9 @@ Write 3 to 4 short sentences for a non-technical reader, in this order:
    a short video with few frames, frames disagreeing, missing metadata (which is weak evidence on its own).
 4. One practical next step for the reader (check the original source, compare with other frames, etc.).
 
+When decisiveEvidence is present, lead with it: signed Content Credentials or generator metadata outrank
+the detector percentages, and name the tool they identify.
+
 Rules: never contradict the given verdict or invent data; never output internal codes such as
 likely_real, few_frames or genai; no markdown, no lists, no headings; keep it under 90 words;
 generator attribution is a resemblance, not proof of which tool was used.`
@@ -54,6 +57,40 @@ const CONFIDENCE_REASONS = {
   few_frames: 'the video is short and only a few frames could be sampled',
   frames_disagree: 'sampled frames disagree with each other',
   beta_model: 'at least one detector used is a beta model',
+  provenance_conflict: 'the file carries a validly signed camera capture record, yet the detector flags it',
+}
+
+const WARNING_TEXT = {
+  c2pa_tampered: 'the Content Credentials signature no longer matches the pixels: the file was changed after signing',
+  c2pa_untrusted: 'the Content Credentials are signed by a certificate that is not on the public trust list',
+}
+
+function describeProvenance(prov) {
+  if (!prov) return null
+  const c = prov.c2pa ?? {}
+  const out = {
+    contentCredentials: !c.present
+      ? c.supported === false
+        ? 'format not supported'
+        : 'none embedded (screenshots and social networks strip them)'
+      : {
+          validation: c.validation,
+          claimGenerator: c.claimGenerator ?? null,
+          signer: c.signer?.issuer ?? c.signer?.commonName ?? null,
+          signedAt: c.signedAt ?? null,
+          digitalSourceType: c.sourceType ?? null,
+          statesAiGenerated: c.aiGenerated,
+          statesAiEdited: c.aiEdited,
+          actions: (c.actions ?? [])
+            .slice(0, 6)
+            .map((a) => a.action + (a.softwareAgent ? ` (${a.softwareAgent})` : '')),
+        },
+    unsignedMetadataHints: (prov.metadata?.hints ?? []).map((h) => `${h.generatorLabel} via ${h.field}`),
+    generatorIdentified: prov.generator
+      ? `${prov.generator.label} (${prov.generator.signed ? 'signed' : 'unsigned metadata'})`
+      : null,
+  }
+  return out
 }
 
 const pct = (v) => (v == null || Number.isNaN(Number(v)) ? null : Math.round(Number(v) * 100))
@@ -97,14 +134,24 @@ export function describeScan(payload) {
 
   const limitations = (payload.confidenceFactors ?? [])
     .map((f) => CONFIDENCE_REASONS[f] ?? String(f).replace(/_/g, ' '))
-    .concat(payload.warnings ?? [])
+    .concat((payload.warnings ?? []).map((w) => WARNING_TEXT[w] ?? String(w).replace(/_/g, ' ')))
+  const evidence = (payload.evidence ?? []).map(
+    (e) =>
+      ({
+        c2pa_ai: 'validly signed Content Credentials state the file was AI-generated or AI-edited',
+        metadata_ai: 'the file metadata names an AI generator (unsigned, but left by the tool)',
+        c2pa_capture: 'validly signed Content Credentials state a camera capture',
+      })[e] ?? e
+  )
 
   return {
     mediaType: payload.mediaCategory ?? 'image',
     verdict: VERDICT_WORDS[payload.verdict] ?? VERDICT_WORDS[payload.status] ?? 'inconclusive',
     aiProbabilityPercent: payload.fakeProbability ?? null,
     confidence: payload.confidence ?? null,
+    decisiveEvidence: evidence,
     limitations,
+    provenance: describeProvenance(payload.provenance),
     detectors,
     likelyGeneratorFamilies: generators,
     imageType,

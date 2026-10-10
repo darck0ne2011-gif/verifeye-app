@@ -14,6 +14,7 @@
     "user": "node scripts/manage-user.js"
   },
   "dependencies": {
+    "@contentauth/c2pa-node": "^0.9.9",
     "@electric-sql/pglite": "^0.5.8",
     "apple-signin-auth": "^2.0.0",
     "axios": "^1.13.4",
@@ -40,6 +41,6 @@
     "vitest": "^3.2.7"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

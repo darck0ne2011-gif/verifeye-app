@@ -33,6 +33,11 @@ export function aggregateFrameScores(scores) {
  * @param {{ count: number, spread: number }} [input.frames] spread = max - min of per-frame scores (0-1)
  * @param {number} [input.signalCount] number of independent detector signals that contributed
  * @param {boolean} [input.betaSignals] true when the verdict rests on a beta model only
+ * @param {{ signedAi?: boolean, signedCapture?: boolean, declaredAi?: boolean }} [input.provenance]
+ *   what the file says about itself (see services/provenance.js). A valid
+ *   Content Credentials manifest stating AI generation, or generator metadata
+ *   left by the tool, settles the verdict; a signed camera capture only
+ *   strengthens an authentic verdict and never hides a detector hit.
  */
 export function computeVerdict({
   fakeProbability,
@@ -40,8 +45,17 @@ export function computeVerdict({
   frames = null,
   signalCount = 1,
   betaSignals = false,
+  provenance = null,
 }) {
-  const p = Math.max(0, Math.min(100, Math.round(Number(fakeProbability) || 0)))
+  let p = Math.max(0, Math.min(100, Math.round(Number(fakeProbability) || 0)))
+  const evidence = []
+  if (provenance?.signedAi) {
+    p = Math.max(p, 97)
+    evidence.push('c2pa_ai')
+  } else if (provenance?.declaredAi) {
+    p = Math.max(p, 90)
+    evidence.push('metadata_ai')
+  }
   const verdict = p >= LIKELY_AI_THRESHOLD ? 'likely_ai' : p <= LIKELY_REAL_THRESHOLD ? 'likely_real' : 'inconclusive'
 
   let confidence = Math.abs(p - 50) * 2
@@ -67,12 +81,24 @@ export function computeVerdict({
   if (signalCount >= 2 && verdict !== 'inconclusive') {
     confidence = Math.min(100, confidence * 1.05)
   }
+  if (evidence.includes('c2pa_ai')) confidence = Math.max(confidence, 95)
+  if (evidence.includes('metadata_ai')) confidence = Math.max(confidence, 80)
+  if (provenance?.signedCapture && !evidence.length) {
+    evidence.push('c2pa_capture')
+    if (verdict === 'likely_real') confidence = Math.max(confidence, 90)
+    else {
+      // The detector disagrees with a validly signed capture: say so instead of picking a side.
+      confidence *= 0.7
+      factors.push('provenance_conflict')
+    }
+  }
   confidence = Math.round(Math.max(0, Math.min(100, confidence)))
 
   return {
     verdict,
     confidence,
     confidenceFactors: factors,
+    evidence,
     fakeProbability: p,
     // Legacy two-way label still used by the web client and PDF.
     status: p >= 50 ? 'FAKE' : 'REAL',

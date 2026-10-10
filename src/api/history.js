@@ -27,6 +27,8 @@ export function historyItemToResult(item) {
     displayScore: item.score,
     fakeProbability,
     expertSummary: item.metadata?.expertSummary ?? null,
-    warnings: [],
+    warnings: item.metadata?.warnings ?? [],
+    provenance: item.metadata?.provenance ?? null,
+    evidence: item.metadata?.evidence ?? [],
   }
 }

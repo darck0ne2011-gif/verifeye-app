@@ -8,6 +8,7 @@ import { analyzeImage } from './analysis.js'
 import { analyzeVideo } from './videoAnalysis.js'
 import { analyzeAudio } from './audioAnalysis.js'
 import { computeVerdict } from './verdict.js'
+import { analyzeProvenance } from './provenance.js'
 import { generateExecutiveSummary } from './deepseekAnalyst.js'
 import { findScanByHash, saveScanResults, saveExpertSummary, addToUserScanHistory } from '../db/scans.js'
 import { updateJobProgress, completeJob, failJob } from '../db/jobs.js'
@@ -70,12 +71,27 @@ export async function processScanJob(job) {
       await saveScanResults(fileHash, analysis, analysis.newModelResults)
     }
 
+    // Content Credentials and generator metadata: local, free, and decisive when present.
+    await onProgress('provenance', 90)
+    const provenance = await analyzeProvenance({
+      filePath: job.filePath,
+      mimeType: analysis.metadata?.fileType || job.mimeType || 'application/octet-stream',
+      mediaCategory: analysis.mediaCategory,
+    }).catch((err) => {
+      console.warn('Provenance check failed:', err?.message)
+      return null
+    })
+    const warnings = [...(analysis.warnings ?? [])]
+    if (provenance?.tampered) warnings.push('c2pa_tampered')
+    if (provenance?.c2pa?.present && provenance.c2pa.validation === 'untrusted') warnings.push('c2pa_untrusted')
+
     const verdict = computeVerdict({
       fakeProbability: analysis.fakeProbability,
       source: job.source,
       frames: analysis.evidence?.frames ?? null,
       signalCount: analysis.evidence?.signalCount ?? 1,
       betaSignals: analysis.evidence?.betaSignals ?? false,
+      provenance,
     })
 
     await onProgress('summarizing', 94)
@@ -90,16 +106,25 @@ export async function processScanJob(job) {
         verdict: verdict.verdict,
         confidence: verdict.confidence,
         confidenceFactors: verdict.confidenceFactors,
+        evidence: verdict.evidence,
+        provenance,
         status: verdict.status,
         source: job.source,
         scannedModels: job.models,
-        warnings: analysis.warnings ?? [],
+        warnings,
         timeline: analysis.timeline ?? null,
         language: job.language,
       })
       if (expertSummary) await saveExpertSummary(fileHash, job.language, expertSummary)
     }
-    const metadata = { ...analysis.metadata, ...(expertSummary && { expertSummary }) }
+    // Provenance and evidence ride along in metadata so history rows keep them.
+    const metadata = {
+      ...analysis.metadata,
+      ...(expertSummary && { expertSummary }),
+      provenance,
+      evidence: verdict.evidence,
+      warnings,
+    }
 
     await addToUserScanHistory(job.userId, {
       fileName: job.fileName,
@@ -129,6 +154,8 @@ export async function processScanJob(job) {
       verdict: verdict.verdict,
       confidence: verdict.confidence,
       confidenceFactors: verdict.confidenceFactors,
+      evidence: verdict.evidence,
+      provenance,
       displayScore: verdict.displayScore,
       mediaCategory: analysis.mediaCategory,
       source: job.source,
@@ -140,7 +167,7 @@ export async function processScanJob(job) {
       metadata,
       expertSummary,
       timeline: analysis.timeline ?? null,
-      warnings: analysis.warnings ?? [],
+      warnings,
       cached: fromCache,
       scannedAt: new Date().toISOString(),
     }
