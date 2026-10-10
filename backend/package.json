@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
-    "db:import-json": "node scripts/migrate-json.js"
+    "db:import-json": "node scripts/migrate-json.js",
+    "user": "node scripts/manage-user.js"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

@@ -78,7 +78,7 @@ Without `DATABASE_URL` the backend uses an embedded Postgres (PGlite) stored in
 
 ```bash
 cd backend
-DATABASE_URL=postgres://... ADMIN_EMAILS=andrei@test.test,inta@test.test npm run db:import-json -- path/to/verifeye-data.json
+DATABASE_URL=postgres://... ADMIN_EMAILS=darck0ne2011@gmail.com npm run db:import-json -- path/to/verifeye-data.json
 ```
 
 ## API overview
@@ -117,5 +117,12 @@ Limits: images 25 MB, audio 50 MB / 10 min, video 100 MB / 10 min.
 `ai_speech` is a Sightengine beta model that must be enabled on the account;
 when it is not, the audio part is skipped and its credit refunded.
 
-Admins are the accounts listed in `ADMIN_EMAILS` (the two existing admin accounts are the default in `.env.example`; set the same value on the server). Each scan costs one credit per
+Admins are the accounts listed in `ADMIN_EMAILS` (set the same value on the server). Create the admin account once with:
+
+```bash
+cd backend
+DATABASE_URL=postgres://... npm run user -- create-admin you@example.com 'a-strong-password'
+```
+
+`npm run user -- list|delete|set-password` manage accounts the same way. Each scan costs one credit per
 model; admins and `elite` accounts are not charged.
