@@ -65,7 +65,7 @@ export default function BottomNav({ activeTab = 'home', onTabChange }) {
       }}
     >
       <div className="flex items-center justify-around py-3 px-4">
-        {navItems.map(({ id, label, accent }) => {
+        {navItems.map(({ id, label, icon: Icon, accent }) => {
           const isActive = activeTab === id
           const isAccent = accent
           return (
