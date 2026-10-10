@@ -11,6 +11,7 @@ import android.os.Build;
 import android.provider.OpenableColumns;
 import android.provider.Settings;
 import android.util.Base64;
+import androidx.core.content.FileProvider;
 import androidx.activity.result.ActivityResult;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -129,6 +130,49 @@ public class VerifEyeNativePlugin extends Plugin {
             if (f.getAbsolutePath().startsWith(getContext().getCacheDir().getAbsolutePath())) f.delete();
         }
         call.resolve();
+    }
+
+    /**
+     * Saves a document produced in the web view (e.g. the PDF report) and opens
+     * it with the system viewer. Blob downloads do not work inside a WebView.
+     */
+    @PluginMethod
+    public void exportFile(PluginCall call) {
+        String name = call.getString("name", "report.pdf");
+        String mimeType = call.getString("mimeType", "application/pdf");
+        String data = call.getString("data");
+        if (data == null) {
+            call.reject("data is required");
+            return;
+        }
+        try {
+            File dir = new File(getContext().getCacheDir(), "exports");
+            if (!dir.exists()) dir.mkdirs();
+            File out = new File(dir, sanitize(name));
+            try (OutputStream os = new FileOutputStream(out)) {
+                os.write(Base64.decode(data, Base64.DEFAULT));
+            }
+            Uri uri = FileProvider.getUriForFile(getContext(), getContext().getPackageName() + ".fileprovider", out);
+            Intent view = new Intent(Intent.ACTION_VIEW);
+            view.setDataAndType(uri, mimeType);
+            view.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent share = new Intent(Intent.ACTION_SEND);
+            share.setType(mimeType);
+            share.putExtra(Intent.EXTRA_STREAM, uri);
+            share.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent chooser = Intent.createChooser(view, name);
+            chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[] { share });
+            try {
+                getActivity().startActivity(chooser);
+            } catch (Exception noViewer) {
+                getActivity().startActivity(Intent.createChooser(share, name));
+            }
+            JSObject result = new JSObject();
+            result.put("path", out.getAbsolutePath());
+            call.resolve(result);
+        } catch (Exception e) {
+            call.reject("Could not export file: " + e.getMessage());
+        }
     }
 
     // --- Floating bubble ---------------------------------------------------

@@ -92,7 +92,14 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
         language: i18n.language,
       })
       const safeName = (r.fileName || 'report').replace(/[^a-zA-Z0-9.-]/g, '_').slice(0, 50)
-      doc.save(`VerifEye-Report-${safeName}.pdf`)
+      const pdfName = `VerifEye-Report-${safeName}.pdf`
+      const { exportNativeFile } = await import('../native/verifeye')
+      const exported = await exportNativeFile({
+        name: pdfName,
+        mimeType: 'application/pdf',
+        arrayBuffer: doc.output('arraybuffer'),
+      })
+      if (!exported) doc.save(pdfName)
     } catch (err) {
       console.error('PDF generation failed:', err)
     } finally {
