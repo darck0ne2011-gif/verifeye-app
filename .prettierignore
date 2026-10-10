@@ -6,3 +6,7 @@ backend/db/migrations
 public/locales
 package-lock.json
 backend/package-lock.json
+android/app/build
+android/app/src/main/assets
+android/.gradle
+android/build

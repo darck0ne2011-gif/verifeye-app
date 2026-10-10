@@ -72,7 +72,7 @@ what a browser cannot do:
 
 - **Share sheet**: "Share → Check with VerifEye" from the gallery, WhatsApp,
   browsers… The file opens on the Home screen ready to analyze.
-- **Bubble over other apps**: Account → *Bubble over other apps* → allow the
+- **Bubble over other apps**: Account → _Bubble over other apps_ → allow the
   overlay, start the bubble, accept the screen-capture prompt. Tap the bubble on
   any app to capture the screen and get a verdict (sent as `source=screenshot`,
   so confidence is reduced). Long-press the bubble or use the notification to
