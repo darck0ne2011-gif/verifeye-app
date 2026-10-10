@@ -8,8 +8,12 @@ vi.mock('../services/sightengine.js', async (importOriginal) => {
     detectAiImage: vi.fn(async (buffer, mime, name, models) => ({
       status: 'success',
       type: {
-        ...(models.includes('genai') && { ai_generated: 0.91 }),
+        ...(models.includes('genai') && {
+          ai_generated: 0.91,
+          ai_generators: { midjourney: 0.7, dalle: 0.2, other: 0.1 },
+        }),
         ...(models.includes('deepfake') && { deepfake: 0.05 }),
+        ...(models.includes('type') && { photo: 0.9, illustration: 0.1 }),
       },
     })),
   }
@@ -159,7 +163,9 @@ describe('scan', () => {
       cached: false,
       scanCredits: 8,
     })
-    expect(res.body.modelScores).toEqual({ ai_generated: 0.91, deepfake: 0.05, quality: null })
+    expect(res.body.modelScores).toMatchObject({ ai_generated: 0.91, deepfake: 0.05, quality: null })
+    expect(res.body.modelScores.generators[0]).toEqual({ id: 'midjourney', score: 0.7 })
+    expect(res.body.scannedAt).toBeTypeOf('string')
     expect(res.body.expertSummary).toBeNull()
 
     const history = await request(app).get('/api/history').set('Authorization', `Bearer ${token}`)

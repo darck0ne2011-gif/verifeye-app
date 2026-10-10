@@ -89,7 +89,12 @@ export async function processScanJob(job) {
         fakeProbability: verdict.fakeProbability,
         verdict: verdict.verdict,
         confidence: verdict.confidence,
+        confidenceFactors: verdict.confidenceFactors,
         status: verdict.status,
+        source: job.source,
+        scannedModels: job.models,
+        warnings: analysis.warnings ?? [],
+        timeline: analysis.timeline ?? null,
         language: job.language,
       })
       if (expertSummary) await saveExpertSummary(fileHash, job.language, expertSummary)
@@ -137,6 +142,7 @@ export async function processScanJob(job) {
       timeline: analysis.timeline ?? null,
       warnings: analysis.warnings ?? [],
       cached: fromCache,
+      scannedAt: new Date().toISOString(),
     }
     await completeJob(job.id, result, { fileHash })
     return result

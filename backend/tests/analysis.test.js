@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { computeFakeProbability, shapeFromResults } from '../services/analysis.js'
+import {
+  computeFakeProbability,
+  shapeFromResults,
+  generatorsFromShape,
+  imageTypeFromShape,
+} from '../services/analysis.js'
 import { extractModelResults } from '../services/sightengine.js'
 
 describe('computeFakeProbability', () => {
@@ -42,5 +47,29 @@ describe('cache round-trip', () => {
   it('only uses the models that were requested', () => {
     const stored = { genai: { ai_generated: 0.1 }, deepfake: { deepfake: 0.9 } }
     expect(computeFakeProbability(shapeFromResults(stored, ['genai']))).toBe(10)
+  })
+})
+
+describe('attribution and image type', () => {
+  it('keeps per-generator scores through the cache and sorts them', () => {
+    const response = {
+      status: 'success',
+      type: {
+        ai_generated: 0.8,
+        ai_generators: { dalle: 0.1, midjourney: 0.6, other: 0.3 },
+        photo: 0.2,
+        illustration: 0.8,
+      },
+    }
+    const stored = extractModelResults(response, ['genai', 'type'])
+    expect(stored.genai.ai_generators).toEqual({ dalle: 0.1, midjourney: 0.6, other: 0.3 })
+    const shape = shapeFromResults(stored, ['genai', 'type'])
+    expect(generatorsFromShape(shape).map((g) => g.id)).toEqual(['midjourney', 'other', 'dalle'])
+    expect(imageTypeFromShape(shape)).toEqual({ photo: 0.2, illustration: 0.8 })
+  })
+
+  it('returns empty attribution when the provider sent none', () => {
+    expect(generatorsFromShape({ type: { ai_generated: 0.5 } })).toEqual([])
+    expect(imageTypeFromShape({ type: { ai_generated: 0.5 } })).toBeNull()
   })
 })

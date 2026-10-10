@@ -10,3 +10,5 @@ android/app/build
 android/app/src/main/assets
 android/.gradle
 android/build
+android/capacitor-cordova-android-plugins/build
+android/**/build

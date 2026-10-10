@@ -4,6 +4,7 @@ import RealTimeAnalysis from './RealTimeAnalysis'
 import VerdictBanner, { deriveVerdict } from './VerdictBanner'
 import FrameTimeline from './FrameTimeline'
 import MediaPreview from './MediaPreview'
+import GeneratorsCard from './GeneratorsCard'
 
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,6 +84,10 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
         metadata,
         expertSummary: summary,
         mediaCategory,
+        source: r.source ?? 'file',
+        scannedAt: r.scannedAt ?? r.date ?? null,
+        warnings,
+        timeline: r.timeline ?? null,
         t,
         language: i18n.language,
       })
@@ -139,6 +144,8 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
         warnings={warnings}
       />
 
+      <GeneratorsCard generators={r.modelScores?.generators} fakeProbability={fakeProbability} />
+
       {mediaCategory === 'video' && <FrameTimeline timeline={r.timeline} />}
 
       {metadata && (
@@ -151,6 +158,20 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
               value={metadata.sizeFormatted || (metadata.size ? `${metadata.size} B` : null)}
             />
             <Row label={t('verdict.resolution')} value={metadata.resolution} />
+            {r.modelScores?.imageType?.photo != null && (
+              <Row
+                label={t('verdict.image_type')}
+                value={
+                  r.modelScores.imageType.photo >= 0.5
+                    ? t('verdict.image_type_photo', { value: Math.round(r.modelScores.imageType.photo * 100) })
+                    : t('verdict.image_type_illustration', {
+                        value: Math.round((r.modelScores.imageType.illustration ?? 0) * 100),
+                      })
+                }
+              />
+            )}
+            <Row label={t('verdict.camera')} value={metadata.camera} />
+            <Row label={t('verdict.software')} value={metadata.software} />
             <Row label={t('verdict.duration')} value={formatDuration(metadata.durationSec)} />
             {mediaCategory === 'video' && <Row label={t('verdict.frames_analyzed')} value={metadata.framesAnalyzed} />}
             {mediaCategory === 'video' && metadata.hasAudio != null && (
@@ -160,6 +181,8 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
               <Row label={t('verdict.analyzed_seconds')} value={formatDuration(metadata.analyzedSec)} />
             )}
             <Row label={t('verdict.created_at')} value={metadata.createdAt} />
+            {metadata.hasExif === false && <Row label={t('verdict.exif')} value={t('verdict.exif_none')} />}
+            <Row label={t('verdict.scanned_at')} value={r.scannedAt ? new Date(r.scannedAt).toLocaleString() : null} />
             {r.source === 'screenshot' && <Row label={t('verdict.source')} value={t('verdict.source_screenshot')} />}
           </dl>
         </section>
