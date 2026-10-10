@@ -21,6 +21,10 @@
 }
 
 @layer components {
+  /* Keeps top bars clear of the status bar / notch when the viewport covers it. */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
   .card {
     @apply rounded-2xl bg-surface border border-line shadow-card;
   }

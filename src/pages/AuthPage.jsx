@@ -54,7 +54,7 @@ export default function AuthPage({ mode = 'login' }) {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-bg flex flex-col items-center justify-center px-4 py-10">
+    <div className="safe-top min-h-[100dvh] bg-bg flex flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm animate-slide-up">
         <div className="flex flex-col items-center mb-8">
           <Logo className="w-16 h-16" />

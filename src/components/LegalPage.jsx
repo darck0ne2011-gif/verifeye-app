@@ -41,7 +41,7 @@ export default function LegalPage({ type, onBack }) {
 
   return (
     <div className="min-h-screen bg-bg flex flex-col">
-      <header className="flex items-center gap-3 px-4 py-4 border-b border-line shrink-0">
+      <header className="safe-top flex items-center gap-3 px-4 py-4 border-b border-line shrink-0">
         <button
           onClick={onBack}
           className="p-2 text-fg hover:bg-surface-2 rounded-full transition-colors"
