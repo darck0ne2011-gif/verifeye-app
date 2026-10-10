@@ -76,7 +76,7 @@ Without `DATABASE_URL` the backend uses an embedded Postgres (PGlite) stored in
 
 ```bash
 cd backend
-DATABASE_URL=postgres://... ADMIN_EMAILS=you@example.com npm run db:import-json -- path/to/verifeye-data.json
+DATABASE_URL=postgres://... ADMIN_EMAILS=andrei@test.test,inta@test.test npm run db:import-json -- path/to/verifeye-data.json
 ```
 
 ## API overview
@@ -95,5 +95,5 @@ DATABASE_URL=postgres://... ADMIN_EMAILS=you@example.com npm run db:import-json 
 | POST   | `/api/admin/credits`         | admin | `{ email, credits }`                           |
 | POST   | `/api/admin/tier`            | admin | `{ email, tier }`                              |
 
-Admins are the accounts listed in `ADMIN_EMAILS`. Each scan costs one credit per
+Admins are the accounts listed in `ADMIN_EMAILS` (the two existing admin accounts are the default in `.env.example`; set the same value on the server). Each scan costs one credit per
 model; admins and `elite` accounts are not charged.
