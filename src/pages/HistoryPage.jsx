@@ -3,6 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import DashboardHeader from '../components/DashboardHeader'
+import { deriveVerdict } from '../components/VerdictBanner'
+
+const bandOf = (item) => deriveVerdict({ verdict: item.verdict, status: item.status, score: item.score })
+const bandClass = (item) => {
+  const band = bandOf(item)
+  return band === 'likely_ai' ? 'text-red-500' : band === 'likely_real' ? 'text-green-500' : 'text-amber-400'
+}
 
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,6 +145,8 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
       const doc = generateScanPdf({
         score: item.score ?? 0,
         status: item.status ?? 'REAL',
+        verdict: bandOf(item),
+        confidence: item.confidence ?? null,
         fileName: item.fileName ?? 'Unknown file',
         fileHash: item.fileHash ?? null,
         aiSignatures: item.aiSignatures ?? null,
@@ -200,10 +209,14 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <div className="flex flex-col items-end gap-0.5">
-                    <span className={`text-sm font-bold ${item.status === 'REAL' ? 'text-green-500' : 'text-red-500'}`}>
-                      {item.status}
+                    <span className={`text-sm font-bold ${bandClass(item)}`}>
+                      {t(`verdict.band_short_${bandOf(item)}`)}
                     </span>
-                    <span className="text-slate-500 text-xs">{item.score}%</span>
+                    <span className="text-slate-500 text-xs">
+                      {item.confidence != null
+                        ? t('verdict.confidence_short', { value: item.confidence })
+                        : `${item.score}%`}
+                    </span>
                   </div>
                   <button
                     onClick={() => handleDownloadReport(item)}

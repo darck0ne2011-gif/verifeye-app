@@ -8,9 +8,12 @@ import { config } from '../config.js'
 const DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions'
 
 const SYSTEM_PROMPT = `You are the analyst for VerifEye, an AI-generated media detection tool.
-You receive the numeric output of detection models and file metadata for one image.
-Write a clinical, 2-sentence summary for a non-technical reader explaining which signals support the verdict.
-Rules: never contradict the given verdict; a missing EXIF block or a common resolution is weak evidence on its own and must not be presented as proof; do not speculate beyond the data.`
+You receive the numeric output of detection models and file metadata for one image, video or audio file,
+together with the verdict (likely_real / inconclusive / likely_ai) and a confidence level.
+Write a clinical, 2-sentence summary for a non-technical reader explaining which signals support the verdict
+and, when the verdict is inconclusive or confidence is low, say plainly that the result is uncertain.
+Rules: never contradict the given verdict; a missing EXIF block or a common resolution is weak evidence on its own
+and must not be presented as proof; for videos the scores come from sampled frames; do not speculate beyond the data.`
 
 const LANG_NAMES = {
   ro: 'Romanian',
@@ -23,7 +26,7 @@ const LANG_NAMES = {
 }
 
 /**
- * @param {{ modelScores, metadata, aiSignatures, fakeProbability, status, language }} payload
+ * @param {{ mediaCategory, modelScores, metadata, aiSignatures, fakeProbability, verdict, confidence, status, language }} payload
  * @returns {Promise<string | null>}
  */
 export async function generateExecutiveSummary(payload) {
@@ -31,7 +34,9 @@ export async function generateExecutiveSummary(payload) {
 
   const lang = LANG_NAMES[payload.language?.split('-')[0]] || 'English'
   const data = {
-    verdict: payload.status,
+    mediaType: payload.mediaCategory ?? 'image',
+    verdict: payload.verdict ?? payload.status,
+    confidence: payload.confidence ?? null,
     fakeProbability: payload.fakeProbability,
     modelScores: payload.modelScores ?? null,
     aiSignatures: payload.aiSignatures ?? null,

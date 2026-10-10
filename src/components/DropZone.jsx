@@ -18,7 +18,14 @@ const FileReadyIcon = () => (
   </svg>
 )
 
-export default function DropZone({ onDrop, onTriggerClick, onClearFile, selectedFile, disabled = false }) {
+export default function DropZone({
+  onDrop,
+  onTriggerClick,
+  onClearFile,
+  selectedFile,
+  disabled = false,
+  creditsNeeded = 1,
+}) {
   const { t } = useTranslation()
   const [isDragOver, setIsDragOver] = useState(false)
 
@@ -83,7 +90,8 @@ export default function DropZone({ onDrop, onTriggerClick, onClearFile, selected
         <FolderIcon />
         <div className="flex flex-col gap-1 flex-1 min-w-0">
           <p className="text-white font-medium">{t('dropzone.drag_drop')}</p>
-          <p className="text-slate-400 text-sm">{t('dropzone.or_click')} (images)</p>
+          <p className="text-slate-400 text-sm">{t('dropzone.or_click')}</p>
+          <p className="text-slate-500 text-xs">{t('dropzone.credits_hint', { count: creditsNeeded })}</p>
         </div>
       </div>
     </div>

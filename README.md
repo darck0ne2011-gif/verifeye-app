@@ -1,6 +1,6 @@
 # VerifEye
 
-Detects AI-generated and manipulated images. React web app + Node API.
+Detects AI-generated and manipulated images, videos and audio. React web app + Node API.
 
 ## Structure
 
@@ -17,7 +17,9 @@ verifeye-app/
 │   ├── app.js           # express app (routes, middleware)
 │   ├── config.js        # env validation
 │   ├── routes/          # auth, oauth, user/admin, scan
-│   ├── services/        # analysis, sightengine, deepseek, oauth, auth
+│   ├── services/        # scanner (jobs), analysis (image), videoAnalysis, audioAnalysis,
+│   │                    # media (ffmpeg), verdict, sightengine, deepseek, oauth, auth
+│   ├── lib/             # job worker, upload storage, errors
 │   ├── db/              # drizzle schema, migrations, repositories
 │   ├── scripts/         # migrate-json.js (legacy data import)
 │   └── tests/           # vitest + supertest
@@ -94,6 +96,26 @@ DATABASE_URL=postgres://... ADMIN_EMAILS=andrei@test.test,inta@test.test npm run
 | POST   | `/api/analyze`               | user  | multipart `file` (image), `models`, `language` |
 | POST   | `/api/admin/credits`         | admin | `{ email, credits }`                           |
 | POST   | `/api/admin/tier`            | admin | `{ email, tier }`                              |
+
+### How a scan works
+
+1. `POST /api/scans` validates the file (type is detected from the bytes), charges
+   one credit per model and queues a job. The upload is kept on disk only while
+   the job runs.
+2. An in-process worker picks the job up (`lib/jobs.js`, Postgres row locking):
+   - **image** → Sightengine image models (`genai`, `deepfake`, `type`, `quality`)
+   - **video** → ffmpeg samples up to 10 frames across the clip → image models per
+     frame (score = mean of the strongest quarter of frames); optional `ai_speech`
+     on the audio track (first 60 s)
+   - **audio** → converted to 16 kHz WAV → Sightengine `ai_speech`
+3. The result is a three-band verdict (`likely_real` / `inconclusive` /
+   `likely_ai`) with a confidence that drops for screenshots, few or
+   disagreeing frames and beta models. Results are cached per file hash.
+4. `GET /api/scans/:id` returns progress (`stage`, `progress`) and the result.
+
+Limits: images 25 MB, audio 50 MB / 10 min, video 100 MB / 10 min.
+`ai_speech` is a Sightengine beta model that must be enabled on the account;
+when it is not, the audio part is skipped and its credit refunded.
 
 Admins are the accounts listed in `ADMIN_EMAILS` (the two existing admin accounts are the default in `.env.example`; set the same value on the server). Each scan costs one credit per
 model; admins and `elite` accounts are not charged.

@@ -9,13 +9,16 @@ export async function findScanByHash(hash) {
 
 /**
  * Upserts the cache entry for a file. Model results are merged so a later scan
- * with extra models only adds to what is already known.
+ * with extra models only adds to what is already known. Results marked
+ * `unavailable` are not cached, so they are retried next time.
  */
 export async function saveScanResults(hash, analysis, newModelResults) {
   const existing = await findScanByHash(hash)
-  const results = { ...(existing?.results ?? {}), ...newModelResults }
+  const cacheable = Object.fromEntries(Object.entries(newModelResults).filter(([, r]) => r && !r.unavailable))
+  const results = { ...(existing?.results ?? {}), ...cacheable }
   const values = {
     hash,
+    mediaCategory: analysis.mediaCategory ?? analysis.metadata?.mediaCategory ?? null,
     results,
     fakeProbability: analysis.fakeProbability ?? null,
     aiProbability: analysis.aiProbability ?? analysis.fakeProbability ?? null,
@@ -50,6 +53,9 @@ export async function addToUserScanHistory(userId, entry) {
       fileName: entry.fileName || 'Unknown file',
       score: Math.round(Number(entry.score) || 0),
       status: entry.status === 'FAKE' ? 'FAKE' : 'REAL',
+      verdict: entry.verdict ?? null,
+      confidence: entry.confidence ?? null,
+      source: entry.source ?? 'file',
       fileHash: entry.fileHash ?? null,
       modelScores: entry.modelScores ?? null,
       aiSignatures: entry.aiSignatures ?? null,
@@ -79,6 +85,9 @@ function toHistoryItem(row) {
     date: row.createdAt instanceof Date ? row.createdAt.toISOString() : row.createdAt,
     score: row.score,
     status: row.status,
+    verdict: row.verdict,
+    confidence: row.confidence,
+    source: row.source,
     fileHash: row.fileHash,
     modelScores: row.modelScores,
     aiSignatures: row.aiSignatures,

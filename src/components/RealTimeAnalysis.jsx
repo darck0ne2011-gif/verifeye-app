@@ -1,5 +1,5 @@
+import { useTranslation } from 'react-i18next'
 import { getMediaCategory } from '../utils/fileType.js'
-import { MODEL_IDS } from './ModelCheckboxes'
 
 const XIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -7,7 +7,18 @@ const XIcon = () => (
   </svg>
 )
 
-// deepfake -> Face/User icon
+const CheckIcon = () => (
+  <svg className="w-6 h-6 flex-shrink-0 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+  </svg>
+)
+
+const DashIcon = () => (
+  <svg className="w-6 h-6 flex-shrink-0 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
+  </svg>
+)
+
 const FaceIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path
@@ -19,7 +30,6 @@ const FaceIcon = () => (
   </svg>
 )
 
-// genai -> Image/Layers icon
 const ImageLayersIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path
@@ -31,7 +41,6 @@ const ImageLayersIcon = () => (
   </svg>
 )
 
-// type -> File/Info icon
 const FileInfoIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path
@@ -43,7 +52,6 @@ const FileInfoIcon = () => (
   </svg>
 )
 
-// quality -> Check/Stars icon
 const QualityStarsIcon = () => (
   <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path
@@ -55,192 +63,103 @@ const QualityStarsIcon = () => (
   </svg>
 )
 
-const CheckIcon = () => (
-  <svg className="w-6 h-6 flex-shrink-0 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+const WaveIcon = () => (
+  <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h2l2-6 3 12 3-9 2 6 2-3h2" />
   </svg>
 )
 
-const IMAGE_ITEMS = [
-  {
-    modelId: MODEL_IDS.deepfake,
-    icon: FaceIcon,
-    title: 'Deepfake Detection',
-    passSubtitle: 'No face swap detected',
-    failSubtitle: 'Deepfake detected',
-  },
-  {
-    modelId: MODEL_IDS.genai,
-    icon: ImageLayersIcon,
-    title: 'AI Pixel Analysis',
-    passSubtitle: 'No AI generation detected',
-    failSubtitle: 'AI generation detected',
-  },
-  {
-    modelId: MODEL_IDS.type,
-    icon: FileInfoIcon,
-    title: 'Metadata Check',
-    passSubtitle: 'EXIF and file structure verified',
-    failSubtitle: 'Metadata anomalies',
-  },
-  {
-    modelId: MODEL_IDS.quality,
-    icon: QualityStarsIcon,
-    title: 'Image Quality',
-    passSubtitle: 'Quality score verified',
-    failSubtitle: 'Low quality score',
-  },
-]
-
-const AUDIO_ITEMS = [
-  {
-    modelId: MODEL_IDS.genai,
-    icon: ImageLayersIcon,
-    title: 'Voice Frequency',
-    passSubtitle: 'No synthetic voice detected',
-    failSubtitle: 'Synthetic voice detected',
-  },
-  {
-    modelId: MODEL_IDS.deepfake,
-    icon: FaceIcon,
-    title: 'Neural Synthesis Check',
-    passSubtitle: 'Vocal patterns verified',
-    failSubtitle: 'Neural synthesis detected',
-  },
-]
-
-// Video: frame + optional Elite dual-track (audio, lip-sync)
-const VIDEO_ITEMS = [
-  {
-    modelId: 'video_ai',
-    icon: ImageLayersIcon,
-    title: 'AI Detection Across Frames',
-    passSubtitle: 'No AI-generated content detected in sampled frames',
-    failSubtitle: 'AI-generated or manipulated content detected',
-  },
-  {
-    modelId: 'voice_clone',
-    icon: FaceIcon,
-    title: 'Voice Clone Detection',
-    passSubtitle: 'No indication of synthetic voice cloning',
-    failSubtitle: 'Indication of synthetic voice cloning',
-    scannedKey: 'voice_clone',
-  },
-  {
-    modelId: 'lip_sync',
-    icon: ImageLayersIcon,
-    title: 'Lip-Sync Integrity',
-    passSubtitle: 'Audio-visual sync verified',
-    failSubtitle: 'Lip-sync anomalies detected',
-    scannedKey: 'lip_sync',
-  },
-]
-
-function getScoreForModel(modelId, modelScores) {
-  if (!modelScores) return null
-  if (modelId === 'video_ai') {
-    const ag = modelScores.ai_generated != null ? Number(modelScores.ai_generated) : 0
-    const df = modelScores.deepfake != null ? Number(modelScores.deepfake) : 0
-    return Math.max(ag, df)
-  }
-  if (modelId === 'voice_clone') return modelScores?.voice_clone_reasoning ? 'reasoning' : null
-  if (modelId === 'lip_sync') return modelScores.lip_sync_integrity != null ? 1 - modelScores.lip_sync_integrity : null
-  if (modelId === MODEL_IDS.genai) return modelScores.ai_generated
-  if (modelId === MODEL_IDS.deepfake) return modelScores.deepfake
-  if (modelId === MODEL_IDS.quality) return modelScores.quality
-  return null
+/**
+ * One row per model that ran. `key` is the translation prefix under
+ * `analysis.<key>` (title / pass / fail).
+ */
+const ITEMS = {
+  image: [
+    { modelId: 'deepfake', key: 'image_deepfake', icon: FaceIcon, scoreKey: 'deepfake' },
+    { modelId: 'genai', key: 'image_genai', icon: ImageLayersIcon, scoreKey: 'ai_generated' },
+    { modelId: 'type', key: 'image_type', icon: FileInfoIcon, scoreKey: null },
+    { modelId: 'quality', key: 'image_quality', icon: QualityStarsIcon, scoreKey: 'quality', invert: true },
+  ],
+  video: [
+    { modelId: 'genai', key: 'video_genai', icon: ImageLayersIcon, scoreKey: 'ai_generated' },
+    { modelId: 'deepfake', key: 'video_deepfake', icon: FaceIcon, scoreKey: 'deepfake' },
+    { modelId: 'ai_speech', key: 'video_speech', icon: WaveIcon, scoreKey: 'ai_speech' },
+  ],
+  audio: [{ modelId: 'ai_speech', key: 'audio_speech', icon: WaveIcon, scoreKey: 'ai_speech' }],
 }
 
-function getSubtitleAndStatus(item, modelScores, aiSignatures, metadata) {
-  if (item.modelId === 'video_ai') {
-    const raw = getScoreForModel('video_ai', modelScores)
-    if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
-    const pct = Math.round(Number(raw) * 100)
-    const isFail = raw > 0.5
-    const subtitle = isFail ? `${item.failSubtitle} (${pct}%)` : `Analysis complete: ${item.passSubtitle}`
-    return { subtitle, isFail, pct }
-  }
-  if (item.modelId === 'voice_clone') {
-    const reasoning = metadata?.audioAnalysis?.voiceCloneReasoning ?? modelScores?.voice_clone_reasoning
-    if (!reasoning) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
-    const hasSuspicion =
-      /suspicion|yes|likely|probable|synthetic|cloned/i.test(reasoning) &&
-      !/no suspicion|low suspicion|unlikely/i.test(reasoning)
-    return { subtitle: reasoning, isFail: hasSuspicion }
-  }
-  if (item.modelId === 'lip_sync') {
-    const raw = getScoreForModel('lip_sync', modelScores)
-    if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
-    const pct = Math.round(Number(raw) * 100)
-    const isFail = raw > 0.5
-    const subtitle = isFail ? `${item.failSubtitle} (${pct}%)` : `Analysis complete: ${item.passSubtitle}`
-    return { subtitle, isFail, pct }
-  }
-  if (item.modelId === MODEL_IDS.type && aiSignatures) {
+function describe(item, { modelScores, aiSignatures, warnings, t }) {
+  if (item.modelId === 'type') {
     const parts = []
-    if (aiSignatures.missingExif) parts.push('Missing EXIF')
-    if (aiSignatures.suspiciousResolution) parts.push(`Suspicious resolution: ${aiSignatures.suspiciousResolution}`)
-    if (aiSignatures.softwareTags?.length) parts.push(`AI software: ${aiSignatures.softwareTags.join(', ')}`)
-    if (parts.length > 0) {
-      return { subtitle: parts.join('. '), isFail: true }
+    if (aiSignatures?.missingExif) parts.push(t('verdict.ai_missing_exif'))
+    if (aiSignatures?.suspiciousResolution) {
+      parts.push(t('verdict.ai_suspicious_resolution', { res: aiSignatures.suspiciousResolution }))
     }
-    return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
+    if (aiSignatures?.softwareTags?.length) {
+      parts.push(t('verdict.ai_software_detected', { tags: aiSignatures.softwareTags.join(', ') }))
+    }
+    // Informational only: metadata never decides the verdict.
+    return {
+      subtitle: parts.length ? parts.join('. ') : t(`analysis.${item.key}.pass`),
+      state: parts.length ? 'info' : 'pass',
+    }
   }
-  const raw = getScoreForModel(item.modelId, modelScores)
-  if (raw == null) return { subtitle: `Analysis complete: ${item.passSubtitle}`, isFail: false }
+
+  const raw = modelScores?.[item.scoreKey]
+  if (raw == null) {
+    if (item.modelId === 'ai_speech' && warnings?.includes('ai_speech_not_enabled')) {
+      return { subtitle: t('analysis.speech_not_enabled'), state: 'skipped' }
+    }
+    if (item.modelId === 'ai_speech' && warnings?.includes('no_audio_track')) {
+      return { subtitle: t('analysis.no_audio_track'), state: 'skipped' }
+    }
+    return { subtitle: t('analysis.no_result'), state: 'skipped' }
+  }
   const pct = Math.round(Number(raw) * 100)
-  const isFail = item.modelId === MODEL_IDS.quality ? raw < 0.4 : raw > 0.5
-  const subtitle = isFail ? `${item.failSubtitle} (${pct}%)` : `Analysis complete: ${item.passSubtitle}`
-  return { subtitle, isFail, pct }
-}
-
-function getItemsForScannedModels(mediaCategory, scannedModels) {
-  const scanned = Array.isArray(scannedModels) && scannedModels.length > 0 ? scannedModels : null
-  const allItems = mediaCategory === 'image' ? IMAGE_ITEMS : mediaCategory === 'audio' ? AUDIO_ITEMS : VIDEO_ITEMS
-
-  if (scanned) {
-    if (mediaCategory === 'video') {
-      const hasVideoModels = scanned.some((m) => ['genai', 'deepfake'].includes(m))
-      if (!hasVideoModels) return []
-      const items = VIDEO_ITEMS.filter((item) => {
-        if (item.modelId === 'video_ai') return hasVideoModels
-        if (item.scannedKey) return scanned.includes(item.scannedKey)
-        return true
-      })
-      return items
-    }
-    return allItems.filter((item) => scanned.includes(item.modelId))
+  const isFail = item.invert ? raw < 0.4 : raw > 0.5
+  return {
+    subtitle: isFail ? `${t(`analysis.${item.key}.fail`)} (${pct}%)` : `${t(`analysis.${item.key}.pass`)} (${pct}%)`,
+    state: isFail ? 'fail' : 'pass',
   }
-
-  return allItems.map((item) => ({ ...item, modelId: undefined }))
 }
 
-export default function RealTimeAnalysis({ fileType, scannedModels, modelScores, aiSignatures, metadata }) {
+export default function RealTimeAnalysis({ fileType, scannedModels, modelScores, aiSignatures, warnings }) {
+  const { t } = useTranslation()
   const mediaCategory = getMediaCategory(fileType)
-  const items = getItemsForScannedModels(mediaCategory, scannedModels)
-
+  const scanned = Array.isArray(scannedModels) && scannedModels.length ? scannedModels : null
+  const items = (ITEMS[mediaCategory] ?? ITEMS.image).filter((item) => !scanned || scanned.includes(item.modelId))
   if (items.length === 0) return null
 
   return (
     <section className="w-full max-w-4xl mx-auto">
-      <h2 className="text-base font-medium text-white mb-4">Real-Time Analysis:</h2>
+      <h2 className="text-base font-medium text-white mb-4">{t('analysis.title')}</h2>
       <div className="space-y-4">
-        {items.map((item, i) => {
+        {items.map((item) => {
           const Icon = item.icon
-          const { subtitle, isFail } = getSubtitleAndStatus(item, modelScores, aiSignatures, metadata)
-          const StatusIcon = isFail ? XIcon : CheckIcon
+          const { subtitle, state } = describe(item, { modelScores, aiSignatures, warnings, t })
+          const StatusIcon = state === 'fail' ? XIcon : state === 'pass' ? CheckIcon : DashIcon
           return (
             <div
-              key={i}
+              key={item.modelId}
               className={`flex items-start justify-between gap-3 py-3 px-4 rounded-xl border ${
-                isFail ? 'bg-red-950/30 border-red-500/40' : 'bg-verifeye-card border-slate-700/50'
+                state === 'fail'
+                  ? 'bg-red-950/30 border-red-500/40'
+                  : state === 'skipped'
+                    ? 'bg-slate-800/40 border-slate-700/40 opacity-80'
+                    : 'bg-verifeye-card border-slate-700/50'
               }`}
             >
               <div className="flex items-start gap-3 flex-1 min-w-0">
                 <Icon />
                 <div>
-                  <p className="text-white font-medium">{item.title}</p>
-                  <p className={`text-sm mt-0.5 ${isFail ? 'text-red-400' : 'text-slate-400'}`}>{subtitle}</p>
+                  <p className="text-white font-medium">{t(`analysis.${item.key}.title`)}</p>
+                  <p
+                    className={`text-sm mt-0.5 ${
+                      state === 'fail' ? 'text-red-400' : state === 'info' ? 'text-amber-300/90' : 'text-slate-400'
+                    }`}
+                  >
+                    {subtitle}
+                  </p>
                 </div>
               </div>
               <StatusIcon />

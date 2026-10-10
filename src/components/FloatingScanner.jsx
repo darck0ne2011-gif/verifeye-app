@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { API_BASE } from '../config.js'
+import { runScan } from '../api/scans'
 import { getActiveModels, getMaxCreditsPerScan } from '../utils/scanSettings'
 import { getMediaCategory } from '../utils/fileType'
-import { getWinningDisplay } from '../utils/verdictScore'
+import { deriveVerdict } from './VerdictBanner'
 
 const FAB_STORAGE_KEY = 'verifeye_fab_position'
 const FAB_SIZE = 56
@@ -93,7 +93,6 @@ const DragHandleIcon = () => (
   </svg>
 )
 
-const MIN_SCAN_DURATION_MS = 2500
 const BOTTOM_NAV_HEIGHT = 80
 
 function getDefaultPosition() {
@@ -105,11 +104,12 @@ function getDefaultPosition() {
 }
 
 export default function FloatingScanner() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user, getAuthHeaders, refreshUser, logout } = useAuth()
   const [expanded, setExpanded] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [miniResult, setMiniResult] = useState(null)
+  const [stage, setStage] = useState('queued')
   const [showDropZone, setShowDropZone] = useState(false)
   const [position, setPosition] = useState(() => loadFabPosition() ?? getDefaultPosition())
   const [, setIsDragging] = useState(false)
@@ -128,20 +128,11 @@ export default function FloatingScanner() {
     setShowDropZone(false)
   }, [])
 
-  const handleScanCurrentPage = useCallback(async () => {
-    if (!hasCredits) return
-    setScanning(true)
-    setMiniResult(null)
-
-    await new Promise((r) => setTimeout(r, MIN_SCAN_DURATION_MS))
-
-    setMiniResult({
-      status: 'INFO',
-      message: 'Quick Scan is currently photo-only. Use Quick Upload to scan an image.',
-    })
-    setScanning(false)
-    await refreshUser()
-  }, [hasCredits, refreshUser])
+  // Scanning what is on screen in other apps needs the Android app (system overlay +
+  // screen capture); a web page cannot see outside itself.
+  const handleScanCurrentPage = useCallback(() => {
+    setMiniResult({ status: 'info', label: t('fab.on_screen_title'), message: t('fab.on_screen_message') })
+  }, [t])
 
   const handleQuickUpload = useCallback(() => {
     if (!hasCredits) return
@@ -152,51 +143,45 @@ export default function FloatingScanner() {
   const processFile = useCallback(
     async (file) => {
       if (!file || !hasCredits) return
+      if (!/^(image|video|audio)\//i.test(file.type || '')) return
 
       setShowDropZone(false)
       setScanning(true)
       setMiniResult(null)
+      setStage('uploading')
 
       try {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('models', getActiveModels(getMediaCategory(file)).join(','))
-        formData.append('language', i18n.language || 'en')
-
-        const startTime = Date.now()
-        const res = await fetch(`${API_BASE}/api/analyze`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: formData,
+        const result = await runScan(
+          file,
+          { models: getActiveModels(getMediaCategory(file)), language: i18n.language || 'en' },
+          { authHeaders: getAuthHeaders(), onProgress: (p) => setStage(p.stage) }
+        )
+        const verdict = deriveVerdict(result)
+        setMiniResult({
+          status: verdict,
+          label: t(`verdict.band_${verdict}`),
+          score: result.fakeProbability,
+          message:
+            t('verdict.ai_probability', { value: result.fakeProbability }) +
+            (result.confidence != null ? ` · ${t('verdict.confidence', { value: result.confidence })}` : ''),
         })
-
-        let elapsed = Date.now() - startTime
-        if (elapsed < MIN_SCAN_DURATION_MS) {
-          await new Promise((r) => setTimeout(r, MIN_SCAN_DURATION_MS - elapsed))
-        }
-
-        const data = await res.json().catch(() => ({}))
-        if (res.status === 401) {
-          logout()
-          setMiniResult({ status: 'ERROR', message: 'Session expired' })
-        } else if (data.success) {
-          const { status, displayScore } = getWinningDisplay(data.fakeProbability ?? 0)
-          setMiniResult({
-            status,
-            score: displayScore,
-            message: `${status} — ${displayScore}%`,
-          })
-          await refreshUser()
-        } else {
-          setMiniResult({ status: 'ERROR', message: data.error || 'Scan failed' })
-        }
+        await refreshUser()
       } catch (err) {
-        setMiniResult({ status: 'ERROR', message: err.message || 'Network error' })
+        if (err.status === 401) {
+          logout()
+          setMiniResult({ status: 'error', label: t('scan.session_expired'), message: '' })
+        } else {
+          setMiniResult({
+            status: 'error',
+            label: t('verdict.scan_failed'),
+            message: err.message || t('scan.network_error'),
+          })
+        }
       } finally {
         setScanning(false)
       }
     },
-    [hasCredits, getAuthHeaders, logout, refreshUser]
+    [hasCredits, getAuthHeaders, logout, refreshUser, i18n.language, t]
   )
 
   const handleFileChange = useCallback(
@@ -214,10 +199,8 @@ export default function FloatingScanner() {
       const files = e.dataTransfer?.files
       if (files?.length && hasCredits) {
         const file = files[0]
-        if (/^image\//.test(file.type)) {
-          setShowDropZone(false)
-          processFile(file)
-        }
+        setShowDropZone(false)
+        processFile(file)
       }
     },
     [hasCredits, processFile]
@@ -328,8 +311,7 @@ export default function FloatingScanner() {
                           : 'text-amber-500'
                     }`}
                   >
-                    {miniResult.status}
-                    {miniResult.score != null && ` (${miniResult.score}%)`}
+                    {miniResult.label}
                   </span>
                   <button
                     onClick={clearMiniResult}
@@ -353,6 +335,11 @@ export default function FloatingScanner() {
                     <CloseIcon />
                   </button>
                 </div>
+                {scanning && (
+                  <p className="text-xs text-cyan-300 mb-2" role="status">
+                    {t(`scan.stage.${stage}`, { defaultValue: t('scan.stage.processing') })}
+                  </p>
+                )}
 
                 <button
                   onClick={handleScanCurrentPage}
@@ -431,7 +418,13 @@ export default function FloatingScanner() {
         </button>
       </div>
 
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*,audio/*"
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       <style>{`
         @keyframes fab-pulse {

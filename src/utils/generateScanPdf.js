@@ -7,6 +7,7 @@ const DARK_GRAY = '#374151'
 const LIGHT_GRAY = '#6b7280'
 const VERDICT_REAL = '#047857'
 const VERDICT_FAKE = '#b91c1c'
+const VERDICT_UNCLEAR = '#b45309'
 
 /** Helvetica lacks Romanian diacritics (ș, ă, ț, etc.). Convert to ASCII for clean PDF rendering. */
 function toPdfSafe(str) {
@@ -73,7 +74,9 @@ function getModelStatus(modelId, scannedModels, modelScores, aiSignatures, t) {
         ? 'deepfake'
         : modelId === 'quality'
           ? 'quality'
-          : null
+          : modelId === 'ai_speech'
+            ? 'ai_speech'
+            : null
   if (!key || !modelScores) return na
   const score = toDisplayScore(modelScores[key])
   return score ?? na
@@ -131,6 +134,9 @@ export function generateScanPdf(opts) {
     scannedModels = null,
     metadata = null,
     expertSummary = null,
+    mediaCategory = null,
+    verdict = null,
+    confidence = null,
     t,
     language,
   } = opts
@@ -205,13 +211,29 @@ export function generateScanPdf(opts) {
   doc.text(toPdfSafe(t?.('pdf.verdict') || 'Verdict'), margin, y)
   y += 22
 
-  const resultColor = status === 'REAL' ? VERDICT_REAL : VERDICT_FAKE
-  doc.setFontSize(22)
+  const band = verdict || (status === 'REAL' ? 'likely_real' : 'likely_ai')
+  const resultColor = band === 'likely_real' ? VERDICT_REAL : band === 'likely_ai' ? VERDICT_FAKE : VERDICT_UNCLEAR
+  const bandLabel = toPdfSafe(
+    t?.(`pdf.verdict_${band}`) ||
+      (band === 'likely_real' ? 'LIKELY AUTHENTIC' : band === 'likely_ai' ? 'LIKELY AI-GENERATED' : 'INCONCLUSIVE')
+  )
+  doc.setFontSize(20)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(resultColor)
-  doc.text(status, margin, y)
-  doc.text(`${score}%`, margin + 70, y)
-  y += 40
+  doc.text(bandLabel, margin, y)
+  y += 22
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(DARK_GRAY)
+  const aiPct = status === 'FAKE' ? score : 100 - score
+  const verdictLine = [
+    `${aiPct}% AI`,
+    confidence != null ? `${toPdfSafe(t?.('pdf.confidence') || 'Confidence')}: ${confidence}%` : null,
+  ]
+    .filter(Boolean)
+    .join('   |   ')
+  doc.text(verdictLine, margin, y)
+  y += 30
 
   // AI Expert Interpretation (DeepSeek) - directly under Verdict line
   const summary = expertSummary || metadata?.expertSummary
@@ -260,24 +282,26 @@ export function generateScanPdf(opts) {
   y += 20
 
   const tval = (k, d) => toPdfSafe(t?.(k) || d)
-  const modelRows = [
-    [
-      tval('pdf.analysis_deepfake', 'Deepfake Detection'),
-      getModelStatus('deepfake', scannedModels, modelScores, aiSignatures, t),
-    ],
-    [
-      tval('pdf.analysis_genai', 'AI Pixel Analysis'),
-      getModelStatus('genai', scannedModels, modelScores, aiSignatures, t),
-    ],
-    [
-      tval('pdf.analysis_metadata', 'Metadata Check'),
-      getModelStatus('type', scannedModels, modelScores, aiSignatures, t),
-    ],
-    [
-      tval('pdf.analysis_quality', 'Image Quality'),
-      getModelStatus('quality', scannedModels, modelScores, aiSignatures, t),
-    ],
-  ]
+  const category = mediaCategory || metadata?.mediaCategory || 'image'
+  const rowDefs =
+    category === 'video'
+      ? [
+          ['genai', 'pdf.analysis_video_genai', 'AI frame analysis'],
+          ['deepfake', 'pdf.analysis_video_deepfake', 'Face swap detection'],
+          ['ai_speech', 'pdf.analysis_ai_speech', 'AI voice detection'],
+        ]
+      : category === 'audio'
+        ? [['ai_speech', 'pdf.analysis_ai_speech', 'AI voice detection']]
+        : [
+            ['deepfake', 'pdf.analysis_deepfake', 'Deepfake Detection'],
+            ['genai', 'pdf.analysis_genai', 'AI Pixel Analysis'],
+            ['type', 'pdf.analysis_metadata', 'Metadata Check'],
+            ['quality', 'pdf.analysis_quality', 'Image Quality'],
+          ]
+  const modelRows = rowDefs.map(([id, key, label]) => [
+    tval(key, label),
+    getModelStatus(id, scannedModels, modelScores, aiSignatures, t),
+  ])
   autoTable(doc, {
     startY: y,
     head: [[toPdfSafe(t?.('pdf.analysis_type') || 'Analysis Type'), toPdfSafe(t?.('pdf.status') || 'Status')]],
@@ -313,6 +337,16 @@ export function generateScanPdf(opts) {
     }
     if (metadata?.resolution) {
       metaRows.push([mt('pdf.meta_resolution', 'Resolution'), metadata.resolution])
+    }
+    if (metadata?.durationSec != null) {
+      const sec = Math.round(metadata.durationSec)
+      metaRows.push([
+        mt('pdf.meta_duration', 'Duration'),
+        `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`,
+      ])
+    }
+    if (metadata?.framesAnalyzed != null) {
+      metaRows.push([mt('pdf.meta_frames', 'Frames analyzed'), String(metadata.framesAnalyzed)])
     }
     if (metadata?.createdAt) {
       metaRows.push([mt('pdf.meta_created', 'Created'), String(metadata.createdAt)])

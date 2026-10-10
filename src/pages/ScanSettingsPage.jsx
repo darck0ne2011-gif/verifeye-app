@@ -1,17 +1,36 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { getActiveModelsForCategory, setActiveModelsForCategory } from '../utils/scanSettings'
+import { MODEL_OPTIONS, getActiveModelsForCategory, setActiveModelsForCategory } from '../utils/scanSettings'
 import DashboardHeader from '../components/DashboardHeader'
 
-const PHOTO_OPTIONS = [
-  { id: 'deepfake', labelKey: 'scan_settings.model_deepfake' },
-  { id: 'genai', labelKey: 'scan_settings.model_genai' },
-  { id: 'type', labelKey: 'scan_settings.model_metadata' },
-  { id: 'quality', labelKey: 'scan_settings.model_quality' },
-]
+const MODEL_LABEL_KEYS = {
+  image: {
+    genai: 'scan_settings.model_genai',
+    deepfake: 'scan_settings.model_deepfake',
+    type: 'scan_settings.model_metadata',
+    quality: 'scan_settings.model_quality',
+  },
+  video: {
+    genai: 'scan_settings.model_video_genai',
+    deepfake: 'scan_settings.model_video_deepfake',
+    ai_speech: 'scan_settings.model_video_speech',
+  },
+  audio: {
+    ai_speech: 'scan_settings.model_audio_speech',
+  },
+}
 
-// Video/Audio disabled: photo-only app mode.
+const MODEL_HINT_KEYS = {
+  video: { ai_speech: 'scan_settings.hint_ai_speech_beta' },
+  audio: { ai_speech: 'scan_settings.hint_ai_speech_beta' },
+}
+
+const TABS = [
+  { id: 'image', labelKey: 'scan_settings.tab_photo', sectionKey: 'scan_settings.section_photo', icon: '📷' },
+  { id: 'video', labelKey: 'scan_settings.tab_video', sectionKey: 'scan_settings.section_video', icon: '🎬' },
+  { id: 'audio', labelKey: 'scan_settings.tab_audio', sectionKey: 'scan_settings.section_audio', icon: '🎙️' },
+]
 
 function ToggleSwitch({ checked, onChange }) {
   return (
@@ -33,46 +52,22 @@ function ToggleSwitch({ checked, onChange }) {
   )
 }
 
-function SectionToggle({ id, labelKey, isOn, onToggle, t, disabled, eliteBadge }) {
-  return (
-    <li
-      className={`w-full flex justify-between items-center p-4 rounded-xl border ${disabled ? 'bg-slate-800/30 border-slate-700/30 opacity-75' : 'bg-slate-800/50 border-slate-700/50'}`}
-    >
-      <span className="text-white font-medium flex-1 min-w-0 flex items-center gap-2">
-        {t(labelKey)}
-        {eliteBadge && (
-          <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
-            Elite
-          </span>
-        )}
-      </span>
-      <div className="shrink-0">
-        <ToggleSwitch checked={disabled ? false : isOn} onChange={() => !disabled && onToggle(id)} />
-      </div>
-    </li>
-  )
-}
-
 export default function ScanSettingsPage({ onSettingsClick }) {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const isElite = user?.subscriptionTier === 'elite' || user?.isPremium === true
-  const [activeTab] = useState('photo')
+  const [activeTab, setActiveTab] = useState('image')
+  const [models, setModels] = useState(() =>
+    Object.fromEntries(TABS.map((tab) => [tab.id, getActiveModelsForCategory(tab.id)]))
+  )
 
-  const [photoModels, setPhotoModels] = useState(() => getActiveModelsForCategory('photo'))
-
-  useEffect(() => {
-    setPhotoModels(getActiveModelsForCategory('photo'))
-  }, [])
-
-  const togglePhoto = (id) => {
-    const next = photoModels.includes(id) ? photoModels.filter((m) => m !== id) : [...photoModels, id]
-    const arr = next.length > 0 ? next : ['genai']
-    setActiveModelsForCategory('photo', arr)
-    setPhotoModels(arr)
+  const toggle = (category, id) => {
+    const current = models[category]
+    const next = current.includes(id) ? current.filter((m) => m !== id) : [...current, id]
+    const saved = setActiveModelsForCategory(category, next)
+    setModels((prev) => ({ ...prev, [category]: saved }))
   }
 
-  const tabs = [{ id: 'photo', labelKey: 'scan_settings.tab_photo', icon: '📷' }]
+  const tab = TABS.find((x) => x.id === activeTab)
 
   return (
     <div className="min-h-screen bg-[#0d0d0d] flex flex-col pb-20">
@@ -86,47 +81,46 @@ export default function ScanSettingsPage({ onSettingsClick }) {
         <h1 className="text-xl font-bold text-white text-left mb-2">{t('scan_settings.title')}</h1>
         <p className="text-slate-400 text-sm mb-6">{t('scan_settings.subtitle')}</p>
 
-        {/* Tab bar */}
-        <div className="flex gap-1 p-1 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6">
-          {tabs.map((tab) => (
+        <div className="flex gap-1 p-1 rounded-xl bg-slate-800/50 border border-slate-700/50 mb-6" role="tablist">
+          {TABS.map((item) => (
             <button
-              key={tab.id}
+              key={item.id}
               type="button"
-              onClick={() => {}}
+              role="tab"
+              aria-selected={activeTab === item.id}
+              onClick={() => setActiveTab(item.id)}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === tab.id
+                activeTab === item.id
                   ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/40'
                   : 'text-slate-400 hover:text-white hover:bg-slate-700/50 border border-transparent'
               }`}
             >
-              <span>{tab.icon}</span>
-              {t(tab.labelKey)}
+              <span aria-hidden>{item.icon}</span>
+              {t(item.labelKey)}
             </button>
           ))}
         </div>
 
-        {/* Photo section */}
-        {activeTab === 'photo' && (
-          <section className="space-y-3 animate-fade-in">
-            <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">
-              {t('scan_settings.section_photo')}
-            </h2>
-            <ul className="space-y-3 w-full">
-              {PHOTO_OPTIONS.map((opt) => (
-                <SectionToggle
-                  key={opt.id}
-                  id={opt.id}
-                  labelKey={opt.labelKey}
-                  isOn={photoModels.includes(opt.id)}
-                  onToggle={togglePhoto}
-                  t={t}
-                  disabled={opt.eliteOnly && !isElite}
-                  eliteBadge={opt.eliteOnly}
-                />
-              ))}
-            </ul>
-          </section>
-        )}
+        <section key={tab.id} className="space-y-3 animate-fade-in" role="tabpanel">
+          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-3">{t(tab.sectionKey)}</h2>
+          <ul className="space-y-3 w-full">
+            {MODEL_OPTIONS[tab.id].map((id) => {
+              const hintKey = MODEL_HINT_KEYS[tab.id]?.[id]
+              return (
+                <li
+                  key={id}
+                  className="w-full flex justify-between items-center gap-4 p-4 rounded-xl border bg-slate-800/50 border-slate-700/50"
+                >
+                  <div className="flex-1 min-w-0">
+                    <span className="text-white font-medium">{t(MODEL_LABEL_KEYS[tab.id][id])}</span>
+                    {hintKey && <p className="text-xs text-amber-400/80 mt-1">{t(hintKey)}</p>}
+                  </div>
+                  <ToggleSwitch checked={models[tab.id].includes(id)} onChange={() => toggle(tab.id, id)} />
+                </li>
+              )
+            })}
+          </ul>
+        </section>
 
         <p className="text-slate-500 text-xs mt-6">{t('scan_settings.credits_note')}</p>
       </main>

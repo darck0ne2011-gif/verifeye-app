@@ -1,9 +1,18 @@
 import { config } from './config.js'
 import { initDb, closeDb } from './db/index.js'
 import { createApp } from './app.js'
+import { setJobHandler, startWorker, stopWorker, recoverInterruptedJobs } from './lib/jobs.js'
+import { processScanJob } from './services/scanner.js'
+import { cleanupStaleUploads } from './lib/storage.js'
 
 async function main() {
   await initDb()
+  await recoverInterruptedJobs()
+  await cleanupStaleUploads()
+
+  setJobHandler(processScanJob)
+  startWorker({ concurrency: config.workerConcurrency })
+
   const app = createApp()
   const server = app.listen(config.port, () => {
     console.log(`VerifEye API running at http://localhost:${config.port} (${config.env})`)
@@ -13,6 +22,7 @@ async function main() {
 
   const shutdown = async (signal) => {
     console.log(`${signal} received, shutting down`)
+    stopWorker()
     server.close(async () => {
       await closeDb()
       process.exit(0)
