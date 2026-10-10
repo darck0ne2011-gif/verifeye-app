@@ -16,6 +16,9 @@ const envSchema = z.object({
   SIGHTENGINE_USER: z.string().optional(),
   SIGHTENGINE_SECRET: z.string().optional(),
   DEEPSEEK_API_KEY: z.string().optional(),
+  GOOGLE_FACTCHECK_API_KEY: z.string().optional(),
+  TAVILY_API_KEY: z.string().optional(),
+  BRAVE_SEARCH_API_KEY: z.string().optional(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   APPLE_CLIENT_ID: z.string().optional(),
@@ -81,6 +84,16 @@ export const config = {
     },
   },
   deepseekApiKey: env.DEEPSEEK_API_KEY,
+  factcheck: {
+    // The analyst model reads the post, extracts claims and judges the evidence.
+    configured: !!env.DEEPSEEK_API_KEY,
+    googleFactCheckKey: env.GOOGLE_FACTCHECK_API_KEY || null,
+    tavilyKey: env.TAVILY_API_KEY || null,
+    braveKey: env.BRAVE_SEARCH_API_KEY || null,
+    credits: 2,
+    maxClaims: 3,
+    maxInputChars: 6000,
+  },
   google: {
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,

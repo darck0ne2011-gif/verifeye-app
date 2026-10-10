@@ -181,12 +181,8 @@
           "name": "scan_history_user_id_users_id_fk",
           "tableFrom": "scan_history",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -261,16 +257,12 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         },
         "users_apple_sub_unique": {
           "name": "users_apple_sub_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "apple_sub"
-          ]
+          "columns": ["apple_sub"]
         }
       },
       "policies": {},

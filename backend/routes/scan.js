@@ -8,7 +8,7 @@ import { modelsForCategory, processScanJob } from '../services/scanner.js'
 import { createJob, getJobForUser, toPublicJob } from '../db/jobs.js'
 import { deductCredits, refundCredits, hasUnlimitedScans, findById, toPublicUser } from '../db/users.js'
 import { removeFile, uploadsDir, ensureUploadsDir, sha256File } from '../lib/storage.js'
-import { badRequest, paymentRequired, notFound } from '../lib/errors.js'
+import { AppError, badRequest, paymentRequired, notFound } from '../lib/errors.js'
 import { config } from '../config.js'
 
 ensureUploadsDir()
@@ -117,6 +117,64 @@ router.post('/scans', authMiddleware, scanLimiter, upload.single('file'), async 
     const job = await createScanJobFromUpload(req)
     res.status(202).json({ success: true, job: toPublicJob(job) })
   } catch (err) {
+    next(err)
+  }
+})
+
+/**
+ * Starts a fact-check of a social media post: a screenshot (field `file`),
+ * pasted text (field `text`) or both. Costs a fixed number of credits and is
+ * polled like any other scan job.
+ */
+router.post('/factchecks', authMiddleware, scanLimiter, upload.single('file'), async (req, res, next) => {
+  const filePath = req.file?.path ?? null
+  try {
+    if (!config.factcheck.configured) {
+      throw new AppError(503, 'Fact-checking is not available on this server', 'FACTCHECK_NOT_CONFIGURED')
+    }
+    const text = String(req.body?.text ?? '')
+      .trim()
+      .slice(0, config.factcheck.maxInputChars)
+    if (!filePath && text.length < 12) throw badRequest('Paste the post text or attach a screenshot', 'NO_TEXT')
+    if (filePath) {
+      const detected = await detectCategory(filePath)
+      if (!detected || detected.category !== 'image') {
+        throw badRequest('Only a screenshot (image) of the post can be fact-checked', 'UNSUPPORTED_MEDIA')
+      }
+      if (req.file.size > SIZE_LIMITS.image) throw badRequest('The screenshot is too large', 'FILE_TOO_LARGE')
+    }
+    const language = String(req.body?.language || 'en').slice(0, 10)
+    const source = req.body?.source === 'screenshot' ? 'screenshot' : 'file'
+    const user = req.user
+    const cost = config.factcheck.credits
+
+    let creditsCharged = 0
+    if (!hasUnlimitedScans(user)) {
+      const updated = await deductCredits(user.id, cost)
+      if (!updated) throw paymentRequired(`A fact-check needs ${cost} credits. You have ${user.scanCredits}.`)
+      creditsCharged = cost
+    }
+    try {
+      const job = await createJob({
+        id: crypto.randomUUID(),
+        userId: user.id,
+        mediaCategory: 'post',
+        source,
+        fileName: req.file?.originalname || (text ? `${text.slice(0, 40).replace(/\s+/g, ' ')}…` : 'post'),
+        filePath,
+        fileHash: filePath ? await sha256File(filePath) : null,
+        models: ['factcheck'],
+        language,
+        inputText: text || null,
+        creditsCharged,
+      })
+      res.status(202).json({ success: true, job: toPublicJob(job) })
+    } catch (err) {
+      if (creditsCharged > 0) await refundCredits(user.id, creditsCharged).catch(() => {})
+      throw err
+    }
+  } catch (err) {
+    if (filePath) await removeFile(filePath)
     next(err)
   }
 })

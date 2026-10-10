@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { fetchHistoryItem, deleteHistoryItem, historyItemToResult } from '../api/history'
 import PageHeader from '../components/PageHeader'
 import VerdictScreen from '../components/VerdictScreen'
+import FactCheckScreen from '../components/FactCheckScreen'
 import { formatDate } from './HistoryPage'
 
 export default function HistoryDetailPage() {
@@ -86,7 +87,11 @@ export default function HistoryDetailPage() {
           {error}
         </p>
       )}
-      <VerdictScreen result={historyItemToResult(item)} canDownloadPdf />
+      {item.mediaCategory === 'post' ? (
+        <FactCheckScreen result={historyItemToResult(item)} canDownloadPdf />
+      ) : (
+        <VerdictScreen result={historyItemToResult(item)} canDownloadPdf />
+      )}
     </div>
   )
 }

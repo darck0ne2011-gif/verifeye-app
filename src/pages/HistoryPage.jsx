@@ -7,8 +7,23 @@ import { fetchHistory } from '../api/history'
 import PageHeader from '../components/PageHeader'
 import { deriveVerdict } from '../components/VerdictBanner'
 
-const BAND_CLASS = { likely_ai: 'text-ai', inconclusive: 'text-unclear', likely_real: 'text-real' }
-const CATEGORIES = ['all', 'image', 'video', 'audio']
+const BAND_CLASS = {
+  likely_ai: 'text-ai',
+  inconclusive: 'text-unclear',
+  likely_real: 'text-real',
+  supported: 'text-real',
+  contested: 'text-unclear',
+  refuted: 'text-ai',
+  unverifiable: 'text-muted',
+  no_claims: 'text-muted',
+}
+const CATEGORIES = ['all', 'image', 'video', 'audio', 'post']
+
+/** Short label for a history row: AI band for media, fact-check verdict for posts. */
+export function bandLabel(t, item) {
+  if (item.mediaCategory === 'post') return t(`factcheck.short_${item.verdict || 'unverifiable'}`)
+  return t(`verdict.band_short_${deriveVerdict({ verdict: item.verdict, status: item.status, score: item.score })}`)
+}
 
 export function categoryOf(item) {
   if (item.mediaCategory) return item.mediaCategory
@@ -46,6 +61,18 @@ const CategoryIcon = ({ type }) => {
     return (
       <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h2l2-6 3 12 3-9 2 6 2-3h2" />
+      </svg>
+    )
+  }
+  if (type === 'post') {
+    return (
+      <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12h6m-6 4h6M7 4h7l5 5v11a1 1 0 01-1 1H7a1 1 0 01-1-1V5a1 1 0 011-1z"
+        />
       </svg>
     )
   }
@@ -137,7 +164,10 @@ export default function HistoryPage() {
       ) : (
         <ul className="card divide-y divide-line">
           {items.map((item) => {
-            const band = deriveVerdict({ verdict: item.verdict, status: item.status, score: item.score })
+            const band =
+              item.mediaCategory === 'post'
+                ? item.verdict || 'unverifiable'
+                : deriveVerdict({ verdict: item.verdict, status: item.status, score: item.score })
             const type = categoryOf(item)
             return (
               <li key={item.id}>
@@ -153,8 +183,8 @@ export default function HistoryPage() {
                     <span className="block text-xs text-muted">{formatDate(item.date)}</span>
                   </span>
                   <span className="text-right shrink-0">
-                    <span className={`block text-xs font-bold ${BAND_CLASS[band]}`}>
-                      {t(`verdict.band_short_${band}`)}
+                    <span className={`block text-xs font-bold ${BAND_CLASS[band] ?? 'text-muted'}`}>
+                      {bandLabel(t, item)}
                     </span>
                     <span className="block text-[11px] text-muted">
                       {item.confidence != null

@@ -15,6 +15,13 @@
       "when": 1791608797527,
       "tag": "0001_scan_jobs_and_verdict",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791620269382,
+      "tag": "0002_factcheck_input_text",
+      "breakpoints": true
     }
   ]
 }

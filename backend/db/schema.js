@@ -62,13 +62,14 @@ export const scanJobs = pgTable(
     status: text('status').notNull().default('queued'), // queued | processing | done | failed
     stage: text('stage'), // human-readable progress stage key
     progress: integer('progress').notNull().default(0), // 0-100
-    mediaCategory: text('media_category').notNull(),
+    mediaCategory: text('media_category').notNull(), // image | video | audio | post
     source: text('source').notNull().default('file'),
     fileName: text('file_name').notNull(),
     filePath: text('file_path'), // temp upload; removed when the job finishes
     fileHash: text('file_hash'),
     models: jsonb('models').notNull(),
     language: text('language').notNull().default('en'),
+    inputText: text('input_text'), // fact-check jobs: the post text (pasted or shared)
     creditsCharged: integer('credits_charged').notNull().default(0),
     result: jsonb('result'),
     error: jsonb('error'),
