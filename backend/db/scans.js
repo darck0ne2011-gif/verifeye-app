@@ -1,4 +1,4 @@
-import { eq, desc, sql } from 'drizzle-orm'
+import { eq, desc, sql, and } from 'drizzle-orm'
 import { getDb } from './index.js'
 import { scanCache, scanHistory } from './schema.js'
 
@@ -95,4 +95,15 @@ function toHistoryItem(row) {
     metadata: row.metadata,
     mediaCategory: row.mediaCategory,
   }
+}
+
+/** Deletes one history entry belonging to the user. Returns true when a row was removed. */
+export async function deleteUserScanHistoryItem(userId, id) {
+  const numericId = Number(id)
+  if (!Number.isInteger(numericId)) return false
+  const rows = await getDb()
+    .delete(scanHistory)
+    .where(and(eq(scanHistory.id, numericId), eq(scanHistory.userId, userId)))
+    .returning({ id: scanHistory.id })
+  return rows.length > 0
 }

@@ -59,7 +59,8 @@
     "feature_pdf_reports": "PDF Reports",
     "feature_priority": "Priority analysis",
     "feature_unlimited": "Unlimited scans",
-    "feature_ai_processing": "Priority AI Processing"
+    "feature_ai_processing": "Priority AI Processing",
+    "unlimited_note": "Your account has unlimited scans — no plan needed."
   },
   "nav": {
     "home": "Home",
@@ -117,7 +118,6 @@
     "scans_unlimited": "Unlimited scans"
   },
   "scan": {
-    "protection_active": "Protection is active. Go to any video app to scan.",
     "session_expired": "Session expired. Please sign in again.",
     "network_error": "Network error – is the backend running?",
     "select_models": "Analysis models (1 credit each)",
@@ -141,14 +141,17 @@
       "summarizing": "Writing summary…",
       "processing": "Processing…",
       "done": "Done"
-    }
+    },
+    "hint_pick_file": "Choose a photo, video or audio file to check it for AI generation or manipulation.",
+    "hint_ready": "Press Start Scanning to analyze this file."
   },
   "dropzone": {
     "file_ready": "File Ready",
     "change": "Change",
     "drag_drop": "Drag & drop a photo, video or audio file",
     "or_click": "or click to browse",
-    "credits_hint": "This scan will use {{count}} credit(s)"
+    "credits_hint": "This scan will use {{count}} credit(s)",
+    "take_photo": "Take a photo"
   },
   "overlay": {
     "out_of_credits": "Out of Credits",
@@ -226,7 +229,14 @@
     "empty": "No scans yet. Start by verifying your first file!",
     "download_report": "Download Report",
     "upgrade_for_pdf": "Upgrade to download PDF",
-    "upgrade_pdf_tooltip": "Upgrade to Pro or Elite for PDF reports"
+    "upgrade_pdf_tooltip": "Upgrade to Pro or Elite for PDF reports",
+    "open": "Open result",
+    "back": "Back to history",
+    "delete": "Delete",
+    "confirm_delete": "Delete",
+    "cancel": "Cancel",
+    "delete_failed": "Could not delete this entry",
+    "load_failed": "Could not load your history"
   },
   "settings": {
     "title": "Settings",
@@ -236,8 +246,6 @@
     "subscription": "Subscription",
     "support": "FAQ & Support",
     "about": "About & App Info",
-    "display_name": "Display Name",
-    "display_name_placeholder": "Your display name",
     "registered_email": "Registered Email",
     "export_data": "Export My Data",
     "log_out": "Log Out",
@@ -255,28 +263,22 @@
     "deleting": "Deleting...",
     "confirm_delete": "Confirm Delete Account",
     "contact_us": "Contact Us",
-    "support_exclusive": "Direct support is exclusive to Pro & Elite members. Please check the FAQs above for common questions, or upgrade your plan to access our support team.",
-    "message_sent": "Thank you! Your message has been sent. We'll get back to you soon.",
-    "name": "Name",
-    "name_placeholder": "Your name",
-    "message": "Message",
-    "message_placeholder": "How can we help?",
-    "sending": "Sending...",
-    "submit": "Submit",
     "current_balance": "Current Balance",
     "scan_credits_remaining": "scan credits remaining",
-    "buy_more_credits": "Buy More Credits",
     "coming_soon": "Coming soon",
     "about_text": "VerifEye is a leading platform for deepfake detection and media authentication. Our AI-powered analysis helps you verify the authenticity of videos, images, and audio in an era of increasingly sophisticated synthetic media. Trust the Truth Layer.",
     "version": "Version",
-    "check_updates": "Check for updates",
     "faq_support": "FAQ & Support",
     "privacy_policy": "Privacy Policy",
     "terms_of_service": "Terms of Service",
     "all_systems": "All Systems Operational",
     "copyright": "© 2026 VerifEye — Truth Layer. All rights reserved.",
-    "saved": "Saved ✓",
-    "save": "Save"
+    "unlimited": "Unlimited",
+    "go_to_plans": "See plans",
+    "support_email_intro": "Write to us and we will get back to you:",
+    "status_checking": "Checking service status…",
+    "status_ok": "All systems operational",
+    "status_down": "The analysis service is currently unreachable"
   },
   "faq": {
     "q1": "How does VerifEye detect deepfakes?",
@@ -418,9 +420,5 @@
       "pass": "No synthetic speech detected",
       "fail": "Synthetic speech detected"
     }
-  },
-  "fab": {
-    "on_screen_title": "On-screen scanning",
-    "on_screen_message": "Checking what is on screen in other apps needs the VerifEye Android app. Here, use Quick Upload or share the file to VerifEye."
   }
 }

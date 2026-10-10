@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import RealTimeAnalysis from './RealTimeAnalysis'
 import VerdictBanner, { deriveVerdict } from './VerdictBanner'
 import FrameTimeline from './FrameTimeline'
+import MediaPreview from './MediaPreview'
 
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,7 +48,7 @@ function Row({ label, value, mono = false }) {
  * (see backend/services/scanner.js); older saved results without `verdict`
  * are still supported.
  */
-export default function VerdictScreen({ result, error, canDownloadPdf = false, onUpgradeClick }) {
+export default function VerdictScreen({ result, error, file = null, canDownloadPdf = false, onUpgradeClick }) {
   const { t, i18n } = useTranslation()
   const [downloading, setDownloading] = useState(false)
 
@@ -107,6 +108,7 @@ export default function VerdictScreen({ result, error, canDownloadPdf = false, o
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 animate-fade-in">
+      {file && <MediaPreview file={file} mediaCategory={mediaCategory} fileName={r.fileName} />}
       <VerdictBanner
         verdict={verdict}
         fakeProbability={fakeProbability}

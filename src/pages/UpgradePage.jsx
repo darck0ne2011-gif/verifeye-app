@@ -68,6 +68,7 @@ export default function UpgradePage({ onSettingsClick }) {
   const [paymentNotice, setPaymentNotice] = useState(false)
   const scansCount = user?.scanCredits ?? 0
   const currentTier = user?.subscriptionTier ?? 'starter'
+  const unlimited = !!user?.unlimitedScans || scansCount >= 999999
 
   // Payments are not wired up yet (Stripe comes in a later phase); selecting
   // a paid plan only shows the notice.
@@ -104,6 +105,11 @@ export default function UpgradePage({ onSettingsClick }) {
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-white mb-2">{t('pricing.title')}</h1>
           <p className="text-slate-400 text-sm">{t('pricing.subtitle')}</p>
+          {unlimited && (
+            <p className="mt-3 inline-block px-3 py-1.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-medium">
+              {t('pricing.unlimited_note')}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-4 max-w-4xl mx-auto sm:grid-cols-2">

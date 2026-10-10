@@ -59,7 +59,8 @@
     "feature_pdf_reports": "Rapoarte PDF",
     "feature_priority": "Analiză prioritără",
     "feature_unlimited": "Scanări nelimitate",
-    "feature_ai_processing": "Procesare AI prioritară"
+    "feature_ai_processing": "Procesare AI prioritară",
+    "unlimited_note": "Contul tău are scanări nelimitate — nu ai nevoie de un plan."
   },
   "nav": {
     "home": "Acasă",
@@ -81,7 +82,6 @@
     "scans_unlimited": "Scanări nelimitate"
   },
   "scan": {
-    "protection_active": "Protecția este activă. Mergi pe orice aplicație video pentru a scana.",
     "session_expired": "Sesiunea a expirat. Te rugăm autentifică-te din nou.",
     "network_error": "Eroare de rețea – rulează backend-ul?",
     "stage": {
@@ -99,14 +99,17 @@
       "summarizing": "Se scrie rezumatul…",
       "processing": "Se procesează…",
       "done": "Gata"
-    }
+    },
+    "hint_pick_file": "Alege o poză, un video sau un fișier audio ca să verifici dacă e generat sau modificat cu AI.",
+    "hint_ready": "Apasă Start Scanning ca să analizezi acest fișier."
   },
   "dropzone": {
     "file_ready": "Fișier pregătit",
     "change": "Schimbă",
     "drag_drop": "Trage aici o poză, un video sau un fișier audio",
     "or_click": "sau apasă pentru a alege",
-    "credits_hint": "Această scanare folosește {{count}} credit(e)"
+    "credits_hint": "Această scanare folosește {{count}} credit(e)",
+    "take_photo": "Fă o poză"
   },
   "overlay": {
     "out_of_credits": "Fără credite",
@@ -174,7 +177,14 @@
     "empty": "Nicio scanare încă. Începe verificând primul fișier!",
     "download_report": "Descarcă raport",
     "upgrade_for_pdf": "Upgrade pentru PDF",
-    "upgrade_pdf_tooltip": "Upgrade la Pro sau Elite pentru rapoarte PDF"
+    "upgrade_pdf_tooltip": "Upgrade la Pro sau Elite pentru rapoarte PDF",
+    "open": "Deschide rezultatul",
+    "back": "Înapoi la istoric",
+    "delete": "Șterge",
+    "confirm_delete": "Șterge",
+    "cancel": "Anulează",
+    "delete_failed": "Nu s-a putut șterge intrarea",
+    "load_failed": "Nu s-a putut încărca istoricul"
   },
   "settings": {
     "title": "Setări",
@@ -184,8 +194,6 @@
     "subscription": "Abonament",
     "support": "FAQ & Suport",
     "about": "Despre & Info aplicație",
-    "display_name": "Nume afișat",
-    "display_name_placeholder": "Numele tău",
     "registered_email": "Email înregistrat",
     "export_data": "Exportă datele mele",
     "log_out": "Deconectare",
@@ -203,28 +211,22 @@
     "deleting": "Se șterge...",
     "confirm_delete": "Confirmă ștergerea contului",
     "contact_us": "Contactează-ne",
-    "support_exclusive": "Suportul direct este exclusiv pentru membrii Pro și Elite. Consultă FAQ-urile de mai sus sau face upgrade la planul tău pentru a accesa echipa noastră de suport.",
-    "message_sent": "Mulțumim! Mesajul tău a fost trimis. Te vom contacta în curând.",
-    "name": "Nume",
-    "name_placeholder": "Numele tău",
-    "message": "Mesaj",
-    "message_placeholder": "Cum te putem ajuta?",
-    "sending": "Se trimite...",
-    "submit": "Trimite",
     "current_balance": "Sold actual",
     "scan_credits_remaining": "credite de scanare rămase",
-    "buy_more_credits": "Cumpără mai multe credite",
     "coming_soon": "În curând",
     "about_text": "VerifEye este o platformă de top pentru detectarea deepfake-urilor și autentificarea conținutului media. Analiza noastră bazată pe AI te ajută să verifici autenticitatea video, imaginilor și audio în era media sintetice sofisticate. Încrede-te în Truth Layer.",
     "version": "Versiune",
-    "check_updates": "Verifică actualizări",
     "faq_support": "FAQ & Suport",
     "privacy_policy": "Politica de confidențialitate",
     "terms_of_service": "Termeni și condiții",
     "all_systems": "Toate sistemele funcționează",
     "copyright": "© 2026 VerifEye — Truth Layer. Toate drepturile rezervate.",
-    "saved": "Salvat ✓",
-    "save": "Salvează"
+    "unlimited": "Nelimitat",
+    "go_to_plans": "Vezi planurile",
+    "support_email_intro": "Scrie-ne și îți răspundem:",
+    "status_checking": "Se verifică starea serviciului…",
+    "status_ok": "Toate sistemele funcționează",
+    "status_down": "Serviciul de analiză nu răspunde momentan"
   },
   "faq": {
     "q1": "Cum detectează VerifEye deepfake-urile?",
@@ -366,9 +368,5 @@
       "pass": "Nu s-a detectat voce sintetică",
       "fail": "Voce sintetică detectată"
     }
-  },
-  "fab": {
-    "on_screen_title": "Scanare pe ecran",
-    "on_screen_message": "Verificarea a ceea ce vezi în alte aplicații are nevoie de aplicația Android VerifEye. Aici, folosește Quick Upload sau trimite fișierul către VerifEye."
   }
 }
