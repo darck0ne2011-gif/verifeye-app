@@ -1,5 +1,6 @@
 import js from '@eslint/js'
 import globals from 'globals'
+import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
@@ -17,8 +18,13 @@ export default [
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
-    plugins: { 'react-hooks': reactHooks, 'react-refresh': reactRefresh },
+    plugins: { react, 'react-hooks': reactHooks, 'react-refresh': reactRefresh },
+    settings: { react: { version: 'detect' } },
     rules: {
+      // Without these, a component referenced only in JSX (<Icon />) is reported
+      // as "unused" and no-unused-vars invites deleting a binding that is in use.
+      'react/jsx-uses-vars': 'error',
+      'react/jsx-no-undef': 'error',
       ...reactHooks.configs.recommended.rules,
       // Legacy pages sync localStorage into state inside effects; cleaned up
       // in the frontend refactor phase. Warn instead of failing CI until then.
