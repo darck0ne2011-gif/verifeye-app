@@ -99,7 +99,12 @@
       "scoring": "Se calculează verdictul…",
       "summarizing": "Se scrie rezumatul…",
       "processing": "Se procesează…",
-      "done": "Gata"
+      "done": "Gata",
+      "reading_post": "Citesc postarea…",
+      "extracting_claims": "Caut afirmațiile verificabile…",
+      "searching": "Caut verificări și surse…",
+      "judging": "Cântăresc dovezile…",
+      "provenance": "Citesc Content Credentials…"
     },
     "step": {
       "uploading": "Încărcare",
@@ -209,7 +214,8 @@
     "filter_audio": "Audio",
     "retry": "Încearcă din nou",
     "no_matches": "Nicio scanare nu se potrivește filtrului.",
-    "start_first": "Verifică primul fișier"
+    "start_first": "Verifică primul fișier",
+    "filter_post": "Postări"
   },
   "settings": {
     "title": "Setări",
@@ -442,7 +448,9 @@
     "category_image": "Poză",
     "category_video": "Video",
     "category_audio": "Audio",
-    "captured_hint": "Captură de ecran din bulă — fișierul original dă un rezultat mai sigur."
+    "captured_hint": "Captură de ecran din bulă — fișierul original dă un rezultat mai sigur.",
+    "shared_text_prefilled": "Textul partajat a fost adăugat mai jos. Verifică afirmațiile sau editează-l întâi.",
+    "category_post": "Postare"
   },
   "result": {
     "title": "Rezultatul verificării",
@@ -508,5 +516,51 @@
     "tampered_hint": "Pixelii diferă de ce a fost semnat: fișierul a fost editat, recomprimat sau resalvat după atașarea credențialelor.",
     "untrusted_hint": "Manifestul e intact, dar semnatarul nu e pe lista publică de încredere, deci tratează afirmațiile lui cu prudență.",
     "metadata_hints": "Urme de generator în metadate nesemnate"
+  },
+  "factcheck": {
+    "mode_file": "Fișier",
+    "mode_post": "Postare",
+    "title": "Verifică afirmațiile dintr-o postare",
+    "subtitle": "Lipește textul unei postări sau atașează o captură de ecran. VerifEye găsește afirmațiile verificabile și caută verificări publicate și surse.",
+    "text_label": "Textul postării",
+    "text_placeholder": "Lipește postarea aici…",
+    "attach_screenshot": "Atașează o captură",
+    "change_screenshot": "Schimbă captura",
+    "remove_screenshot": "Elimină",
+    "run": "Verifică afirmațiile",
+    "cost": "{{count}} credite per verificare",
+    "check_claims_too": "Verifică și afirmațiile din această imagine",
+    "overall": "Verdict general",
+    "verdict_supported": "Susținut de surse",
+    "verdict_contested": "Contestat sau înșelător",
+    "verdict_refuted": "Infirmat de surse",
+    "verdict_unverifiable": "Nu a putut fi verificat",
+    "verdict_no_claims": "Fără afirmații verificabile",
+    "short_supported": "SUSȚINUT",
+    "short_contested": "CONTESTAT",
+    "short_refuted": "INFIRMAT",
+    "short_unverifiable": "NEVERIFICAT",
+    "short_no_claims": "FĂRĂ AFIRMAȚII",
+    "confidence": "Încredere {{value}}%",
+    "post_title": "Postarea",
+    "from_screenshot": "Citită din captura de ecran",
+    "from_text": "Text lipit",
+    "image_desc": "Imagine",
+    "claims_title": "Afirmații verificate ({{count}})",
+    "no_sources": "Nu s-a găsit nicio sursă pentru această afirmație; rămâne neverificată.",
+    "no_claims_hint": "Nu s-a găsit nicio afirmație factuală verificabilă. Opiniile, glumele și predicțiile nu pot fi verificate.",
+    "skipped_title": "Neverificabile",
+    "source_factcheck": "Verificare publicată",
+    "rating": "Evaluare",
+    "warning_link_only": "A fost dat doar un link; postările din spatele unui login nu pot fi citite. Lipește textul sau atașează o captură.",
+    "warning_no_factcheck_api": "Verificările publicate nu au fost căutate (serviciu neconfigurat).",
+    "warning_no_web_search": "Web-ul nu a fost căutat (serviciu neconfigurat); s-au folosit doar verificările publicate.",
+    "disclaimer": "Verdictele se bazează doar pe sursele listate. O afirmație fără surse e neverificată, nu falsă. Verifică sursele înainte să distribui.",
+    "providers": "Bază de verificări: {{factcheck}}. Căutare web: {{web}}.",
+    "failed": "Verificarea a eșuat",
+    "pdf_title": "Raport de verificare a faptelor",
+    "pdf_source": "Sursă",
+    "pdf_kind": "Tip",
+    "pdf_link": "Link"
   }
 }

@@ -30,6 +30,24 @@ export async function createScan(file, { models, language = 'en', source = 'file
   return data.job
 }
 
+/**
+ * Starts a fact-check of a social media post: pasted text, a screenshot, or
+ * both. Returns the job; poll it with waitForScan like any scan.
+ */
+export async function createFactCheck({ file = null, text = '', language = 'en', source = 'file' }, authHeaders) {
+  const formData = new FormData()
+  if (file) formData.append('file', file)
+  if (text) formData.append('text', text)
+  formData.append('language', language)
+  formData.append('source', source)
+  const res = await fetch(`${API_BASE}/api/factchecks`, { method: 'POST', headers: authHeaders, body: formData })
+  const data = await readJson(res)
+  if (!res.ok || !data.success) {
+    throw new ScanError(data.error || `Fact-check failed (${res.status})`, { code: data.code, status: res.status })
+  }
+  return data.job
+}
+
 export async function getScan(jobId, authHeaders) {
   const res = await fetch(`${API_BASE}/api/scans/${encodeURIComponent(jobId)}`, { headers: authHeaders })
   const data = await readJson(res)

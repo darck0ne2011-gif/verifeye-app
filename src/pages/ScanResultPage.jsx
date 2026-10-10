@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
-import { getScan, waitForScan } from '../api/scans'
-import { recallFile } from '../lib/fileStore'
+import { getScan, waitForScan, createFactCheck } from '../api/scans'
+import { recallFile, rememberFile } from '../lib/fileStore'
 import ScanProgress from '../components/ScanProgress'
 import VerdictScreen from '../components/VerdictScreen'
+import FactCheckScreen from '../components/FactCheckScreen'
 import PageHeader from '../components/PageHeader'
 
 /**
@@ -15,9 +16,12 @@ import PageHeader from '../components/PageHeader'
  */
 export default function ScanResultPage() {
   const { jobId } = useParams()
-  const { t } = useTranslation()
-  const { getAuthHeaders, refreshUser } = useAuth()
+  const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
+  const { getAuthHeaders, refreshUser, logout } = useAuth()
   const queryClient = useQueryClient()
+  const [checking, setChecking] = useState(false)
+  const [checkError, setCheckError] = useState(null)
   const [state, setState] = useState({
     status: 'loading',
     progress: 0,
@@ -104,10 +108,48 @@ export default function ScanResultPage() {
     )
   }
 
+  const isPost = state.result?.mediaCategory === 'post'
+  const canCheckClaims = !isPost && file && /^image\//.test(file.type || '') && state.result
+
+  const checkClaims = async () => {
+    setChecking(true)
+    setCheckError(null)
+    try {
+      const job = await createFactCheck(
+        { file, language: i18n.language || 'en', source: state.result?.source ?? 'file' },
+        getAuthHeaders()
+      )
+      rememberFile(job.id, file)
+      refreshUser()
+      navigate(`/scan/${job.id}`)
+    } catch (err) {
+      if (err.status === 401) return logout()
+      setCheckError(err.message || t('scan.network_error'))
+    } finally {
+      setChecking(false)
+    }
+  }
+
   return (
     <div className="animate-fade-in">
       <PageHeader title={t('result.title')} subtitle={state.fileName ?? file?.name} action={newScan} />
-      <VerdictScreen result={state.result} error={state.error} file={file} canDownloadPdf />
+      {isPost ? (
+        <FactCheckScreen result={state.result} error={state.error} canDownloadPdf />
+      ) : (
+        <VerdictScreen result={state.result} error={state.error} file={file} canDownloadPdf />
+      )}
+      {canCheckClaims && (
+        <div className="w-full max-w-4xl mx-auto mt-4 flex flex-col gap-2">
+          <button type="button" className="btn-secondary" onClick={checkClaims} disabled={checking}>
+            {checking ? t('home.starting') : t('factcheck.check_claims_too')}
+          </button>
+          {checkError && (
+            <p className="text-sm text-ai" role="alert">
+              {checkError}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

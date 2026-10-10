@@ -141,7 +141,12 @@
       "scoring": "Computing verdict…",
       "summarizing": "Writing summary…",
       "processing": "Processing…",
-      "done": "Done"
+      "done": "Done",
+      "reading_post": "Reading the post…",
+      "extracting_claims": "Finding checkable claims…",
+      "searching": "Searching fact-checks and sources…",
+      "judging": "Weighing the evidence…",
+      "provenance": "Reading Content Credentials…"
     },
     "step": {
       "uploading": "Upload",
@@ -261,7 +266,8 @@
     "filter_audio": "Audio",
     "retry": "Try again",
     "no_matches": "No scans match your filter.",
-    "start_first": "Verify your first file"
+    "start_first": "Verify your first file",
+    "filter_post": "Posts"
   },
   "settings": {
     "title": "Settings",
@@ -494,7 +500,9 @@
     "category_image": "Photo",
     "category_video": "Video",
     "category_audio": "Audio",
-    "captured_hint": "Screenshot from the bubble — the original file gives a more reliable result."
+    "captured_hint": "Screenshot from the bubble — the original file gives a more reliable result.",
+    "shared_text_prefilled": "Shared text was added below. Check the claims or edit it first.",
+    "category_post": "Post"
   },
   "result": {
     "title": "Verification result",
@@ -560,5 +568,51 @@
     "tampered_hint": "Pixels differ from what was signed: the file was edited, recompressed or re-saved after the credentials were attached.",
     "untrusted_hint": "The manifest is intact, but its signer is not on the public trust list, so treat its claims with care.",
     "metadata_hints": "Generator traces in unsigned metadata"
+  },
+  "factcheck": {
+    "mode_file": "File",
+    "mode_post": "Post",
+    "title": "Check the claims in a post",
+    "subtitle": "Paste the text of a post or attach a screenshot. VerifEye finds the checkable claims and looks for published fact-checks and sources.",
+    "text_label": "Post text",
+    "text_placeholder": "Paste the post here…",
+    "attach_screenshot": "Attach a screenshot",
+    "change_screenshot": "Change screenshot",
+    "remove_screenshot": "Remove",
+    "run": "Check the claims",
+    "cost": "{{count}} credits per fact-check",
+    "check_claims_too": "Also check the claims in this image",
+    "overall": "Overall verdict",
+    "verdict_supported": "Supported by sources",
+    "verdict_contested": "Contested or misleading",
+    "verdict_refuted": "Refuted by sources",
+    "verdict_unverifiable": "Could not be verified",
+    "verdict_no_claims": "No checkable claims",
+    "short_supported": "SUPPORTED",
+    "short_contested": "CONTESTED",
+    "short_refuted": "REFUTED",
+    "short_unverifiable": "UNVERIFIED",
+    "short_no_claims": "NO CLAIMS",
+    "confidence": "Confidence {{value}}%",
+    "post_title": "The post",
+    "from_screenshot": "Read from the screenshot",
+    "from_text": "Pasted text",
+    "image_desc": "Image",
+    "claims_title": "Claims checked ({{count}})",
+    "no_sources": "No source found for this claim; it stays unverified.",
+    "no_claims_hint": "No checkable factual claim was found. Opinions, jokes and predictions cannot be fact-checked.",
+    "skipped_title": "Not checkable",
+    "source_factcheck": "Fact-check",
+    "rating": "Rating",
+    "warning_link_only": "Only a link was provided; posts behind a login cannot be read. Paste the text or attach a screenshot.",
+    "warning_no_factcheck_api": "Published fact-checks were not searched (service not configured).",
+    "warning_no_web_search": "The web was not searched (service not configured); only published fact-checks were used.",
+    "disclaimer": "Verdicts rest only on the sources listed. A claim without sources is unverified, not false. Check the sources yourself before sharing.",
+    "providers": "Fact-check database: {{factcheck}}. Web search: {{web}}.",
+    "failed": "The fact-check failed",
+    "pdf_title": "Fact-check report",
+    "pdf_source": "Source",
+    "pdf_kind": "Kind",
+    "pdf_link": "Link"
   }
 }

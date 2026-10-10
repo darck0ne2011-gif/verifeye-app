@@ -9,6 +9,7 @@ import { analyzeVideo } from './videoAnalysis.js'
 import { analyzeAudio } from './audioAnalysis.js'
 import { computeVerdict } from './verdict.js'
 import { analyzeProvenance } from './provenance.js'
+import { processFactCheckJob } from './factcheck.js'
 import { generateExecutiveSummary } from './deepseekAnalyst.js'
 import { findScanByHash, saveScanResults, saveExpertSummary, addToUserScanHistory } from '../db/scans.js'
 import { updateJobProgress, completeJob, failJob } from '../db/jobs.js'
@@ -20,12 +21,14 @@ export const MODELS_BY_CATEGORY = {
   image: ['genai', 'deepfake', 'type', 'quality'],
   video: ['genai', 'deepfake', 'ai_speech'],
   audio: ['ai_speech'],
+  post: ['factcheck'],
 }
 
 export const DEFAULT_MODELS = {
   image: ['genai'],
   video: ['genai', 'deepfake'],
   audio: ['ai_speech'],
+  post: ['factcheck'],
 }
 
 export function modelsForCategory(category, raw) {
@@ -56,6 +59,7 @@ async function analyze(job, cachedResults, onProgress) {
  * @returns {Promise<object|null>} the result on success, null on failure
  */
 export async function processScanJob(job) {
+  if (job.mediaCategory === 'post') return processFactCheckJob(job)
   const onProgress = (stage, progress) => updateJobProgress(job.id, stage, progress).catch(() => {})
   try {
     if (!job.filePath || !fs.existsSync(job.filePath)) {

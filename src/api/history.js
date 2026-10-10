@@ -30,5 +30,7 @@ export function historyItemToResult(item) {
     warnings: item.metadata?.warnings ?? [],
     provenance: item.metadata?.provenance ?? null,
     evidence: item.metadata?.evidence ?? [],
+    // Fact-checks of posts keep their claims and sources under metadata.factcheck.
+    ...(item.mediaCategory === 'post' && item.metadata?.factcheck ? item.metadata.factcheck : {}),
   }
 }
