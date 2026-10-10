@@ -174,7 +174,9 @@ describe('scan', () => {
     expect(one.status).toBe(200)
     expect(one.body.item).toMatchObject({ id, fileName: 'test.png' })
     const stranger = await registerUser('stranger@example.com')
-    expect((await request(app).get(`/api/history/${id}`).set('Authorization', `Bearer ${stranger.token}`)).status).toBe(404)
+    expect((await request(app).get(`/api/history/${id}`).set('Authorization', `Bearer ${stranger.token}`)).status).toBe(
+      404
+    )
     const forbidden = await request(app).delete(`/api/history/${id}`).set('Authorization', `Bearer ${stranger.token}`)
     expect(forbidden.status).toBe(404)
     const ok = await request(app).delete(`/api/history/${id}`).set('Authorization', `Bearer ${token}`)
