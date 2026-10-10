@@ -59,6 +59,21 @@ export function watchPendingNativeFile(onFile) {
   }
 }
 
+/**
+ * Saves a generated document through the native side and opens it with the
+ * system viewer. Returns false on the web, where a normal download works.
+ */
+export async function exportNativeFile({ name, mimeType, arrayBuffer }) {
+  if (!isNative) return false
+  const bytes = new Uint8Array(arrayBuffer)
+  let bin = ''
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000))
+  }
+  await Native.exportFile({ name, mimeType, data: btoa(bin) })
+  return true
+}
+
 export const bubble = {
   async hasOverlayPermission() {
     return (await Native.hasOverlayPermission()).granted

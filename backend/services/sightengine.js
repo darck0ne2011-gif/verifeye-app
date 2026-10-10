@@ -73,7 +73,10 @@ export async function detectAiImage(buffer, mimeType, originalName, models = ['g
   form.append('models', modelsParam.join(','))
   form.append('api_user', config.sightengine.user)
   form.append('api_secret', config.sightengine.secret)
-  return post(IMAGE_URL, form, 30000)
+  const data = await post(IMAGE_URL, form, 30000)
+  // Field names only (no scores): shows which optional blocks the account receives.
+  console.info(`Sightengine image response: type=[${Object.keys(data.type ?? {}).join(',')}]`)
+  return data
 }
 
 /**
