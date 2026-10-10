@@ -107,3 +107,14 @@ export async function deleteUserScanHistoryItem(userId, id) {
     .returning({ id: scanHistory.id })
   return rows.length > 0
 }
+
+export async function getUserScanHistoryItem(userId, id) {
+  const numericId = Number(id)
+  if (!Number.isInteger(numericId)) return null
+  const [row] = await getDb()
+    .select()
+    .from(scanHistory)
+    .where(and(eq(scanHistory.id, numericId), eq(scanHistory.userId, userId)))
+    .limit(1)
+  return row ? toHistoryItem(row) : null
+}

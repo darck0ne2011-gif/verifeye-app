@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import MediaPreview from './MediaPreview'
 
 const FolderIcon = () => (
-  <svg className="w-12 h-12 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="w-12 h-12 text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -57,14 +57,14 @@ export default function DropZone({
       <div className="w-full space-y-3">
         <MediaPreview file={selectedFile} />
         <div className="flex items-center justify-between gap-3 text-sm">
-          <span className="text-green-400 font-medium">{t('dropzone.file_ready')}</span>
+          <span className="text-real font-medium">{t('dropzone.file_ready')}</span>
           <div className="flex items-center gap-3">
             {showCredits && (
-              <span className="text-slate-500 text-xs">{t('dropzone.credits_hint', { count: creditsNeeded })}</span>
+              <span className="text-muted text-xs">{t('dropzone.credits_hint', { count: creditsNeeded })}</span>
             )}
             <button
               type="button"
-              className="text-slate-300 hover:text-white underline underline-offset-2"
+              className="text-muted hover:text-fg underline underline-offset-2"
               onClick={() => onClearFile?.()}
             >
               {t('dropzone.change')}
@@ -92,31 +92,22 @@ export default function DropZone({
           transition-all duration-200
           ${
             disabled
-              ? 'border-slate-600 bg-slate-800/30 cursor-not-allowed opacity-60'
+              ? 'border-line bg-surface-2/40 cursor-not-allowed opacity-60'
               : `cursor-pointer ${
-                  isDragOver
-                    ? 'border-cyan-400 bg-slate-800/80 shadow-[0_0_20px_rgba(34,211,238,0.2)]'
-                    : 'border-slate-500 bg-slate-800/40 hover:border-slate-400'
+                  isDragOver ? 'border-accent bg-accent-soft' : 'border-line bg-surface-2/60 hover:border-muted'
                 }`
           }
         `}
       >
         <FolderIcon />
         <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <p className="text-white font-medium">{t('dropzone.drag_drop')}</p>
-          <p className="text-slate-400 text-sm">{t('dropzone.or_click')}</p>
-          {showCredits && (
-            <p className="text-slate-500 text-xs">{t('dropzone.credits_hint', { count: creditsNeeded })}</p>
-          )}
+          <p className="text-fg font-medium">{t('dropzone.drag_drop')}</p>
+          <p className="text-muted text-sm">{t('dropzone.or_click')}</p>
+          {showCredits && <p className="text-muted text-xs">{t('dropzone.credits_hint', { count: creditsNeeded })}</p>}
         </div>
       </div>
       {onCameraClick && (
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={onCameraClick}
-          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-slate-800/60 border border-slate-600 text-white text-sm font-medium hover:bg-slate-700/60 disabled:opacity-50 disabled:cursor-not-allowed md:hidden"
-        >
+        <button type="button" disabled={disabled} onClick={onCameraClick} className="btn-secondary w-full md:hidden">
           <CameraIcon />
           {t('dropzone.take_photo')}
         </button>

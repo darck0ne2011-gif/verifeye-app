@@ -15,13 +15,13 @@ export default function FrameTimeline({ timeline }) {
   }))
 
   return (
-    <section className="w-full rounded-xl bg-slate-800/60 border border-slate-600/60 p-4">
-      <h3 className="text-sm font-medium text-slate-300 mb-1">{t('verdict.timeline_title')}</h3>
-      <p className="text-xs text-slate-500 mb-3">{t('verdict.timeline_hint', { count: frames.length })}</p>
+    <section className="w-full card p-4">
+      <h3 className="text-sm font-medium text-fg mb-1">{t('verdict.timeline_title')}</h3>
+      <p className="text-xs text-muted mb-3">{t('verdict.timeline_hint', { count: frames.length })}</p>
       <ol className="flex items-end gap-1 h-24" aria-label={t('verdict.timeline_title')}>
         {frames.map((f, i) => {
           const pct = Math.round(f.score * 100)
-          const color = pct >= 70 ? 'bg-red-500' : pct > 30 ? 'bg-amber-400' : 'bg-green-500'
+          const color = pct >= 70 ? 'bg-ai' : pct > 30 ? 'bg-unclear' : 'bg-real'
           return (
             <li
               key={i}
@@ -29,7 +29,7 @@ export default function FrameTimeline({ timeline }) {
               title={`${formatTime(f.positionSec)} — ${pct}%`}
             >
               <div className={`w-full rounded-t ${color}`} style={{ height: `${Math.max(4, pct)}%` }} />
-              <span className="text-[10px] text-slate-500 mt-1 truncate">{formatTime(f.positionSec)}</span>
+              <span className="text-[10px] text-muted mt-1 truncate">{formatTime(f.positionSec)}</span>
             </li>
           )
         })}

@@ -40,25 +40,25 @@ export default function LegalPage({ type, onBack }) {
   if (!sections) return null
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex flex-col">
-      <header className="flex items-center gap-3 px-4 py-4 border-b border-slate-800 shrink-0">
+    <div className="min-h-screen bg-bg flex flex-col">
+      <header className="flex items-center gap-3 px-4 py-4 border-b border-line shrink-0">
         <button
           onClick={onBack}
-          className="p-2 text-white hover:bg-white/10 rounded-full transition-colors"
+          className="p-2 text-fg hover:bg-surface-2 rounded-full transition-colors"
           aria-label="Back"
         >
           <BackIcon />
         </button>
-        <h1 className="text-xl font-bold text-white">{title}</h1>
+        <h1 className="text-xl font-bold text-fg">{title}</h1>
       </header>
       <main ref={containerRef} className="flex-1 overflow-y-auto px-4 py-6 pb-12">
         <div className="max-w-2xl mx-auto">
-          <p className="text-slate-500 text-sm mb-8">{t('legal.last_updated', { date: updated })}</p>
+          <p className="text-muted text-sm mb-8">{t('legal.last_updated', { date: updated })}</p>
           <div className="space-y-8">
             {sections.map((section, i) => (
-              <div key={i} className="bg-slate-800/40 border border-slate-700/50 rounded-xl p-5 backdrop-blur-sm">
-                <h2 className="text-cyan-400 font-semibold mb-3">{t(`legal.${section.heading}`)}</h2>
-                <p className="text-slate-300 text-sm leading-relaxed">{t(`legal.${section.body}`)}</p>
+              <div key={i} className="card p-5">
+                <h2 className="text-accent font-semibold mb-3">{t(`legal.${section.heading}`)}</h2>
+                <p className="text-fg/90 text-sm leading-relaxed">{t(`legal.${section.body}`)}</p>
               </div>
             ))}
           </div>

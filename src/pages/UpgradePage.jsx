@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import DashboardHeader from '../components/DashboardHeader'
+import PageHeader from '../components/PageHeader'
 
 function getTiers(t) {
   return [
@@ -61,7 +61,7 @@ const StarIcon = ({ className = '' }) => (
   </svg>
 )
 
-export default function UpgradePage({ onSettingsClick }) {
+export default function UpgradePage() {
   const { t } = useTranslation()
   const { user } = useAuth()
   const TIERS = getTiers(t)
@@ -93,99 +93,87 @@ export default function UpgradePage({ onSettingsClick }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d0d] flex flex-col pb-20">
-      <DashboardHeader
-        scansCount={scansCount}
-        userEmail={user?.email}
-        subscriptionTier={user?.subscriptionTier}
-        onSettingsClick={onSettingsClick}
-      />
+    <div className="animate-fade-in">
+      <PageHeader title={t('pricing.title')} subtitle={t('pricing.subtitle')} />
+      {unlimited && (
+        <p className="mb-5 inline-block px-3 py-1.5 rounded-full bg-unclear-soft text-unclear text-xs font-medium">
+          {t('pricing.unlimited_note')}
+        </p>
+      )}
 
-      <main className="flex-1 px-4 pt-6 pb-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-white mb-2">{t('pricing.title')}</h1>
-          <p className="text-slate-400 text-sm">{t('pricing.subtitle')}</p>
-          {unlimited && (
-            <p className="mt-3 inline-block px-3 py-1.5 rounded-full bg-amber-500/15 text-amber-300 text-xs font-medium">
-              {t('pricing.unlimited_note')}
-            </p>
-          )}
-        </div>
+      <div className="grid gap-4 max-w-4xl mx-auto sm:grid-cols-2">
+        {TIERS.map((tier) => {
+          const isElite = tier.elite
 
-        <div className="grid gap-4 max-w-4xl mx-auto sm:grid-cols-2">
-          {TIERS.map((tier) => {
-            const isElite = tier.elite
-
-            return (
-              <div
-                key={tier.id}
-                className={`
+          return (
+            <div
+              key={tier.id}
+              className={`
                   relative flex flex-col h-full rounded-2xl border-2 overflow-hidden transition-all duration-300
                   ${
                     isElite
                       ? 'bg-[#050508] border-[#d4af37]/60 shadow-[0_0_40px_rgba(212,175,55,0.12),inset_0_1px_0_rgba(212,175,55,0.08)]'
                       : tier.highlighted
-                        ? 'bg-slate-800/80 border-cyan-500/50'
-                        : 'bg-slate-800/40 border-slate-700/60'
+                        ? 'bg-surface border-accent/50'
+                        : 'bg-surface border-line'
                   }
                   ${isElite ? 'ring-1 ring-[#d4af37]/25' : ''}
                 `}
-              >
-                {isElite && (
-                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
-                )}
-                {isElite && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1 text-amber-400 text-xs font-medium">
-                    <StarIcon className="w-4 h-4" />
-                    {t('pricing.premium')}
-                  </div>
-                )}
-
-                <div className={`flex flex-col h-full p-6 ${isElite ? 'pt-8' : ''}`}>
-                  <h3 className={`text-lg font-bold mb-1 ${isElite ? 'text-amber-400' : 'text-white'}`}>{tier.name}</h3>
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className={`text-2xl font-bold ${isElite ? 'text-amber-400' : 'text-white'}`}>
-                      {tier.price}
-                    </span>
-                    <span className={isElite ? 'text-amber-400/80' : 'text-slate-400'}>{tier.subtext}</span>
-                  </div>
-                  <p className={`text-sm mb-4 ${isElite ? 'text-amber-300/90' : 'text-cyan-400'}`}>{tier.scans}</p>
-
-                  <ul className="space-y-2.5 mb-6">
-                    {tier.featureKeys.map((key, i) => (
-                      <li
-                        key={i}
-                        className={`flex items-center gap-2 text-sm ${isElite ? 'text-slate-300' : 'text-slate-400'}`}
-                      >
-                        <CheckIcon className={isElite ? 'text-amber-500' : 'text-cyan-500'} />
-                        {t(`pricing.${key}`)}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <button
-                    onClick={() => handleSelectPlan(tier.id)}
-                    className={`mt-auto w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${getButtonClasses(tier)}`}
-                  >
-                    {currentTier === tier.id ? t('pricing.current_plan') : tier.cta}
-                  </button>
+            >
+              {isElite && (
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
+              )}
+              {isElite && (
+                <div className="absolute top-3 right-3 flex items-center gap-1 text-amber-400 text-xs font-medium">
+                  <StarIcon className="w-4 h-4" />
+                  {t('pricing.premium')}
                 </div>
+              )}
 
-                {isElite && (
-                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
-                )}
+              <div className={`flex flex-col h-full p-6 ${isElite ? 'pt-8' : ''}`}>
+                <h3 className={`text-lg font-bold mb-1 ${isElite ? 'text-amber-400' : 'text-white'}`}>{tier.name}</h3>
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className={`text-2xl font-bold ${isElite ? 'text-amber-400' : 'text-white'}`}>
+                    {tier.price}
+                  </span>
+                  <span className={isElite ? 'text-amber-400/80' : 'text-slate-400'}>{tier.subtext}</span>
+                </div>
+                <p className={`text-sm mb-4 ${isElite ? 'text-amber-300/90' : 'text-cyan-400'}`}>{tier.scans}</p>
+
+                <ul className="space-y-2.5 mb-6">
+                  {tier.featureKeys.map((key, i) => (
+                    <li
+                      key={i}
+                      className={`flex items-center gap-2 text-sm ${isElite ? 'text-slate-300' : 'text-slate-400'}`}
+                    >
+                      <CheckIcon className={isElite ? 'text-amber-500' : 'text-cyan-500'} />
+                      {t(`pricing.${key}`)}
+                    </li>
+                  ))}
+                </ul>
+
+                <button
+                  onClick={() => handleSelectPlan(tier.id)}
+                  className={`mt-auto w-full py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-200 ${getButtonClasses(tier)}`}
+                >
+                  {currentTier === tier.id ? t('pricing.current_plan') : tier.cta}
+                </button>
               </div>
-            )
-          })}
-        </div>
 
-        <p
-          className={`text-xs text-center mt-6 transition-colors ${paymentNotice ? 'text-cyan-300' : 'text-slate-500'}`}
-          role="status"
-        >
-          {t('pricing.payment_coming_soon')}
-        </p>
-      </main>
+              {isElite && (
+                <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-400/40 to-transparent" />
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      <p
+        className={`text-xs text-center mt-6 transition-colors ${paymentNotice ? 'text-accent' : 'text-muted'}`}
+        role="status"
+      >
+        {t('pricing.payment_coming_soon')}
+      </p>
     </div>
   )
 }

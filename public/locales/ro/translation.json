@@ -65,7 +65,8 @@
   "nav": {
     "home": "Acasă",
     "history": "Istoric",
-    "upgrade": "Upgrade"
+    "upgrade": "Upgrade",
+    "main": "Navigare principală"
   },
   "scan_settings": {
     "model_fake_news": "Detecție Fake News / Credibilitate",
@@ -100,8 +101,13 @@
       "processing": "Se procesează…",
       "done": "Gata"
     },
-    "hint_pick_file": "Alege o poză, un video sau un fișier audio ca să verifici dacă e generat sau modificat cu AI.",
-    "hint_ready": "Apasă Start Scanning ca să analizezi acest fișier."
+    "step": {
+      "uploading": "Încărcare",
+      "queued": "Coadă",
+      "analyzing": "Analiză",
+      "scoring": "Verdict",
+      "done": "Gata"
+    }
   },
   "dropzone": {
     "file_ready": "Fișier pregătit",
@@ -110,11 +116,6 @@
     "or_click": "sau apasă pentru a alege",
     "credits_hint": "Această scanare folosește {{count}} credit(e)",
     "take_photo": "Fă o poză"
-  },
-  "overlay": {
-    "out_of_credits": "Fără credite",
-    "new_search": "CĂUTARE NOUĂ",
-    "start_scanning": "ÎNCEPE SCANAREA"
   },
   "verdict": {
     "view_source": "Vezi sursa originală",
@@ -159,7 +160,8 @@
     "audio_track": "Pistă audio",
     "analyzed_seconds": "Audio analizat",
     "source": "Sursă",
-    "source_screenshot": "Screenshot"
+    "source_screenshot": "Screenshot",
+    "ai_probability_label": "Probabilitate AI"
   },
   "deepfake": {
     "why_fake": "De ce este fals?",
@@ -184,7 +186,16 @@
     "confirm_delete": "Șterge",
     "cancel": "Anulează",
     "delete_failed": "Nu s-a putut șterge intrarea",
-    "load_failed": "Nu s-a putut încărca istoricul"
+    "load_failed": "Nu s-a putut încărca istoricul",
+    "subtitle": "{{count}} scanări",
+    "search": "Caută după numele fișierului",
+    "filter_all": "Toate",
+    "filter_image": "Poze",
+    "filter_video": "Video",
+    "filter_audio": "Audio",
+    "retry": "Încearcă din nou",
+    "no_matches": "Nicio scanare nu se potrivește filtrului.",
+    "start_first": "Verifică primul fișier"
   },
   "settings": {
     "title": "Setări",
@@ -368,5 +379,33 @@
       "pass": "Nu s-a detectat voce sintetică",
       "fail": "Voce sintetică detectată"
     }
+  },
+  "shell": {
+    "account": "Cont"
+  },
+  "home": {
+    "title": "Verifică un fișier",
+    "subtitle": "Poze, videoclipuri și înregistrări vocale — află dacă au fost generate sau modificate cu AI.",
+    "analyze": "Analizează",
+    "starting": "Se încarcă…",
+    "change_file": "Alt fișier",
+    "change_models": "Schimbă modelele",
+    "cost": "Această scanare folosește {{count}} credit(e)",
+    "balance": "ai {{count}}",
+    "no_credits": "Nu mai ai credite. Vezi planurile pentru mai multe.",
+    "unsupported_file": "Se pot analiza doar poze, videoclipuri și fișiere audio.",
+    "shared_unsupported": "Elementul trimis nu e o poză, un video sau un fișier audio.",
+    "shared_links_soon": "Verificarea link-urilor vine în curând. Trimite fișierul în sine (din galerie sau din aplicație).",
+    "recent": "Recente",
+    "see_all": "Vezi tot",
+    "category_image": "Poză",
+    "category_video": "Video",
+    "category_audio": "Audio"
+  },
+  "result": {
+    "title": "Rezultatul verificării",
+    "analyzing": "Se analizează…",
+    "analyzing_hint": "Poți părăsi pagina; rezultatul se salvează în istoric.",
+    "new_scan": "Scanare nouă"
   }
 }

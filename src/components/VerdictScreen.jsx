@@ -37,8 +37,8 @@ function Row({ label, value, mono = false }) {
   if (value == null || value === '') return null
   return (
     <div className="flex justify-between gap-4">
-      <dt className="text-slate-500">{label}</dt>
-      <dd className={`text-white text-right ${mono ? 'font-mono text-xs' : ''}`}>{String(value)}</dd>
+      <dt className="text-muted">{label}</dt>
+      <dd className={`text-fg text-right ${mono ? 'font-mono text-xs' : ''}`}>{String(value)}</dd>
     </div>
   )
 }
@@ -98,9 +98,9 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
   if (error && !result) {
     return (
       <div className="w-full max-w-4xl mx-auto animate-fade-in">
-        <section className="w-full rounded-xl bg-red-950/40 border border-red-500/40 p-4" role="alert">
-          <h3 className="text-sm font-medium text-red-300 mb-1">{t('verdict.scan_failed')}</h3>
-          <p className="text-sm text-slate-300">{error}</p>
+        <section className="card p-4 border-ai/40" role="alert">
+          <h3 className="text-sm font-medium text-ai mb-1">{t('verdict.scan_failed')}</h3>
+          <p className="text-sm text-fg/90">{error}</p>
         </section>
       </div>
     )
@@ -117,14 +117,14 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
       />
 
       {summary && (
-        <section className="w-full rounded-xl bg-slate-800/60 border border-cyan-500/30 p-4">
-          <h3 className="text-sm font-medium text-cyan-400 mb-2">{t('verdict.ai_expert_interpretation')}</h3>
-          <p className="text-sm text-slate-300 leading-relaxed">{summary}</p>
+        <section className="card p-4 border-accent/30">
+          <h3 className="text-sm font-medium text-accent mb-2">{t('verdict.ai_expert_interpretation')}</h3>
+          <p className="text-sm text-fg/90 leading-relaxed">{summary}</p>
         </section>
       )}
 
       {warnings.length > 0 && (
-        <ul className="w-full rounded-xl bg-amber-950/30 border border-amber-500/30 p-4 text-sm text-amber-200 space-y-1">
+        <ul className="card p-4 border-unclear/40 text-sm text-unclear space-y-1">
           {warnings.map((w) => (
             <li key={w}>• {t(`verdict.warning_${w}`, { defaultValue: w })}</li>
           ))}
@@ -142,8 +142,8 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
       {mediaCategory === 'video' && <FrameTimeline timeline={r.timeline} />}
 
       {metadata && (
-        <section className="w-full rounded-xl bg-slate-800/60 border border-slate-600/60 p-4">
-          <h3 className="text-sm font-medium text-slate-300 mb-3">{t('verdict.metadata_title')}</h3>
+        <section className="card p-4">
+          <h3 className="text-sm font-medium text-fg mb-3">{t('verdict.metadata_title')}</h3>
           <dl className="grid gap-2 text-sm">
             <Row label={t('verdict.file_type')} value={metadata.fileType || metadata.extension} mono />
             <Row
@@ -169,11 +169,7 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
         <button
           onClick={handleDownloadPdf}
           disabled={downloading}
-          className={`flex-1 min-w-[140px] py-3 px-4 flex items-center justify-center gap-2 border rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-            canDownloadPdf
-              ? 'bg-slate-800 border-slate-600 text-white hover:bg-slate-700'
-              : 'bg-slate-800/80 border-slate-600 text-amber-500/90 hover:bg-slate-700/80'
-          }`}
+          className={`flex-1 min-w-[140px] ${canDownloadPdf ? 'btn-secondary' : 'btn-secondary text-unclear'}`}
           aria-label={canDownloadPdf ? t('history.download_report') : t('history.upgrade_for_pdf')}
           title={canDownloadPdf ? t('history.download_report') : t('history.upgrade_pdf_tooltip')}
         >
@@ -195,7 +191,7 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
         </button>
       </div>
 
-      {error && <p className="text-amber-400 text-sm">{error}</p>}
+      {error && <p className="text-unclear text-sm">{error}</p>}
     </div>
   )
 }

@@ -35,9 +35,14 @@ export default [
       'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
+  // Service worker
+  {
+    files: ['src/sw.js'],
+    languageOptions: { ecmaVersion: 2024, sourceType: 'module', globals: { ...globals.serviceworker } },
+  },
   // Backend and scripts (Node)
   {
-    files: ['backend/**/*.js', 'scripts/**/*.js', '*.config.js', 'eslint.config.js'],
+    files: ['backend/**/*.js', 'scripts/**/*.{js,mjs}', '*.config.js', 'eslint.config.js'],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',
