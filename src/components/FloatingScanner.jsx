@@ -43,17 +43,6 @@ function snapToEdge(x) {
 
 const VerifEyeLogo = () => <span className="text-white font-bold text-xl">V</span>
 
-const ScanIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-    />
-  </svg>
-)
-
 const UploadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path
@@ -127,12 +116,6 @@ export default function FloatingScanner() {
     setExpanded(false)
     setShowDropZone(false)
   }, [])
-
-  // Scanning what is on screen in other apps needs the Android app (system overlay +
-  // screen capture); a web page cannot see outside itself.
-  const handleScanCurrentPage = useCallback(() => {
-    setMiniResult({ status: 'info', label: t('fab.on_screen_title'), message: t('fab.on_screen_message') })
-  }, [t])
 
   const handleQuickUpload = useCallback(() => {
     if (!hasCredits) return
@@ -340,15 +323,6 @@ export default function FloatingScanner() {
                     {t(`scan.stage.${stage}`, { defaultValue: t('scan.stage.processing') })}
                   </p>
                 )}
-
-                <button
-                  onClick={handleScanCurrentPage}
-                  disabled={!hasCredits || scanning}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-default"
-                >
-                  <ScanIcon />
-                  Scan Current Page
-                </button>
 
                 <button
                   onClick={handleQuickUpload}

@@ -3,7 +3,7 @@ import { z } from 'zod'
 import { authMiddleware, requireAdmin } from '../middleware/auth.js'
 import { validateBody } from '../middleware/validate.js'
 import { findByEmail, setCredits, setTier, toPublicUser } from '../db/users.js'
-import { getUserScanHistory } from '../db/scans.js'
+import { getUserScanHistory, deleteUserScanHistoryItem } from '../db/scans.js'
 import { notFound } from '../lib/errors.js'
 
 const router = Router()
@@ -16,6 +16,16 @@ router.get('/history', authMiddleware, async (req, res, next) => {
   try {
     const history = await getUserScanHistory(req.userId)
     res.json({ success: true, history })
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.delete('/history/:id', authMiddleware, async (req, res, next) => {
+  try {
+    const removed = await deleteUserScanHistoryItem(req.userId, req.params.id)
+    if (!removed) throw notFound('History entry not found', 'HISTORY_NOT_FOUND')
+    res.json({ success: true })
   } catch (err) {
     next(err)
   }

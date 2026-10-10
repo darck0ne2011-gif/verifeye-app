@@ -167,6 +167,19 @@ describe('scan', () => {
     expect(history.body.history[0]).toMatchObject({ fileName: 'test.png', score: 91, status: 'FAKE' })
   })
 
+  it('lets the owner delete a history entry, and nobody else', async () => {
+    const history = await request(app).get('/api/history').set('Authorization', `Bearer ${token}`)
+    const id = history.body.history[0].id
+    const stranger = await registerUser('stranger@example.com')
+    const forbidden = await request(app).delete(`/api/history/${id}`).set('Authorization', `Bearer ${stranger.token}`)
+    expect(forbidden.status).toBe(404)
+    const ok = await request(app).delete(`/api/history/${id}`).set('Authorization', `Bearer ${token}`)
+    expect(ok.status).toBe(200)
+    const again = await request(app).get('/api/history').set('Authorization', `Bearer ${token}`)
+    expect(again.body.history.find((h) => h.id === id)).toBeUndefined()
+    expect((await request(app).delete('/api/history/abc').set('Authorization', `Bearer ${token}`)).status).toBe(404)
+  })
+
   it('serves the same file from cache without calling the provider again', async () => {
     sightengine.detectAiImage.mockClear()
     const res = await request(app)

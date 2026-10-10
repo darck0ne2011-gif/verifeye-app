@@ -84,7 +84,15 @@ function App() {
   }
 
   if (showSettings) {
-    return <SettingsPage onBack={() => setShowSettings(false)} />
+    return (
+      <SettingsPage
+        onBack={() => setShowSettings(false)}
+        onNavigate={(tab) => {
+          setActiveTab(tab)
+          setShowSettings(false)
+        }}
+      />
+    )
   }
 
   return (

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import LegalPage from '../components/LegalPage'
 
-const APP_VERSION = '0.1.2-beta'
+const APP_VERSION = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : 'dev'
 
 const FAQ_KEYS = ['q1', 'q2', 'q3', 'q4', 'q5']
 
@@ -37,28 +37,7 @@ const EyeOffIcon = () => (
 
 const TAB_IDS = ['profile', 'security', 'subscription', 'support', 'about']
 
-const DISPLAY_NAME_KEY = 'verifeye_displayname'
-
-function getDisplayName(email) {
-  try {
-    const stored = localStorage.getItem(DISPLAY_NAME_KEY)
-    if (stored) {
-      const map = JSON.parse(stored)
-      return map[email] || ''
-    }
-  } catch (_) {}
-  return ''
-}
-
-function setDisplayName(email, name) {
-  try {
-    const stored = localStorage.getItem(DISPLAY_NAME_KEY) || '{}'
-    const map = JSON.parse(stored)
-    map[email] = name
-    localStorage.setItem(DISPLAY_NAME_KEY, JSON.stringify(map))
-  } catch (_) {}
-}
-
+// Only languages that actually have a translation file (see public/locales).
 const LANGUAGE_GROUPS = [
   { region: 'English', options: [{ value: 'en', label: 'English' }] },
   {
@@ -71,85 +50,28 @@ const LANGUAGE_GROUPS = [
       { value: 'it', label: 'Italiano' },
       { value: 'pt', label: 'Português' },
       { value: 'ru', label: 'Русский' },
-      { value: 'uk', label: 'Українська' },
-      { value: 'nl', label: 'Nederlands' },
-      { value: 'pl', label: 'Polski' },
-      { value: 'el', label: 'Ελληνικά' },
-      { value: 'bg', label: 'Български' },
-      { value: 'cs', label: 'Čeština' },
-      { value: 'da', label: 'Dansk' },
-      { value: 'fi', label: 'Suomi' },
-      { value: 'hu', label: 'Magyar' },
-      { value: 'no', label: 'Norsk' },
-      { value: 'sk', label: 'Slovenčina' },
-      { value: 'sv', label: 'Svenska' },
-      { value: 'az', label: 'Azərbaycan' },
     ],
   },
   {
-    region: 'East Asia',
+    region: 'Asia',
     options: [
       { value: 'zh', label: '中文' },
-      { value: 'ja', label: '日本語' },
       { value: 'ko', label: '한국어' },
-    ],
-  },
-  {
-    region: 'South Asia',
-    options: [
-      { value: 'hi', label: 'हिन्दी' },
-      { value: 'bn', label: 'বাংলা' },
-      { value: 'pa', label: 'ਪੰਜਾਬੀ' },
-      { value: 'ta', label: 'தமிழ்' },
-      { value: 'te', label: 'తెలుగు' },
-      { value: 'mr', label: 'मराठी' },
-      { value: 'gu', label: 'ગુજરાતી' },
-      { value: 'kn', label: 'ಕನ್ನಡ' },
-      { value: 'ml', label: 'മലയാളം' },
-      { value: 'or', label: 'ଓଡ଼ିଆ' },
-      { value: 'ur', label: 'اردو' },
-    ],
-  },
-  {
-    region: 'Southeast Asia',
-    options: [
       { value: 'id', label: 'Bahasa Indonesia' },
-      { value: 'ms', label: 'Bahasa Melayu' },
-      { value: 'vi', label: 'Tiếng Việt' },
-      { value: 'th', label: 'ไทย' },
-      { value: 'my', label: 'မြန်မာစာ' },
-      { value: 'jv', label: 'Basa Jawa' },
       { value: 'ban', label: 'Basa Bali' },
+      { value: 'vi', label: 'Tiếng Việt' },
     ],
   },
-  {
-    region: 'Middle East',
-    options: [
-      { value: 'ar', label: 'العربية' },
-      { value: 'fa', label: 'فارسی' },
-      { value: 'he', label: 'עברית' },
-      { value: 'tr', label: 'Türkçe' },
-    ],
-  },
-  {
-    region: 'Africa',
-    options: [
-      { value: 'sw', label: 'Kiswahili' },
-      { value: 'yo', label: 'Yorùbá' },
-      { value: 'ig', label: 'Igbo' },
-      { value: 'ha', label: 'Hausa' },
-      { value: 'am', label: 'አማርኛ' },
-    ],
-  },
+  { region: 'Middle East', options: [{ value: 'ar', label: 'العربية' }] },
 ]
 
-export default function SettingsPage({ onBack }) {
+const SUPPORT_EMAIL = import.meta.env.VITE_SUPPORT_EMAIL || ''
+
+export default function SettingsPage({ onBack, onNavigate }) {
   const { t, i18n } = useTranslation()
-  const { user, logout, refreshUser, getAuthHeaders } = useAuth()
+  const { user, logout, getAuthHeaders } = useAuth()
   const TABS = TAB_IDS.map((id) => ({ id, label: t(`settings.${id}`) }))
   const [activeTab, setActiveTab] = useState('profile')
-  const [displayName, setDisplayNameState] = useState('')
-  const [displayNameSaved, setDisplayNameSaved] = useState(false)
   const [passwordForm, setPasswordForm] = useState({ current: '', new: '', confirm: '' })
   const [showPassword, setShowPassword] = useState({ current: false, new: false, confirm: false })
   const [passwordError, setPasswordError] = useState('')
@@ -159,18 +81,24 @@ export default function SettingsPage({ onBack }) {
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [legalView, setLegalView] = useState(null)
   const [faqOpen, setFaqOpen] = useState(null)
-  const [contactForm, setContactForm] = useState({ name: '', message: '' })
-  const [contactLoading, setContactLoading] = useState(false)
-  const [contactSuccess, setContactSuccess] = useState(false)
+  const [apiStatus, setApiStatus] = useState('checking') // checking | ok | down
 
   const email = user?.email || ''
   const scanCredits = user?.scanCredits ?? 0
-  const subscriptionTier = user?.subscriptionTier ?? 'starter'
-  const canContactSupport = subscriptionTier === 'pro' || subscriptionTier === 'elite'
+  const unlimited = !!user?.unlimitedScans || scanCredits >= 999999
 
   useEffect(() => {
-    setDisplayNameState(getDisplayName(email))
-  }, [email])
+    let cancelled = false
+    const controller = new AbortController()
+    fetch(`${API_BASE}/api/health`, { signal: controller.signal })
+      .then((res) => res.ok && res.json())
+      .then((data) => !cancelled && setApiStatus(data?.status === 'ok' ? 'ok' : 'down'))
+      .catch(() => !cancelled && setApiStatus('down'))
+    return () => {
+      cancelled = true
+      controller.abort()
+    }
+  }, [])
 
   const handleExportData = async () => {
     try {
@@ -196,12 +124,6 @@ export default function SettingsPage({ onBack }) {
     } catch (err) {
       console.error('Export failed:', err)
     }
-  }
-
-  const handleSaveDisplayName = () => {
-    setDisplayName(email, displayName)
-    setDisplayNameSaved(true)
-    setTimeout(() => setDisplayNameSaved(false), 2000)
   }
 
   const handleChangePassword = async (e) => {
@@ -234,23 +156,6 @@ export default function SettingsPage({ onBack }) {
       setPasswordError(err.message)
     } finally {
       setPasswordLoading(false)
-    }
-  }
-
-  const handleContactSubmit = async (e) => {
-    e.preventDefault()
-    if (!contactForm.name.trim() || !contactForm.message.trim()) return
-    setContactLoading(true)
-    setContactSuccess(false)
-    try {
-      // Simulated submit - in production, POST to /api/support
-      await new Promise((r) => setTimeout(r, 800))
-      setContactForm({ name: '', message: '' })
-      setContactSuccess(true)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setContactLoading(false)
     }
   }
 
@@ -350,22 +255,6 @@ export default function SettingsPage({ onBack }) {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-400 text-sm mb-2">{t('settings.display_name')}</label>
-                    <input
-                      type="text"
-                      value={displayName}
-                      onChange={(e) => setDisplayNameState(e.target.value)}
-                      placeholder={t('settings.display_name_placeholder')}
-                      className="w-full px-4 py-3 bg-slate-800/60 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                    />
-                    <button
-                      onClick={handleSaveDisplayName}
-                      className="mt-2 px-4 py-2 bg-cyan-600 text-white text-sm font-medium rounded-lg hover:bg-cyan-500 transition-colors"
-                    >
-                      {displayNameSaved ? t('settings.saved') : t('settings.save')}
-                    </button>
-                  </div>
-                  <div>
                     <label className="block text-slate-400 text-sm mb-2">{t('settings.registered_email')}</label>
                     <p className="px-4 py-3 bg-slate-800/40 border border-slate-700 rounded-xl text-slate-300">
                       {email}
@@ -418,7 +307,7 @@ export default function SettingsPage({ onBack }) {
                         value={passwordForm.new}
                         onChange={(e) => setPasswordForm((p) => ({ ...p, new: e.target.value }))}
                         className="w-full px-4 py-3 pr-12 bg-slate-800/60 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                        minLength={6}
+                        minLength={8}
                         required
                       />
                       <button
@@ -440,7 +329,7 @@ export default function SettingsPage({ onBack }) {
                         value={passwordForm.confirm}
                         onChange={(e) => setPasswordForm((p) => ({ ...p, confirm: e.target.value }))}
                         className="w-full px-4 py-3 pr-12 bg-slate-800/60 border border-slate-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
-                        minLength={6}
+                        minLength={8}
                         required
                       />
                       <button
@@ -527,42 +416,15 @@ export default function SettingsPage({ onBack }) {
                   style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.03)' }}
                 >
                   <h3 className="text-white font-medium mb-3">{t('settings.contact_us')}</h3>
-                  {!canContactSupport ? (
-                    <p className="text-slate-400 text-sm leading-relaxed">{t('settings.support_exclusive')}</p>
-                  ) : contactSuccess ? (
-                    <p className="text-green-400 text-sm">{t('settings.message_sent')}</p>
+                  {SUPPORT_EMAIL ? (
+                    <p className="text-slate-400 text-sm leading-relaxed">
+                      {t('settings.support_email_intro')}{' '}
+                      <a href={`mailto:${SUPPORT_EMAIL}`} className="text-cyan-400 hover:text-cyan-300 break-all">
+                        {SUPPORT_EMAIL}
+                      </a>
+                    </p>
                   ) : (
-                    <form onSubmit={handleContactSubmit} className="space-y-3">
-                      <div>
-                        <label className="block text-slate-400 text-sm mb-1.5">{t('settings.name')}</label>
-                        <input
-                          type="text"
-                          value={contactForm.name}
-                          onChange={(e) => setContactForm((f) => ({ ...f, name: e.target.value }))}
-                          placeholder={t('settings.name_placeholder')}
-                          className="w-full px-4 py-2.5 bg-slate-800/60 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-sm"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-slate-400 text-sm mb-1.5">{t('settings.message')}</label>
-                        <textarea
-                          value={contactForm.message}
-                          onChange={(e) => setContactForm((f) => ({ ...f, message: e.target.value }))}
-                          placeholder={t('settings.message_placeholder')}
-                          rows={4}
-                          className="w-full px-4 py-2.5 bg-slate-800/60 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 text-sm resize-none"
-                          required
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={contactLoading}
-                        className="w-full py-2.5 px-4 bg-cyan-600 text-white font-medium rounded-lg hover:bg-cyan-500 transition-colors disabled:opacity-50 text-sm"
-                      >
-                        {contactLoading ? t('settings.sending') : t('settings.submit')}
-                      </button>
-                    </form>
+                    <p className="text-slate-500 text-sm">{t('settings.coming_soon')}</p>
                   )}
                 </div>
               </section>
@@ -574,15 +436,18 @@ export default function SettingsPage({ onBack }) {
                 <h2 className="text-lg font-semibold text-white mb-4">{t('settings.subscription')}</h2>
                 <div className="p-6 bg-slate-800/60 border border-slate-700 rounded-xl">
                   <p className="text-slate-400 text-sm mb-1">{t('settings.current_balance')}</p>
-                  <p className="text-3xl font-bold text-cyan-400">{scanCredits}</p>
-                  <p className="text-slate-500 text-sm mt-1">{t('settings.scan_credits_remaining')}</p>
-                  <button
-                    onClick={() => refreshUser()}
-                    className="mt-4 w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
-                  >
-                    {t('settings.buy_more_credits')}
-                  </button>
-                  <p className="text-slate-500 text-xs mt-2 text-center">{t('settings.coming_soon')}</p>
+                  <p className="text-3xl font-bold text-cyan-400">
+                    {unlimited ? t('settings.unlimited') : scanCredits}
+                  </p>
+                  {!unlimited && <p className="text-slate-500 text-sm mt-1">{t('settings.scan_credits_remaining')}</p>}
+                  {!unlimited && onNavigate && (
+                    <button
+                      onClick={() => onNavigate('upgrade')}
+                      className="mt-4 w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-purple-600 text-white font-medium rounded-xl hover:opacity-90 transition-opacity"
+                    >
+                      {t('settings.go_to_plans')}
+                    </button>
+                  )}
                 </div>
               </section>
             )}
@@ -595,9 +460,6 @@ export default function SettingsPage({ onBack }) {
                 <div className="flex items-center gap-3 mb-6">
                   <span className="text-slate-400 text-sm">{t('settings.version')}</span>
                   <span className="text-cyan-400 font-medium">VerifEye v{APP_VERSION}</span>
-                  <button className="px-3 py-1.5 text-xs bg-slate-800 border border-slate-600 rounded-lg text-slate-400 hover:text-white transition-colors">
-                    {t('settings.check_updates')}
-                  </button>
                 </div>
                 <div className="flex flex-wrap gap-6 text-sm mb-8">
                   <button onClick={() => setActiveTab('support')} className="text-cyan-400 hover:text-cyan-300">
@@ -624,8 +486,12 @@ export default function SettingsPage({ onBack }) {
       <footer className="mt-auto shrink-0 px-4 py-6 border-t border-slate-800">
         <div className="max-w-xl mx-auto space-y-3">
           <div className="flex items-center gap-2 text-sm">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-slate-400">{t('settings.all_systems')}</span>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                apiStatus === 'ok' ? 'bg-green-500' : apiStatus === 'down' ? 'bg-red-500' : 'bg-slate-500 animate-pulse'
+              }`}
+            />
+            <span className="text-slate-400">{t(`settings.status_${apiStatus}`)}</span>
           </div>
           <p className="text-slate-500 text-xs">{t('settings.copyright')}</p>
         </div>

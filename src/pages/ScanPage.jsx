@@ -17,12 +17,14 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
   const { t, i18n } = useTranslation()
   const { user, getAuthHeaders, refreshUser, logout } = useAuth()
   const scansCount = user?.scanCredits ?? 0
+  const unlimited = !!user?.unlimitedScans || scansCount >= 999999
 
   const [selectedFile, setSelectedFile] = useState(null)
   const [view, setView] = useState(() => (getLastScanResult() ? 'verdict' : 'idle'))
   const [scan, setScan] = useState(() => getLastScanResult())
   const [progress, setProgress] = useState({ stage: 'queued', progress: 0 })
   const fileInputRef = useRef(null)
+  const cameraInputRef = useRef(null)
   const scansCountRef = useRef(scansCount)
   scansCountRef.current = scansCount
 
@@ -84,6 +86,17 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
     fileInputRef.current?.click()
   }, [])
 
+  const triggerCamera = useCallback(() => {
+    if (scansCountRef.current <= 0) return
+    cameraInputRef.current?.click()
+  }, [])
+
+  const onInputChange = (e) => {
+    const files = e.target.files
+    if (files?.length) handleFileSelect(files)
+    e.target.value = ''
+  }
+
   return (
     <div className="min-h-screen bg-[#0d0d0d] flex flex-col pb-20">
       <DashboardHeader
@@ -105,7 +118,9 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
           )}
 
           {view === 'idle' && (
-            <p className="mt-6 text-slate-400 text-sm text-center max-w-xs shrink-0">{t('scan.protection_active')}</p>
+            <p className="mt-6 text-slate-400 text-sm text-center max-w-xs shrink-0">
+              {selectedFile ? t('scan.hint_ready') : t('scan.hint_pick_file')}
+            </p>
           )}
 
           <div className="flex-1 w-full mt-8 flex flex-col items-center gap-4 min-h-0">
@@ -118,6 +133,7 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
               <VerdictScreen
                 result={scan.result}
                 error={scan.error}
+                file={selectedFile}
                 canDownloadPdf={true}
                 onUpgradeClick={onUpgradeClick}
               />
@@ -130,8 +146,10 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
                 disabled={scansCount < creditsNeeded}
                 selectedFile={selectedFile}
                 creditsNeeded={creditsNeeded}
+                showCredits={!unlimited}
                 onDrop={(files) => handleFileSelect(files)}
                 onTriggerClick={triggerFileSelect}
+                onCameraClick={triggerCamera}
                 onClearFile={() => setSelectedFile(null)}
               />
             </div>
@@ -144,11 +162,15 @@ export default function ScanPage({ onSettingsClick, onUpgradeClick }) {
         type="file"
         accept="image/*,video/*,audio/*"
         className="hidden"
-        onChange={(e) => {
-          const files = e.target.files
-          if (files?.length) handleFileSelect(files)
-          e.target.value = ''
-        }}
+        onChange={onInputChange}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={onInputChange}
       />
     </div>
   )
