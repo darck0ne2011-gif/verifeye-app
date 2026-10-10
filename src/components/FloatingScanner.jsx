@@ -1,10 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { API_BASE } from '../config.js'
+import { runScan } from '../api/scans'
 import { getActiveModels, getMaxCreditsPerScan } from '../utils/scanSettings'
 import { getMediaCategory } from '../utils/fileType'
-import { getWinningDisplay } from '../utils/verdictScore'
+import { deriveVerdict } from './VerdictBanner'
 
 const FAB_STORAGE_KEY = 'verifeye_fab_position'
 const FAB_SIZE = 56
@@ -36,28 +36,43 @@ function saveFabPosition(x, y) {
 
 function snapToEdge(x) {
   const mid = typeof window !== 'undefined' ? window.innerWidth / 2 : 400
-  return x < mid ? PADDING : Math.max(PADDING, (typeof window !== 'undefined' ? window.innerWidth : 800) - FAB_SIZE - PADDING)
+  return x < mid
+    ? PADDING
+    : Math.max(PADDING, (typeof window !== 'undefined' ? window.innerWidth : 800) - FAB_SIZE - PADDING)
 }
 
-const VerifEyeLogo = () => (
-  <span className="text-white font-bold text-xl">V</span>
-)
+const VerifEyeLogo = () => <span className="text-white font-bold text-xl">V</span>
 
 const ScanIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+    />
   </svg>
 )
 
 const UploadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+    />
   </svg>
 )
 
 const StatusIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
   </svg>
 )
 
@@ -78,7 +93,6 @@ const DragHandleIcon = () => (
   </svg>
 )
 
-const MIN_SCAN_DURATION_MS = 2500
 const BOTTOM_NAV_HEIGHT = 80
 
 function getDefaultPosition() {
@@ -90,15 +104,16 @@ function getDefaultPosition() {
 }
 
 export default function FloatingScanner() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user, getAuthHeaders, refreshUser, logout } = useAuth()
   const [expanded, setExpanded] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [miniResult, setMiniResult] = useState(null)
+  const [stage, setStage] = useState('queued')
   const [showDropZone, setShowDropZone] = useState(false)
   const [position, setPosition] = useState(() => loadFabPosition() ?? getDefaultPosition())
-  const [isDragging, setIsDragging] = useState(false)
-  const [isSnapping, setIsSnapping] = useState(false)
+  const [, setIsDragging] = useState(false)
+  const [, setIsSnapping] = useState(false)
   const fileInputRef = useRef(null)
   const dragStartRef = useRef(null)
   const hasDraggedRef = useRef(false)
@@ -113,20 +128,11 @@ export default function FloatingScanner() {
     setShowDropZone(false)
   }, [])
 
-  const handleScanCurrentPage = useCallback(async () => {
-    if (!hasCredits) return
-    setScanning(true)
-    setMiniResult(null)
-
-    await new Promise((r) => setTimeout(r, MIN_SCAN_DURATION_MS))
-
-    setMiniResult({
-      status: 'INFO',
-      message: 'Quick Scan is currently photo-only. Use Quick Upload to scan an image.',
-    })
-    setScanning(false)
-    await refreshUser()
-  }, [hasCredits, refreshUser])
+  // Scanning what is on screen in other apps needs the Android app (system overlay +
+  // screen capture); a web page cannot see outside itself.
+  const handleScanCurrentPage = useCallback(() => {
+    setMiniResult({ status: 'info', label: t('fab.on_screen_title'), message: t('fab.on_screen_message') })
+  }, [t])
 
   const handleQuickUpload = useCallback(() => {
     if (!hasCredits) return
@@ -137,51 +143,45 @@ export default function FloatingScanner() {
   const processFile = useCallback(
     async (file) => {
       if (!file || !hasCredits) return
+      if (!/^(image|video|audio)\//i.test(file.type || '')) return
 
       setShowDropZone(false)
       setScanning(true)
       setMiniResult(null)
+      setStage('uploading')
 
       try {
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('models', getActiveModels(getMediaCategory(file)).join(','))
-        formData.append('language', i18n.language || 'en')
-
-        const startTime = Date.now()
-        const res = await fetch(`${API_BASE}/api/analyze`, {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: formData,
+        const result = await runScan(
+          file,
+          { models: getActiveModels(getMediaCategory(file)), language: i18n.language || 'en' },
+          { authHeaders: getAuthHeaders(), onProgress: (p) => setStage(p.stage) }
+        )
+        const verdict = deriveVerdict(result)
+        setMiniResult({
+          status: verdict,
+          label: t(`verdict.band_${verdict}`),
+          score: result.fakeProbability,
+          message:
+            t('verdict.ai_probability', { value: result.fakeProbability }) +
+            (result.confidence != null ? ` · ${t('verdict.confidence', { value: result.confidence })}` : ''),
         })
-
-        let elapsed = Date.now() - startTime
-        if (elapsed < MIN_SCAN_DURATION_MS) {
-          await new Promise((r) => setTimeout(r, MIN_SCAN_DURATION_MS - elapsed))
-        }
-
-        const data = await res.json().catch(() => ({}))
-        if (res.status === 401) {
-          logout()
-          setMiniResult({ status: 'ERROR', message: 'Session expired' })
-        } else if (data.success) {
-          const { status, displayScore } = getWinningDisplay(data.fakeProbability ?? 0)
-          setMiniResult({
-            status,
-            score: displayScore,
-            message: `${status} — ${displayScore}%`,
-          })
-          await refreshUser()
-        } else {
-          setMiniResult({ status: 'ERROR', message: data.error || 'Scan failed' })
-        }
+        await refreshUser()
       } catch (err) {
-        setMiniResult({ status: 'ERROR', message: err.message || 'Network error' })
+        if (err.status === 401) {
+          logout()
+          setMiniResult({ status: 'error', label: t('scan.session_expired'), message: '' })
+        } else {
+          setMiniResult({
+            status: 'error',
+            label: t('verdict.scan_failed'),
+            message: err.message || t('scan.network_error'),
+          })
+        }
       } finally {
         setScanning(false)
       }
     },
-    [hasCredits, getAuthHeaders, logout, refreshUser]
+    [hasCredits, getAuthHeaders, logout, refreshUser, i18n.language, t]
   )
 
   const handleFileChange = useCallback(
@@ -199,10 +199,8 @@ export default function FloatingScanner() {
       const files = e.dataTransfer?.files
       if (files?.length && hasCredits) {
         const file = files[0]
-        if (/^image\//.test(file.type)) {
-          setShowDropZone(false)
-          processFile(file)
-        }
+        setShowDropZone(false)
+        processFile(file)
       }
     },
     [hasCredits, processFile]
@@ -232,50 +230,44 @@ export default function FloatingScanner() {
     [position, scanning]
   )
 
-  const handlePointerMove = useCallback(
-    (e) => {
-      const start = dragStartRef.current
-      if (!start) return
+  const handlePointerMove = useCallback((e) => {
+    const start = dragStartRef.current
+    if (!start) return
 
-      const dx = e.clientX - start.clientX
-      const dy = start.clientY - e.clientY
-      if (!hasDraggedRef.current && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
-        hasDraggedRef.current = true
-      }
+    const dx = e.clientX - start.clientX
+    const dy = start.clientY - e.clientY
+    if (!hasDraggedRef.current && (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)) {
+      hasDraggedRef.current = true
+    }
 
-      const w = typeof window !== 'undefined' ? window.innerWidth : 800
-      const h = typeof window !== 'undefined' ? window.innerHeight : 600
-      const newX = Math.max(PADDING, Math.min(w - FAB_SIZE - PADDING, start.posX + dx))
-      const newY = Math.max(BOTTOM_NAV_HEIGHT, Math.min(h - FAB_SIZE - PADDING, start.posY + dy))
-      setPosition({ x: newX, y: newY })
-    },
-    []
-  )
+    const w = typeof window !== 'undefined' ? window.innerWidth : 800
+    const h = typeof window !== 'undefined' ? window.innerHeight : 600
+    const newX = Math.max(PADDING, Math.min(w - FAB_SIZE - PADDING, start.posX + dx))
+    const newY = Math.max(BOTTOM_NAV_HEIGHT, Math.min(h - FAB_SIZE - PADDING, start.posY + dy))
+    setPosition({ x: newX, y: newY })
+  }, [])
 
-  const handlePointerUp = useCallback(
-    (e) => {
-      e.currentTarget.releasePointerCapture?.(e.pointerId)
-      const start = dragStartRef.current
-      const didDrag = hasDraggedRef.current
-      dragStartRef.current = null
-      setIsDragging(false)
+  const handlePointerUp = useCallback((e) => {
+    e.currentTarget.releasePointerCapture?.(e.pointerId)
+    const start = dragStartRef.current
+    const didDrag = hasDraggedRef.current
+    dragStartRef.current = null
+    setIsDragging(false)
 
-      if (!start) return
+    if (!start) return
 
-      if (didDrag) {
-        setPosition((prev) => {
-          const snappedX = snapToEdge(prev.x)
-          saveFabPosition(snappedX, prev.y)
-          return { ...prev, x: snappedX }
-        })
-        setIsSnapping(true)
-        setTimeout(() => setIsSnapping(false), 350)
-      }
-    },
-    []
-  )
+    if (didDrag) {
+      setPosition((prev) => {
+        const snappedX = snapToEdge(prev.x)
+        saveFabPosition(snappedX, prev.y)
+        return { ...prev, x: snappedX }
+      })
+      setIsSnapping(true)
+      setTimeout(() => setIsSnapping(false), 350)
+    }
+  }, [])
 
-  const handleFabClick = useCallback((e) => {
+  const handleFabClick = useCallback(() => {
     if (hasDraggedRef.current) return
     setExpanded((prev) => !prev)
   }, [])
@@ -319,8 +311,7 @@ export default function FloatingScanner() {
                           : 'text-amber-500'
                     }`}
                   >
-                    {miniResult.status}
-                    {miniResult.score != null && ` (${miniResult.score}%)`}
+                    {miniResult.label}
                   </span>
                   <button
                     onClick={clearMiniResult}
@@ -344,6 +335,11 @@ export default function FloatingScanner() {
                     <CloseIcon />
                   </button>
                 </div>
+                {scanning && (
+                  <p className="text-xs text-cyan-300 mb-2" role="status">
+                    {t(`scan.stage.${stage}`, { defaultValue: t('scan.stage.processing') })}
+                  </p>
+                )}
 
                 <button
                   onClick={handleScanCurrentPage}
@@ -395,7 +391,8 @@ export default function FloatingScanner() {
           className="relative flex items-center justify-center w-14 h-14 rounded-full transition-all duration-300 ease-out group touch-none select-none"
           style={{
             background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.1)',
+            boxShadow:
+              '0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08), inset 0 1px 0 rgba(255,255,255,0.1)',
             backdropFilter: 'blur(12px)',
           }}
           aria-label={expanded ? 'Close scanner' : 'Open scanner'}
@@ -424,7 +421,7 @@ export default function FloatingScanner() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*,audio/*"
         className="hidden"
         onChange={handleFileChange}
       />

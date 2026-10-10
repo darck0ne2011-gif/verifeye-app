@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       animation: {
@@ -28,8 +25,8 @@ export default {
           'accent-hover': '#52cc00',
           muted: '#9ca3af',
           warning: '#FF4444',
-        }
-      }
+        },
+      },
     },
   },
   plugins: [],

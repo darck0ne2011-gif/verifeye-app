@@ -14,7 +14,7 @@
     "password": "Parolă",
     "email_placeholder": "tu@exemplu.com",
     "password_placeholder_login": "••••••••",
-    "password_placeholder_register": "Minim 6 caractere",
+    "password_placeholder_register": "Minim 8 caractere",
     "show_password": "Arată parola",
     "hide_password": "Ascunde parola",
     "please_wait": "Te rugăm așteaptă...",
@@ -67,7 +67,14 @@
     "upgrade": "Upgrade"
   },
   "scan_settings": {
-    "model_fake_news": "Detecție Fake News / Credibilitate"
+    "model_fake_news": "Detecție Fake News / Credibilitate",
+    "subtitle": "Alege ce modele de analiză rulează pentru fiecare tip de fișier. Fiecare model folosește 1 credit per scanare.",
+    "credits_note": "Setările se salvează separat pentru poze, video și audio.",
+    "model_video_genai": "Analiză AI pe cadre",
+    "model_video_deepfake": "Detecție schimb de față (cadre)",
+    "model_video_speech": "Detecție voce AI (pista audio)",
+    "model_audio_speech": "Detecție voce AI",
+    "hint_ai_speech_beta": "Beta: trebuie activat pe contul Sightengine. Dacă nu e disponibil, creditul se returnează."
   },
   "header": {
     "scans": "{{count}} Scanări",
@@ -76,13 +83,30 @@
   "scan": {
     "protection_active": "Protecția este activă. Mergi pe orice aplicație video pentru a scana.",
     "session_expired": "Sesiunea a expirat. Te rugăm autentifică-te din nou.",
-    "network_error": "Eroare de rețea – rulează backend-ul?"
+    "network_error": "Eroare de rețea – rulează backend-ul?",
+    "stage": {
+      "uploading": "Se încarcă fișierul…",
+      "queued": "În așteptare…",
+      "starting": "Se pornește…",
+      "hashing": "Se verifică amprenta fișierului…",
+      "analyzing_image": "Se analizează imaginea…",
+      "probing": "Se citesc informațiile media…",
+      "extracting_frames": "Se extrag cadrele…",
+      "analyzing_frames": "Se analizează cadrele…",
+      "converting_audio": "Se pregătește audio…",
+      "analyzing_audio": "Se analizează audio…",
+      "scoring": "Se calculează verdictul…",
+      "summarizing": "Se scrie rezumatul…",
+      "processing": "Se procesează…",
+      "done": "Gata"
+    }
   },
   "dropzone": {
     "file_ready": "Fișier pregătit",
     "change": "Schimbă",
-    "drag_drop": "Trage și plasează Video, Audio sau Foto",
-    "or_click": "sau dă click pentru a căuta (YouTube, X, TikTok, Instagram)"
+    "drag_drop": "Trage aici o poză, un video sau un fișier audio",
+    "or_click": "sau apasă pentru a alege",
+    "credits_hint": "Această scanare folosește {{count}} credit(e)"
   },
   "overlay": {
     "out_of_credits": "Fără credite",
@@ -92,8 +116,8 @@
   "verdict": {
     "view_source": "Vezi sursa originală",
     "api_error": "Eroare API (folosind fallback): {{error}}",
-    "ai_missing_exif": "Lipsesc metadatele EXIF (frecvent la imagini generate de AI)",
-    "ai_suspicious_resolution": "Rezoluție suspectă {{res}} (tipică pentru unelte AI)",
+    "ai_missing_exif": "Fără metadata de cameră (EXIF) — obișnuit la screenshot-uri, aplicații de mesagerie și imagini AI",
+    "ai_suspicious_resolution": "Rezoluția {{res}} coincide cu dimensiuni uzuale ale generatoarelor AI",
     "ai_software_detected": "Software AI detectat: {{tags}}",
     "credibility_meter": "Indicator Credibilitate",
     "ai_expert_interpretation": "Interpretare expert AI",
@@ -103,7 +127,36 @@
     "fact_check_rating": "Rating Credibilitate",
     "credibility_low": "Scăzut",
     "credibility_medium": "Mediu",
-    "credibility_high": "Ridicat"
+    "credibility_high": "Ridicat",
+    "result_title": "Rezultatul verificării",
+    "scan_failed": "Scanarea nu a putut fi finalizată",
+    "band_likely_ai": "Probabil generat sau modificat cu AI",
+    "band_inconclusive": "Neconcludent",
+    "band_likely_real": "Probabil autentic",
+    "band_short_likely_ai": "PROBABIL AI",
+    "band_short_inconclusive": "NECLAR",
+    "band_short_likely_real": "PROBABIL REAL",
+    "band_likely_ai_explainer": "Detectoarele au găsit semne puternice de generare sau manipulare AI. Tratează conținutul cu prudență și caută sursa originală.",
+    "band_inconclusive_explainer": "Semnalele sunt mixte sau slabe. Asta nu înseamnă că e autentic sau fals; încearcă fișierul original dacă ai scanat un screenshot sau o copie redistribuită.",
+    "band_likely_real_explainer": "Nu s-au găsit semne relevante de generare AI. Detectoarele pot rata generatoare noi, deci nu e o garanție.",
+    "ai_probability": "{{value}}% probabilitate AI",
+    "confidence": "{{value}}% încredere",
+    "confidence_short": "{{value}}% încr.",
+    "factor_screenshot": "Screenshot, nu fișierul original",
+    "factor_few_frames": "Puține cadre analizate",
+    "factor_frames_disagree": "Cadrele nu concordă",
+    "factor_beta_model": "Model beta",
+    "warning_ai_speech_not_enabled": "Detecția vocii AI nu e activată încă pe acest cont; pista audio nu a fost analizată (credit returnat).",
+    "warning_no_audio_track": "Videoclipul nu are pistă audio; detecția vocii a fost sărită (credit returnat).",
+    "timeline_title": "Cronologia cadrelor",
+    "timeline_hint": "Probabilitatea AI pentru fiecare dintre cele {{count}} cadre analizate",
+    "resolution": "Rezoluție",
+    "duration": "Durată",
+    "frames_analyzed": "Cadre analizate",
+    "audio_track": "Pistă audio",
+    "analyzed_seconds": "Audio analizat",
+    "source": "Sursă",
+    "source_screenshot": "Screenshot"
   },
   "deepfake": {
     "why_fake": "De ce este fals?",
@@ -140,7 +193,7 @@
     "new_password": "Parola nouă",
     "confirm_password": "Confirmă parola nouă",
     "passwords_no_match": "Parolele noi nu coincid",
-    "password_min_length": "Parola nouă trebuie să aibă minim 6 caractere",
+    "password_min_length": "Parola nouă trebuie să aibă minim 8 caractere",
     "password_updated": "Parola a fost actualizată.",
     "updating": "Se actualizează...",
     "change_password": "Schimbă parola",
@@ -236,7 +289,7 @@
     "analysis_metadata": "Verificare metadata",
     "analysis_quality": "Calitate imagine",
     "analysis_temporal_ai": "Consistență AI temporală",
-    "analysis_video_deepfake": "Detecție Deepfake video",
+    "analysis_video_deepfake": "Detecție schimb de față",
     "analysis_frame_integrity": "Integritate cadre",
     "analysis_voice_clone": "Detecție Voice Clone",
     "analysis_lip_sync": "Integritate Lip-Sync",
@@ -255,12 +308,67 @@
     "missing_exif": "Lipsesc EXIF",
     "verified": "Verificat",
     "analysis_method_frame": "Bazat pe cadre (rapid)",
-    "analysis_method_native": "Video nativ (secvențial)"
+    "analysis_method_native": "Video nativ (secvențial)",
+    "confidence": "Încredere",
+    "analysis_ai_speech": "Detecție voce AI",
+    "analysis_video_genai": "Analiză AI pe cadre",
+    "meta_frames": "Cadre analizate",
+    "verdict_likely_ai": "PROBABIL GENERAT AI",
+    "verdict_inconclusive": "NECONCLUDENT",
+    "verdict_likely_real": "PROBABIL AUTENTIC"
   },
-  "alerts": {
-    "loading": "Se încarcă alertele...",
-    "fallback_1": "Video cu Marcel Ciolacu marcat ca FAKE de 1.200 de ori azi.",
-    "fallback_2": "Știre despre taxa auto VERIFICATĂ. Sursa: Guvernul.ro",
-    "fallback_3": "Clip viral cu Klaus Iohannis marcat ca FAKE de 890 de ori."
+  "common": {
+    "yes": "Da",
+    "no": "Nu"
+  },
+  "analysis": {
+    "title": "Analiză",
+    "no_result": "Fără rezultat",
+    "speech_not_enabled": "Detecția vocii AI nu e activată încă pe acest cont (credit returnat)",
+    "no_audio_track": "Fișierul nu are pistă audio (credit returnat)",
+    "image_deepfake": {
+      "title": "Detecție deepfake",
+      "pass": "Nu s-a detectat schimb de față",
+      "fail": "Față înlocuită sau modificată cu AI"
+    },
+    "image_genai": {
+      "title": "Analiză AI a pixelilor",
+      "pass": "Nu s-a detectat generare AI",
+      "fail": "Generare AI detectată"
+    },
+    "image_type": {
+      "title": "Verificare metadata",
+      "pass": "Nimic neobișnuit în metadata",
+      "fail": "Anomalii în metadata"
+    },
+    "image_quality": {
+      "title": "Calitatea imaginii",
+      "pass": "Scor de calitate",
+      "fail": "Calitate scăzută"
+    },
+    "video_genai": {
+      "title": "Analiză AI pe cadre",
+      "pass": "Nu s-a detectat generare AI în cadrele analizate",
+      "fail": "Cadre generate AI detectate"
+    },
+    "video_deepfake": {
+      "title": "Detecție schimb de față",
+      "pass": "Nu s-a detectat schimb de față în cadre",
+      "fail": "Schimb de față detectat"
+    },
+    "video_speech": {
+      "title": "Detecție voce AI",
+      "pass": "Nu s-a detectat voce sintetică",
+      "fail": "Voce sintetică detectată"
+    },
+    "audio_speech": {
+      "title": "Detecție voce AI",
+      "pass": "Nu s-a detectat voce sintetică",
+      "fail": "Voce sintetică detectată"
+    }
+  },
+  "fab": {
+    "on_screen_title": "Scanare pe ecran",
+    "on_screen_message": "Verificarea a ceea ce vezi în alte aplicații are nevoie de aplicația Android VerifEye. Aici, folosește Quick Upload sau trimite fișierul către VerifEye."
   }
 }

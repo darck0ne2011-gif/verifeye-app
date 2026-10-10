@@ -16,14 +16,22 @@ const BackIcon = () => (
 
 const EyeIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
+    />
     <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 )
 
 const EyeOffIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
+    />
   </svg>
 )
 
@@ -53,68 +61,86 @@ function setDisplayName(email, name) {
 
 const LANGUAGE_GROUPS = [
   { region: 'English', options: [{ value: 'en', label: 'English' }] },
-  { region: 'Europe', options: [
-    { value: 'ro', label: 'Română' },
-    { value: 'es', label: 'Español' },
-    { value: 'fr', label: 'Français' },
-    { value: 'de', label: 'Deutsch' },
-    { value: 'it', label: 'Italiano' },
-    { value: 'pt', label: 'Português' },
-    { value: 'ru', label: 'Русский' },
-    { value: 'uk', label: 'Українська' },
-    { value: 'nl', label: 'Nederlands' },
-    { value: 'pl', label: 'Polski' },
-    { value: 'el', label: 'Ελληνικά' },
-    { value: 'bg', label: 'Български' },
-    { value: 'cs', label: 'Čeština' },
-    { value: 'da', label: 'Dansk' },
-    { value: 'fi', label: 'Suomi' },
-    { value: 'hu', label: 'Magyar' },
-    { value: 'no', label: 'Norsk' },
-    { value: 'sk', label: 'Slovenčina' },
-    { value: 'sv', label: 'Svenska' },
-    { value: 'az', label: 'Azərbaycan' },
-  ]},
-  { region: 'East Asia', options: [
-    { value: 'zh', label: '中文' },
-    { value: 'ja', label: '日本語' },
-    { value: 'ko', label: '한국어' },
-  ]},
-  { region: 'South Asia', options: [
-    { value: 'hi', label: 'हिन्दी' },
-    { value: 'bn', label: 'বাংলা' },
-    { value: 'pa', label: 'ਪੰਜਾਬੀ' },
-    { value: 'ta', label: 'தமிழ்' },
-    { value: 'te', label: 'తెలుగు' },
-    { value: 'mr', label: 'मराठी' },
-    { value: 'gu', label: 'ગુજરાતી' },
-    { value: 'kn', label: 'ಕನ್ನಡ' },
-    { value: 'ml', label: 'മലയാളം' },
-    { value: 'or', label: 'ଓଡ଼ିଆ' },
-    { value: 'ur', label: 'اردو' },
-  ]},
-  { region: 'Southeast Asia', options: [
-    { value: 'id', label: 'Bahasa Indonesia' },
-    { value: 'ms', label: 'Bahasa Melayu' },
-    { value: 'vi', label: 'Tiếng Việt' },
-    { value: 'th', label: 'ไทย' },
-    { value: 'my', label: 'မြန်မာစာ' },
-    { value: 'jv', label: 'Basa Jawa' },
-    { value: 'ban', label: 'Basa Bali' },
-  ]},
-  { region: 'Middle East', options: [
-    { value: 'ar', label: 'العربية' },
-    { value: 'fa', label: 'فارسی' },
-    { value: 'he', label: 'עברית' },
-    { value: 'tr', label: 'Türkçe' },
-  ]},
-  { region: 'Africa', options: [
-    { value: 'sw', label: 'Kiswahili' },
-    { value: 'yo', label: 'Yorùbá' },
-    { value: 'ig', label: 'Igbo' },
-    { value: 'ha', label: 'Hausa' },
-    { value: 'am', label: 'አማርኛ' },
-  ]},
+  {
+    region: 'Europe',
+    options: [
+      { value: 'ro', label: 'Română' },
+      { value: 'es', label: 'Español' },
+      { value: 'fr', label: 'Français' },
+      { value: 'de', label: 'Deutsch' },
+      { value: 'it', label: 'Italiano' },
+      { value: 'pt', label: 'Português' },
+      { value: 'ru', label: 'Русский' },
+      { value: 'uk', label: 'Українська' },
+      { value: 'nl', label: 'Nederlands' },
+      { value: 'pl', label: 'Polski' },
+      { value: 'el', label: 'Ελληνικά' },
+      { value: 'bg', label: 'Български' },
+      { value: 'cs', label: 'Čeština' },
+      { value: 'da', label: 'Dansk' },
+      { value: 'fi', label: 'Suomi' },
+      { value: 'hu', label: 'Magyar' },
+      { value: 'no', label: 'Norsk' },
+      { value: 'sk', label: 'Slovenčina' },
+      { value: 'sv', label: 'Svenska' },
+      { value: 'az', label: 'Azərbaycan' },
+    ],
+  },
+  {
+    region: 'East Asia',
+    options: [
+      { value: 'zh', label: '中文' },
+      { value: 'ja', label: '日本語' },
+      { value: 'ko', label: '한국어' },
+    ],
+  },
+  {
+    region: 'South Asia',
+    options: [
+      { value: 'hi', label: 'हिन्दी' },
+      { value: 'bn', label: 'বাংলা' },
+      { value: 'pa', label: 'ਪੰਜਾਬੀ' },
+      { value: 'ta', label: 'தமிழ்' },
+      { value: 'te', label: 'తెలుగు' },
+      { value: 'mr', label: 'मराठी' },
+      { value: 'gu', label: 'ગુજરાતી' },
+      { value: 'kn', label: 'ಕನ್ನಡ' },
+      { value: 'ml', label: 'മലയാളം' },
+      { value: 'or', label: 'ଓଡ଼ିଆ' },
+      { value: 'ur', label: 'اردو' },
+    ],
+  },
+  {
+    region: 'Southeast Asia',
+    options: [
+      { value: 'id', label: 'Bahasa Indonesia' },
+      { value: 'ms', label: 'Bahasa Melayu' },
+      { value: 'vi', label: 'Tiếng Việt' },
+      { value: 'th', label: 'ไทย' },
+      { value: 'my', label: 'မြန်မာစာ' },
+      { value: 'jv', label: 'Basa Jawa' },
+      { value: 'ban', label: 'Basa Bali' },
+    ],
+  },
+  {
+    region: 'Middle East',
+    options: [
+      { value: 'ar', label: 'العربية' },
+      { value: 'fa', label: 'فارسی' },
+      { value: 'he', label: 'עברית' },
+      { value: 'tr', label: 'Türkçe' },
+    ],
+  },
+  {
+    region: 'Africa',
+    options: [
+      { value: 'sw', label: 'Kiswahili' },
+      { value: 'yo', label: 'Yorùbá' },
+      { value: 'ig', label: 'Igbo' },
+      { value: 'ha', label: 'Hausa' },
+      { value: 'am', label: 'አማርኛ' },
+    ],
+  },
 ]
 
 export default function SettingsPage({ onBack }) {
@@ -186,7 +212,7 @@ export default function SettingsPage({ onBack }) {
       setPasswordError(t('settings.passwords_no_match'))
       return
     }
-    if (passwordForm.new.length < 6) {
+    if (passwordForm.new.length < 8) {
       setPasswordError(t('settings.password_min_length'))
       return
     }
@@ -292,9 +318,7 @@ export default function SettingsPage({ onBack }) {
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`shrink-0 px-3 py-2 rounded-lg text-sm font-medium ${
-                    activeTab === tab.id
-                      ? 'bg-cyan-500/20 text-cyan-400'
-                      : 'text-slate-400 bg-slate-800/50'
+                    activeTab === tab.id ? 'bg-cyan-500/20 text-cyan-400' : 'text-slate-400 bg-slate-800/50'
                   }`}
                 >
                   {tab.label}
@@ -353,10 +377,7 @@ export default function SettingsPage({ onBack }) {
                   >
                     {t('settings.export_data')}
                   </button>
-                  <button
-                    onClick={logout}
-                    className="text-red-400 hover:text-red-300 text-sm font-medium"
-                  >
+                  <button onClick={logout} className="text-red-400 hover:text-red-300 text-sm font-medium">
                     {t('settings.log_out')}
                   </button>
                 </div>
@@ -507,9 +528,7 @@ export default function SettingsPage({ onBack }) {
                 >
                   <h3 className="text-white font-medium mb-3">{t('settings.contact_us')}</h3>
                   {!canContactSupport ? (
-                    <p className="text-slate-400 text-sm leading-relaxed">
-                      {t('settings.support_exclusive')}
-                    </p>
+                    <p className="text-slate-400 text-sm leading-relaxed">{t('settings.support_exclusive')}</p>
                   ) : contactSuccess ? (
                     <p className="text-green-400 text-sm">{t('settings.message_sent')}</p>
                   ) : (
@@ -572,35 +591,22 @@ export default function SettingsPage({ onBack }) {
             {activeTab === 'about' && (
               <section>
                 <h2 className="text-lg font-semibold text-white mb-4">{t('settings.about')}</h2>
-                <p className="text-slate-300 text-sm leading-relaxed mb-6">
-                  {t('settings.about_text')}
-                </p>
+                <p className="text-slate-300 text-sm leading-relaxed mb-6">{t('settings.about_text')}</p>
                 <div className="flex items-center gap-3 mb-6">
                   <span className="text-slate-400 text-sm">{t('settings.version')}</span>
                   <span className="text-cyan-400 font-medium">VerifEye v{APP_VERSION}</span>
-                  <button
-                    className="px-3 py-1.5 text-xs bg-slate-800 border border-slate-600 rounded-lg text-slate-400 hover:text-white transition-colors"
-                  >
+                  <button className="px-3 py-1.5 text-xs bg-slate-800 border border-slate-600 rounded-lg text-slate-400 hover:text-white transition-colors">
                     {t('settings.check_updates')}
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-6 text-sm mb-8">
-                  <button
-                    onClick={() => setActiveTab('support')}
-                    className="text-cyan-400 hover:text-cyan-300"
-                  >
+                  <button onClick={() => setActiveTab('support')} className="text-cyan-400 hover:text-cyan-300">
                     {t('settings.faq_support')}
                   </button>
-                  <button
-                    onClick={() => setLegalView('privacy')}
-                    className="text-cyan-400 hover:text-cyan-300"
-                  >
+                  <button onClick={() => setLegalView('privacy')} className="text-cyan-400 hover:text-cyan-300">
                     {t('settings.privacy_policy')}
                   </button>
-                  <button
-                    onClick={() => setLegalView('terms')}
-                    className="text-cyan-400 hover:text-cyan-300"
-                  >
+                  <button onClick={() => setLegalView('terms')} className="text-cyan-400 hover:text-cyan-300">
                     {t('settings.terms_of_service')}
                   </button>
                 </div>
@@ -621,9 +627,7 @@ export default function SettingsPage({ onBack }) {
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-slate-400">{t('settings.all_systems')}</span>
           </div>
-          <p className="text-slate-500 text-xs">
-            {t('settings.copyright')}
-          </p>
+          <p className="text-slate-500 text-xs">{t('settings.copyright')}</p>
         </div>
       </footer>
     </div>

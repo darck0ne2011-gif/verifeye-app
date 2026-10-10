@@ -5,7 +5,7 @@
  * - real 0.98 (fake 0.02) → REAL 98%
  */
 export function getWinningDisplay(fakeProbability) {
-  const fp = Number(fakeProbability) ?? 0
+  const fp = Number(fakeProbability) || 0
   const clamped = Math.max(0, Math.min(100, fp))
   if (clamped >= 50) {
     return { status: 'FAKE', displayScore: Math.round(clamped) }

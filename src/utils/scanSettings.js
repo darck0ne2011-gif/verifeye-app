@@ -1,93 +1,89 @@
 const STORAGE_KEY = 'verifeye_scan_models'
 
-// Backend model IDs (used by API)
-const PHOTO_IDS = ['deepfake', 'genai', 'type', 'quality']
-
-const DEFAULTS = {
-  photo: ['genai'],
+/** Backend model ids, per media category. Order is the display order. */
+export const MODEL_OPTIONS = {
+  image: ['genai', 'deepfake', 'type', 'quality'],
+  video: ['genai', 'deepfake', 'ai_speech'],
+  audio: ['ai_speech'],
 }
 
-/** Map UI model IDs to backend API model IDs */
-const TO_API_MAP = {
-  // Photo: direct 1:1
+export const DEFAULT_MODELS = {
+  image: ['genai'],
+  video: ['genai', 'deepfake'],
+  audio: ['ai_speech'],
+}
+
+export const MODEL_IDS = {
   deepfake: 'deepfake',
   genai: 'genai',
   type: 'type',
   quality: 'quality',
+  ai_speech: 'ai_speech',
+}
+
+const CATEGORIES = Object.keys(MODEL_OPTIONS)
+
+/** Legacy key names from older versions of the app. */
+const LEGACY_KEYS = { photo: 'image' }
+
+function normalizeCategory(category) {
+  const c = LEGACY_KEYS[category] ?? category
+  return CATEGORIES.includes(c) ? c : 'image'
+}
+
+function sanitize(category, models) {
+  const allowed = MODEL_OPTIONS[category]
+  const valid = Array.isArray(models) ? models.filter((m) => allowed.includes(m)) : []
+  return valid.length ? [...new Set(valid)] : [...DEFAULT_MODELS[category]]
 }
 
 function loadRaw() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
+    if (!raw) return {}
     const parsed = JSON.parse(raw)
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      // Photo-only mode: ignore any legacy video/audio keys
-      return { photo: Array.isArray(parsed.photo) ? parsed.photo : DEFAULTS.photo }
+    if (Array.isArray(parsed)) return { image: parsed } // very old flat format
+    if (parsed && typeof parsed === 'object') {
+      const out = {}
+      for (const [k, v] of Object.entries(parsed)) out[LEGACY_KEYS[k] ?? k] = v
+      return out
     }
-    // Legacy flat array → migrate to photo
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      const migrated = { photo: parsed }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated))
-      return migrated
-    }
-    return null
   } catch {
-    return null
+    // ignore corrupt storage
   }
+  return {}
 }
 
 function saveRaw(data) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-  } catch (_) {}
+  } catch {
+    // storage may be unavailable (private mode); settings just won't persist
+  }
 }
 
-/** Get models for a category. Ensures at least one is selected. */
-function getForCategory(category) {
+/** Active backend model ids for a media category. Always returns at least one. */
+export function getActiveModels(mediaCategory = 'image') {
+  const category = normalizeCategory(mediaCategory)
+  return sanitize(category, loadRaw()[category])
+}
+
+export const getActiveModelsForCategory = getActiveModels
+
+export function setActiveModelsForCategory(mediaCategory, models) {
+  const category = normalizeCategory(mediaCategory)
   const data = loadRaw()
-  const key = category === 'image' ? 'photo' : category
-  if (key !== 'photo') return [...DEFAULTS.photo]
-  const arr = data?.[key]
-  if (Array.isArray(arr) && arr.length > 0) return [...arr]
-  return [...(DEFAULTS[key] ?? DEFAULTS.photo)]
-}
-
-/** Get active models for a media category. Returns backend-compatible IDs. */
-export function getActiveModels(mediaCategory = 'photo') {
-  const cat = mediaCategory === 'image' ? 'photo' : mediaCategory
-  const ids = getForCategory(cat === 'photo' ? 'photo' : 'photo')
-  const apiIds = ids.map((id) => TO_API_MAP[id]).filter(Boolean)
-  const deduped = [...new Set(apiIds)]
-  return deduped.length > 0 ? deduped : ['genai']
-}
-
-/** Get raw UI model IDs for a category (for settings UI) */
-export function getActiveModelsForCategory(category) {
-  return getForCategory(category === 'photo' ? 'photo' : 'photo')
-}
-
-/** Set active models for a category. Ensures at least one remains. */
-export function setActiveModelsForCategory(category, models, ensureOne = true) {
-  const data = loadRaw() || { photo: DEFAULTS.photo }
-  const valid = Array.isArray(models) ? models.filter(Boolean) : []
-  const arr = ensureOne && valid.length === 0
-    ? ['genai']
-    : valid.length > 0 ? valid : data.photo ?? DEFAULTS.photo
-  data.photo = arr
+  data[category] = sanitize(category, models)
   saveRaw(data)
+  return data[category]
 }
 
-/** Legacy: set photo models (backward compat) */
-export function setActiveModels(models) {
-  setActiveModelsForCategory('photo', models)
+/** Credits a scan costs for a given file (1 per model). */
+export function getCreditsForCategory(mediaCategory) {
+  return getActiveModels(mediaCategory).length
 }
 
-/** Max credits needed across all categories (for display before file selection) */
+/** Highest credit cost across categories (shown before a file is chosen). */
 export function getMaxCreditsPerScan() {
-  const p = getForCategory('photo').map((id) => TO_API_MAP[id]).filter(Boolean)
-  return Math.max(
-    [...new Set(p)].length,
-    1
-  )
+  return Math.max(...CATEGORIES.map((c) => getActiveModels(c).length), 1)
 }

@@ -7,16 +7,22 @@ const DARK_GRAY = '#374151'
 const LIGHT_GRAY = '#6b7280'
 const VERDICT_REAL = '#047857'
 const VERDICT_FAKE = '#b91c1c'
+const VERDICT_UNCLEAR = '#b45309'
 
 /** Helvetica lacks Romanian diacritics (ș, ă, ț, etc.). Convert to ASCII for clean PDF rendering. */
 function toPdfSafe(str) {
   if (typeof str !== 'string') return str
   return str
-    .replace(/ș/g, 's').replace(/Ș/g, 'S')
-    .replace(/ț/g, 't').replace(/Ț/g, 'T')
-    .replace(/ă/g, 'a').replace(/Ă/g, 'A')
-    .replace(/â/g, 'a').replace(/Â/g, 'A')
-    .replace(/î/g, 'i').replace(/Î/g, 'I')
+    .replace(/ș/g, 's')
+    .replace(/Ș/g, 'S')
+    .replace(/ț/g, 't')
+    .replace(/Ț/g, 'T')
+    .replace(/ă/g, 'a')
+    .replace(/Ă/g, 'A')
+    .replace(/â/g, 'a')
+    .replace(/Â/g, 'A')
+    .replace(/î/g, 'i')
+    .replace(/Î/g, 'I')
 }
 
 /** Extract valid 64-char SHA256 hex from fileHash (handles corrupt prefixes). */
@@ -25,7 +31,6 @@ function sanitizeFileHash(h) {
   const hex = h.match(/[a-fA-F0-9]{64}/)?.[0]
   return hex || (/^[a-fA-F0-9]{64}$/.test(h.trim()) ? h.trim() : null)
 }
-
 
 /**
  * Convert raw model score to display percentage (matches UI: RealTimeAnalysis uses raw * 100).
@@ -56,12 +61,22 @@ function getModelStatus(modelId, scannedModels, modelScores, aiSignatures, t) {
     const parts = []
     const mex = t?.('pdf.missing_exif') || 'Missing EXIF'
     if (aiSignatures.missingExif) parts.push(mex)
-    if (aiSignatures.suspiciousResolution) parts.push(`${t?.('pdf.meta_resolution') || 'Resolution'}: ${aiSignatures.suspiciousResolution}`)
+    if (aiSignatures.suspiciousResolution)
+      parts.push(`${t?.('pdf.meta_resolution') || 'Resolution'}: ${aiSignatures.suspiciousResolution}`)
     if (aiSignatures.softwareTags?.length) parts.push(`AI tags: ${aiSignatures.softwareTags.join(', ')}`)
-    return parts.length ? parts.join('; ') : (t?.('pdf.verified') || 'Verified')
+    return parts.length ? parts.join('; ') : t?.('pdf.verified') || 'Verified'
   }
 
-  const key = modelId === 'genai' ? 'ai_generated' : modelId === 'deepfake' ? 'deepfake' : modelId === 'quality' ? 'quality' : null
+  const key =
+    modelId === 'genai'
+      ? 'ai_generated'
+      : modelId === 'deepfake'
+        ? 'deepfake'
+        : modelId === 'quality'
+          ? 'quality'
+          : modelId === 'ai_speech'
+            ? 'ai_speech'
+            : null
   if (!key || !modelScores) return na
   const score = toDisplayScore(modelScores[key])
   return score ?? na
@@ -84,16 +99,12 @@ export function getDetectionSignals(aiSignatures, t) {
   if (aiSignatures.suspiciousResolution) {
     const res = aiSignatures.suspiciousResolution
     signals.push(
-      t?.('verdict.ai_suspicious_resolution', { res }) ||
-        `Suspicious resolution ${res} (typical of AI tools)`
+      t?.('verdict.ai_suspicious_resolution', { res }) || `Suspicious resolution ${res} (typical of AI tools)`
     )
   }
   if (aiSignatures.softwareTags?.length) {
     const tags = aiSignatures.softwareTags.join(', ')
-    signals.push(
-      t?.('verdict.ai_software_detected', { tags }) ||
-        `AI software tags detected: ${tags}`
-    )
+    signals.push(t?.('verdict.ai_software_detected', { tags }) || `AI software tags detected: ${tags}`)
   }
   return signals
 }
@@ -124,12 +135,11 @@ export function generateScanPdf(opts) {
     metadata = null,
     expertSummary = null,
     mediaCategory = null,
+    verdict = null,
+    confidence = null,
     t,
     language,
   } = opts
-
-  const mediaType = mediaCategory ?? metadata?.mediaCategory ?? 'image'
-  const isVideo = false
 
   const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
   const pageWidth = doc.internal.pageSize.getWidth()
@@ -155,7 +165,13 @@ export function generateScanPdf(opts) {
   y += 25
 
   // Scan details – use language for date format (e.g. 'ro', 'en')
-  const locale = language ? (language.startsWith('ro') ? 'ro-RO' : language.startsWith('en') ? 'en-US' : language) : undefined
+  const locale = language
+    ? language.startsWith('ro')
+      ? 'ro-RO'
+      : language.startsWith('en')
+        ? 'en-US'
+        : language
+    : undefined
   const dateFormatted = new Date().toLocaleString(locale, {
     dateStyle: 'long',
     timeStyle: 'medium',
@@ -195,13 +211,29 @@ export function generateScanPdf(opts) {
   doc.text(toPdfSafe(t?.('pdf.verdict') || 'Verdict'), margin, y)
   y += 22
 
-  const resultColor = status === 'REAL' ? VERDICT_REAL : VERDICT_FAKE
-  doc.setFontSize(22)
+  const band = verdict || (status === 'REAL' ? 'likely_real' : 'likely_ai')
+  const resultColor = band === 'likely_real' ? VERDICT_REAL : band === 'likely_ai' ? VERDICT_FAKE : VERDICT_UNCLEAR
+  const bandLabel = toPdfSafe(
+    t?.(`pdf.verdict_${band}`) ||
+      (band === 'likely_real' ? 'LIKELY AUTHENTIC' : band === 'likely_ai' ? 'LIKELY AI-GENERATED' : 'INCONCLUSIVE')
+  )
+  doc.setFontSize(20)
   doc.setFont('helvetica', 'bold')
   doc.setTextColor(resultColor)
-  doc.text(status, margin, y)
-  doc.text(`${score}%`, margin + 70, y)
-  y += 40
+  doc.text(bandLabel, margin, y)
+  y += 22
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(DARK_GRAY)
+  const aiPct = status === 'FAKE' ? score : 100 - score
+  const verdictLine = [
+    `${aiPct}% AI`,
+    confidence != null ? `${toPdfSafe(t?.('pdf.confidence') || 'Confidence')}: ${confidence}%` : null,
+  ]
+    .filter(Boolean)
+    .join('   |   ')
+  doc.text(verdictLine, margin, y)
+  y += 30
 
   // AI Expert Interpretation (DeepSeek) - directly under Verdict line
   const summary = expertSummary || metadata?.expertSummary
@@ -250,12 +282,26 @@ export function generateScanPdf(opts) {
   y += 20
 
   const tval = (k, d) => toPdfSafe(t?.(k) || d)
-  const modelRows = [
-    [tval('pdf.analysis_deepfake', 'Deepfake Detection'), getModelStatus('deepfake', scannedModels, modelScores, aiSignatures, t)],
-    [tval('pdf.analysis_genai', 'AI Pixel Analysis'), getModelStatus('genai', scannedModels, modelScores, aiSignatures, t)],
-    [tval('pdf.analysis_metadata', 'Metadata Check'), getModelStatus('type', scannedModels, modelScores, aiSignatures, t)],
-    [tval('pdf.analysis_quality', 'Image Quality'), getModelStatus('quality', scannedModels, modelScores, aiSignatures, t)],
-  ]
+  const category = mediaCategory || metadata?.mediaCategory || 'image'
+  const rowDefs =
+    category === 'video'
+      ? [
+          ['genai', 'pdf.analysis_video_genai', 'AI frame analysis'],
+          ['deepfake', 'pdf.analysis_video_deepfake', 'Face swap detection'],
+          ['ai_speech', 'pdf.analysis_ai_speech', 'AI voice detection'],
+        ]
+      : category === 'audio'
+        ? [['ai_speech', 'pdf.analysis_ai_speech', 'AI voice detection']]
+        : [
+            ['deepfake', 'pdf.analysis_deepfake', 'Deepfake Detection'],
+            ['genai', 'pdf.analysis_genai', 'AI Pixel Analysis'],
+            ['type', 'pdf.analysis_metadata', 'Metadata Check'],
+            ['quality', 'pdf.analysis_quality', 'Image Quality'],
+          ]
+  const modelRows = rowDefs.map(([id, key, label]) => [
+    tval(key, label),
+    getModelStatus(id, scannedModels, modelScores, aiSignatures, t),
+  ])
   autoTable(doc, {
     startY: y,
     head: [[toPdfSafe(t?.('pdf.analysis_type') || 'Analysis Type'), toPdfSafe(t?.('pdf.status') || 'Status')]],
@@ -291,6 +337,16 @@ export function generateScanPdf(opts) {
     }
     if (metadata?.resolution) {
       metaRows.push([mt('pdf.meta_resolution', 'Resolution'), metadata.resolution])
+    }
+    if (metadata?.durationSec != null) {
+      const sec = Math.round(metadata.durationSec)
+      metaRows.push([
+        mt('pdf.meta_duration', 'Duration'),
+        `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`,
+      ])
+    }
+    if (metadata?.framesAnalyzed != null) {
+      metaRows.push([mt('pdf.meta_frames', 'Frames analyzed'), String(metadata.framesAnalyzed)])
     }
     if (metadata?.createdAt) {
       metaRows.push([mt('pdf.meta_created', 'Created'), String(metadata.createdAt)])

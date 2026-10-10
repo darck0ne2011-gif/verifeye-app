@@ -1,0 +1,8 @@
+dist
+node_modules
+backend/node_modules
+backend/data
+backend/db/migrations
+public/locales
+package-lock.json
+backend/package-lock.json

@@ -14,7 +14,7 @@
     "password": "Password",
     "email_placeholder": "you@example.com",
     "password_placeholder_login": "••••••••",
-    "password_placeholder_register": "At least 6 characters",
+    "password_placeholder_register": "At least 8 characters",
     "show_password": "Show password",
     "hide_password": "Hide password",
     "please_wait": "Please wait...",
@@ -69,8 +69,8 @@
   },
   "scan_settings": {
     "title": "Scan Settings",
-    "subtitle": "Choose which analysis models to run. Each model uses 1 credit per scan.",
-    "credits_note": "Settings are saved per media type. Photo, video, and audio toggles are independent.",
+    "subtitle": "Choose which analysis models run for each media type. Each model uses 1 credit per scan.",
+    "credits_note": "Settings are saved per media type. Photo, video and audio choices are independent.",
     "tab_photo": "Photo",
     "tab_video": "Video",
     "tab_audio": "Audio",
@@ -82,7 +82,7 @@
     "model_metadata": "Metadata Check",
     "model_quality": "Image Quality",
     "model_temporal_ai": "Temporal AI Consistency",
-    "model_video_deepfake": "Video Deepfake Detection",
+    "model_video_deepfake": "Face swap detection (frames)",
     "model_frame_integrity": "Frame Integrity Analysis",
     "model_video_voice_clone": "Voice Clone Detection",
     "model_video_lip_sync": "Lip-Sync Integrity",
@@ -105,7 +105,11 @@
     "model_fake_news": "Fake News / Credibility Detection",
     "model_voice_cloning": "Voice Cloning Detection",
     "model_synthetic_speech": "Synthetic Speech Analysis",
-    "model_background_noise": "Background Noise Integrity"
+    "model_background_noise": "Background Noise Integrity",
+    "model_video_genai": "AI frame analysis",
+    "model_video_speech": "AI voice detection (audio track)",
+    "model_audio_speech": "AI voice detection",
+    "hint_ai_speech_beta": "Beta: must be enabled on the Sightengine account. If unavailable, the credit is refunded."
   },
   "header": {
     "menu": "Menu",
@@ -121,13 +125,30 @@
     "model_deepfake": "Deepfake Detection",
     "model_genai": "AI Pixel Analysis",
     "model_metadata": "Metadata Check",
-    "model_quality": "Image Quality"
+    "model_quality": "Image Quality",
+    "stage": {
+      "uploading": "Uploading file…",
+      "queued": "Waiting in queue…",
+      "starting": "Starting…",
+      "hashing": "Checking file fingerprint…",
+      "analyzing_image": "Analyzing image…",
+      "probing": "Reading media information…",
+      "extracting_frames": "Extracting frames…",
+      "analyzing_frames": "Analyzing frames…",
+      "converting_audio": "Preparing audio…",
+      "analyzing_audio": "Analyzing audio…",
+      "scoring": "Computing verdict…",
+      "summarizing": "Writing summary…",
+      "processing": "Processing…",
+      "done": "Done"
+    }
   },
   "dropzone": {
     "file_ready": "File Ready",
     "change": "Change",
-    "drag_drop": "Drag & Drop Video, Audio or Photo",
-    "or_click": "or click to browse (YouTube, X, TikTok, Instagram)"
+    "drag_drop": "Drag & drop a photo, video or audio file",
+    "or_click": "or click to browse",
+    "credits_hint": "This scan will use {{count}} credit(s)"
   },
   "overlay": {
     "out_of_credits": "Out of Credits",
@@ -143,8 +164,8 @@
     "file_size": "File Size",
     "created_at": "Creation Date",
     "ai_signatures": "AI Detection Signals",
-    "ai_missing_exif": "Missing EXIF metadata (common in AI-generated images)",
-    "ai_suspicious_resolution": "Suspicious resolution {{res}} (typical of AI tools)",
+    "ai_missing_exif": "No camera metadata (EXIF) — common for screenshots, messaging apps and AI images",
+    "ai_suspicious_resolution": "Resolution {{res}} matches common AI generator output sizes",
     "ai_software_detected": "AI software detected: {{tags}}",
     "credibility_meter": "Credibility Meter",
     "credibility_error_unavailable": "Credibility analysis temporarily unavailable.",
@@ -157,7 +178,36 @@
     "ai_expert_interpretation": "AI Expert Interpretation",
     "analysis_method": "Analysis Method",
     "analysis_frame_based": "Frame-Based (Fast)",
-    "analysis_native_video": "Native Video (Sequential)"
+    "analysis_native_video": "Native Video (Sequential)",
+    "result_title": "Verification result",
+    "scan_failed": "The scan could not be completed",
+    "band_likely_ai": "Likely AI-generated or manipulated",
+    "band_inconclusive": "Inconclusive",
+    "band_likely_real": "Likely authentic",
+    "band_short_likely_ai": "LIKELY AI",
+    "band_short_inconclusive": "UNCLEAR",
+    "band_short_likely_real": "LIKELY REAL",
+    "band_likely_ai_explainer": "The detectors found strong signs of AI generation or manipulation. Treat this content with caution and look for the original source.",
+    "band_inconclusive_explainer": "The signals are mixed or weak. This does not mean the content is authentic or fake; try the original file if you scanned a screenshot or a re-shared copy.",
+    "band_likely_real_explainer": "No meaningful signs of AI generation were found. Detectors can miss new generators, so this is not a guarantee.",
+    "ai_probability": "{{value}}% AI probability",
+    "confidence": "{{value}}% confidence",
+    "confidence_short": "{{value}}% conf.",
+    "factor_screenshot": "Screenshot, not the original file",
+    "factor_few_frames": "Few frames sampled",
+    "factor_frames_disagree": "Frames disagree with each other",
+    "factor_beta_model": "Beta model",
+    "warning_ai_speech_not_enabled": "AI voice detection is not enabled on this account yet; the audio track was not analyzed (credit refunded).",
+    "warning_no_audio_track": "The video has no audio track; voice detection was skipped (credit refunded).",
+    "timeline_title": "Frame timeline",
+    "timeline_hint": "AI probability for each of the {{count}} sampled frames",
+    "resolution": "Resolution",
+    "duration": "Duration",
+    "frames_analyzed": "Frames analyzed",
+    "audio_track": "Audio track",
+    "analyzed_seconds": "Audio analyzed",
+    "source": "Source",
+    "source_screenshot": "Screenshot"
   },
   "deepfake": {
     "why_fake": "Why is this a fake?",
@@ -195,7 +245,7 @@
     "new_password": "New Password",
     "confirm_password": "Confirm New Password",
     "passwords_no_match": "New passwords do not match",
-    "password_min_length": "New password must be at least 6 characters",
+    "password_min_length": "New password must be at least 8 characters",
     "password_updated": "Password updated successfully.",
     "updating": "Updating...",
     "change_password": "Change Password",
@@ -291,7 +341,7 @@
     "analysis_metadata": "Metadata Check",
     "analysis_quality": "Image Quality",
     "analysis_temporal_ai": "Temporal AI Consistency",
-    "analysis_video_deepfake": "Video Deepfake Detection",
+    "analysis_video_deepfake": "Face swap detection",
     "analysis_frame_integrity": "Frame Integrity",
     "analysis_voice_clone": "Voice Clone Detection",
     "analysis_lip_sync": "Lip-Sync Integrity",
@@ -310,12 +360,67 @@
     "missing_exif": "Missing EXIF",
     "verified": "Verified",
     "analysis_method_frame": "Frame-Based (Fast)",
-    "analysis_method_native": "Native Video (Sequential)"
+    "analysis_method_native": "Native Video (Sequential)",
+    "confidence": "Confidence",
+    "analysis_ai_speech": "AI voice detection",
+    "analysis_video_genai": "AI frame analysis",
+    "meta_frames": "Frames analyzed",
+    "verdict_likely_ai": "LIKELY AI-GENERATED",
+    "verdict_inconclusive": "INCONCLUSIVE",
+    "verdict_likely_real": "LIKELY AUTHENTIC"
   },
-  "alerts": {
-    "loading": "Loading alerts...",
-    "fallback_1": "Video with Marcel Ciolacu marked as FAKE 1,200 times today.",
-    "fallback_2": "News about car tax VERIFIED. Source: Guvernul.ro",
-    "fallback_3": "Viral clip with Klaus Iohannis marked as FAKE 890 times."
+  "common": {
+    "yes": "Yes",
+    "no": "No"
+  },
+  "analysis": {
+    "title": "Analysis",
+    "no_result": "No result",
+    "speech_not_enabled": "AI voice detection is not enabled on this account yet (credit refunded)",
+    "no_audio_track": "The file has no audio track (credit refunded)",
+    "image_deepfake": {
+      "title": "Deepfake detection",
+      "pass": "No face swap detected",
+      "fail": "Face swap or AI-modified face detected"
+    },
+    "image_genai": {
+      "title": "AI pixel analysis",
+      "pass": "No AI generation detected",
+      "fail": "AI generation detected"
+    },
+    "image_type": {
+      "title": "Metadata check",
+      "pass": "Nothing unusual in file metadata",
+      "fail": "Metadata anomalies"
+    },
+    "image_quality": {
+      "title": "Image quality",
+      "pass": "Quality score",
+      "fail": "Low quality score"
+    },
+    "video_genai": {
+      "title": "AI frame analysis",
+      "pass": "No AI generation detected in sampled frames",
+      "fail": "AI-generated frames detected"
+    },
+    "video_deepfake": {
+      "title": "Face swap detection",
+      "pass": "No face swap detected in sampled frames",
+      "fail": "Face swap detected"
+    },
+    "video_speech": {
+      "title": "AI voice detection",
+      "pass": "No synthetic speech detected",
+      "fail": "Synthetic speech detected"
+    },
+    "audio_speech": {
+      "title": "AI voice detection",
+      "pass": "No synthetic speech detected",
+      "fail": "Synthetic speech detected"
+    }
+  },
+  "fab": {
+    "on_screen_title": "On-screen scanning",
+    "on_screen_message": "Checking what is on screen in other apps needs the VerifEye Android app. Here, use Quick Upload or share the file to VerifEye."
   }
 }

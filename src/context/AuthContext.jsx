@@ -49,7 +49,8 @@ export function AuthProvider({ children }) {
   }, [setToken])
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
+    // OAuth callbacks deliver the token in the URL fragment (never sent to servers).
+    const params = new URLSearchParams(window.location.hash.replace(/^#/, ''))
     const authToken = params.get('auth_token')
     const authError = params.get('auth_error')
     if (authToken) {
@@ -59,7 +60,7 @@ export function AuthProvider({ children }) {
       return
     }
     if (authError) {
-      setOauthError(decodeURIComponent(authError))
+      setOauthError(authError)
       setToken(null)
       window.history.replaceState({}, '', window.location.pathname)
     }
@@ -80,33 +81,39 @@ export function AuthProvider({ children }) {
     return () => document.removeEventListener('visibilitychange', onVisibilityChange)
   }, [token, fetchUser])
 
-  const login = useCallback(async (email, password) => {
-    const res = await fetch(`${API_BASE}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-    const data = await res.json()
-    if (!data.success) throw new Error(data.error || 'Login failed')
-    setToken(data.token)
-    setUser(data.user)
-    setLoading(false)
-    return data.user
-  }, [setToken])
+  const login = useCallback(
+    async (email, password) => {
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || 'Login failed')
+      setToken(data.token)
+      setUser(data.user)
+      setLoading(false)
+      return data.user
+    },
+    [setToken]
+  )
 
-  const register = useCallback(async (email, password) => {
-    const res = await fetch(`${API_BASE}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-    const data = await res.json()
-    if (!data.success) throw new Error(data.error || 'Registration failed')
-    setToken(data.token)
-    setUser(data.user)
-    setLoading(false)
-    return data.user
-  }, [setToken])
+  const register = useCallback(
+    async (email, password) => {
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await res.json()
+      if (!data.success) throw new Error(data.error || 'Registration failed')
+      setToken(data.token)
+      setUser(data.user)
+      setLoading(false)
+      return data.user
+    },
+    [setToken]
+  )
 
   const logout = useCallback(() => {
     localStorage.removeItem(REDIRECT_PATH_KEY)
