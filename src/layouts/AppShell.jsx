@@ -24,7 +24,7 @@ export default function AppShell() {
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
-      <header className="sticky top-0 z-30 bg-bg/80 backdrop-blur border-b border-line">
+      <header className="safe-top sticky top-0 z-30 bg-bg/80 backdrop-blur border-b border-line">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-2 min-w-0" aria-label={t('app.brand')}>
             <Logo className="w-7 h-7" />
