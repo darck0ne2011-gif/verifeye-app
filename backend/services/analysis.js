@@ -59,6 +59,38 @@ function hasCameraMetadata(exif) {
   return !!(tags.Make || tags.Model || ((tags.DateTimeOriginal || tags.DateTime) && tags.ExifVersion))
 }
 
+/**
+ * Sorted list of probable generators from Sightengine's per-generator scores.
+ * @returns {{ id: string, score: number }[]}
+ */
+export function generatorsFromShape(shape) {
+  const raw = shape?.type?.ai_generators
+  if (!raw || typeof raw !== 'object') return []
+  return Object.entries(raw)
+    .map(([id, v]) => ({ id, score: Number(v) }))
+    .filter((g) => Number.isFinite(g.score))
+    .sort((a, b) => b.score - a.score)
+}
+
+/** photo vs illustration probabilities from the `type` model, when it ran. */
+export function imageTypeFromShape(shape) {
+  const t = shape?.type
+  if (!t || (t.photo == null && t.illustration == null)) return null
+  return {
+    photo: t.photo != null ? Number(t.photo) : null,
+    illustration: t.illustration != null ? Number(t.illustration) : null,
+  }
+}
+
+function cameraFromExif(exif) {
+  const tags = exif?.tags
+  if (!tags) return null
+  const make = tags.Make ? String(tags.Make).trim() : ''
+  const model = tags.Model ? String(tags.Model).trim() : ''
+  if (!make && !model) return null
+  return model.toLowerCase().startsWith(make.toLowerCase()) ? model : `${make} ${model}`.trim()
+}
+
 function detectSoftwareTags(exif) {
   const software = String(exif?.tags?.Software || '').toLowerCase()
   if (!software) return []
@@ -77,7 +109,10 @@ export function shapeFromResults(results, models) {
   for (const m of models) {
     const r = results?.[m]
     if (!r) continue
-    if (m === 'genai' && r.ai_generated != null) shape.type.ai_generated = r.ai_generated
+    if (m === 'genai' && r.ai_generated != null) {
+      shape.type.ai_generated = r.ai_generated
+      if (r.ai_generators) shape.type.ai_generators = r.ai_generators
+    }
     if (m === 'deepfake' && r.deepfake != null) shape.type.deepfake = r.deepfake
     if (m === 'type') Object.assign(shape.type, r)
     if (m === 'quality' && r.score != null) shape.quality = { score: r.score }
@@ -161,6 +196,9 @@ export async function analyzeImage(buffer, originalName, models = ['genai'], cac
     size: buffer.length,
     sizeFormatted: formatFileSize(buffer.length),
     createdAt: exif?.tags?.DateTimeOriginal || exif?.tags?.DateTime || null,
+    hasExif: !!exif?.tags && Object.keys(exif.tags).length > 0,
+    camera: cameraFromExif(exif),
+    software: exif?.tags?.Software ? String(exif.tags.Software).trim() : null,
     ...(resolution && { resolution }),
   }
 
@@ -174,6 +212,8 @@ export async function analyzeImage(buffer, originalName, models = ['genai'], cac
       ai_generated: shape.type.ai_generated ?? null,
       deepfake: shape.type.deepfake ?? null,
       quality: shape.quality?.score ?? null,
+      generators: generatorsFromShape(shape),
+      imageType: imageTypeFromShape(shape),
     },
     providerResponse,
     newModelResults,

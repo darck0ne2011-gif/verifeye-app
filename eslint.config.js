@@ -6,7 +6,14 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
   {
-    ignores: ['dist/**', 'node_modules/**', 'backend/node_modules/**', 'backend/data/**', 'backend/db/migrations/**'],
+    ignores: [
+      'dist/**',
+      'android/**',
+      'node_modules/**',
+      'backend/node_modules/**',
+      'backend/data/**',
+      'backend/db/migrations/**',
+    ],
   },
   js.configs.recommended,
   // Frontend (browser, React)

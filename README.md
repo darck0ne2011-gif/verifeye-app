@@ -64,6 +64,29 @@ Without `DATABASE_URL` the backend uses an embedded Postgres (PGlite) stored in
 | `npm run db:generate`    | Generate a migration after editing schema |
 | `npm run db:import-json` | Import a legacy `verifeye-data.json`      |
 
+## Android app
+
+`android/` is a Capacitor project that wraps the web app (it loads the
+production site, so web updates reach the app without a release) and adds
+what a browser cannot do:
+
+- **Share sheet**: "Share → Check with VerifEye" from the gallery, WhatsApp,
+  browsers… The file opens on the Home screen ready to analyze.
+- **Bubble over other apps**: Account → _Bubble over other apps_ → allow the
+  overlay, start the bubble, accept the screen-capture prompt. Tap the bubble on
+  any app to capture the screen and get a verdict (sent as `source=screenshot`,
+  so confidence is reduced). Long-press the bubble or use the notification to
+  stop it.
+
+Native code: `android/app/src/main/java/app/verifeye/` (`VerifEyeNativePlugin`,
+`BubbleService`, `MainActivity`); web side: `src/native/verifeye.js`.
+
+Build a debug APK: the **Android APK** GitHub Actions workflow runs on every
+push to `main` that touches the Android project (or manually from the Actions
+tab) and uploads `verifeye-debug-apk`. Locally: `npm run android:sync` then
+`cd android && ./gradlew assembleDebug` (needs Android SDK 36 + JDK 21).
+Launcher icons and the splash come from `npm run icons`.
+
 ## Deployment
 
 - **Frontend:** Vercel. Set `VITE_API_URL` to the API URL.

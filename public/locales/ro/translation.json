@@ -161,7 +161,18 @@
     "analyzed_seconds": "Audio analizat",
     "source": "Sursă",
     "source_screenshot": "Screenshot",
-    "ai_probability_label": "Probabilitate AI"
+    "ai_probability_label": "Probabilitate AI",
+    "generators_title": "Generator probabil",
+    "generators_hint": "Asemănare cu familii cunoscute de generatoare — o estimare statistică, nu o dovadă. Modelele noi sau ajustate apar adesea ca „Altele”.",
+    "generators_hint_weak": "Probabilitatea AI e mică, deci aceste scoruri de asemănare contează puțin.",
+    "image_type": "Tip imagine",
+    "image_type_photo": "Fotografie ({{value}}%)",
+    "image_type_illustration": "Ilustrație / randare ({{value}}%)",
+    "camera": "Cameră",
+    "software": "Software",
+    "exif": "Metadata EXIF",
+    "exif_none": "Lipsă (ștearsă sau inexistentă)",
+    "scanned_at": "Scanat la"
   },
   "deepfake": {
     "why_fake": "De ce este fals?",
@@ -288,7 +299,7 @@
     "verdict": "Verdict",
     "credibility_meter": "Indicator Credibilitate (Detecție Fake News)",
     "credibility_score": "Scor",
-    "ai_expert": "Interpretare expert AI (DeepSeek Analyst)",
+    "ai_expert": "Rezumatul analistului",
     "detection_signals": "Semnal detectat",
     "signal_column": "Semnal",
     "analysis_breakdown": "Detaliu analiză",
@@ -328,7 +339,25 @@
     "meta_frames": "Cadre analizate",
     "verdict_likely_ai": "PROBABIL GENERAT AI",
     "verdict_inconclusive": "NECONCLUDENT",
-    "verdict_likely_real": "PROBABIL AUTENTIC"
+    "verdict_likely_real": "PROBABIL AUTENTIC",
+    "source_screenshot": "Analizat dintr-o captură de ecran, nu din fișierul original (încredere redusă)",
+    "models_run": "Modele rulate",
+    "generators": "Generator probabil (atribuire statistică)",
+    "generators_hint": "Asemănare cu familii cunoscute de generatoare; o estimare, nu o dovadă. Modelele noi sau ajustate apar adesea ca Altele.",
+    "generator": "Familie de generatoare",
+    "score": "Scor",
+    "timeline": "Cronologia cadrelor",
+    "timeline_position": "Poziție",
+    "meta_image_type": "Tip imagine",
+    "photo": "Fotografie",
+    "illustration": "Ilustrație",
+    "meta_camera": "Cameră",
+    "meta_software": "Software",
+    "meta_audio": "Pistă audio",
+    "meta_exif": "EXIF",
+    "meta_exif_none": "Lipsă (ștearsă sau inexistentă)",
+    "disclaimer": "Benzi de verdict: probabil autentic (probabilitate AI <= 30%), neconcludent (31-69%), probabil generat AI (>= 70%). Detectoarele pot rata generatoare noi și pierd precizie pe fișiere comprimate sau redistribuite; tratați raportul ca o dovadă, nu ca o certitudine.",
+    "footer": "Acest raport are scop informativ."
   },
   "common": {
     "yes": "Da",
@@ -400,12 +429,26 @@
     "see_all": "Vezi tot",
     "category_image": "Poză",
     "category_video": "Video",
-    "category_audio": "Audio"
+    "category_audio": "Audio",
+    "captured_hint": "Captură de ecran din bulă — fișierul original dă un rezultat mai sigur."
   },
   "result": {
     "title": "Rezultatul verificării",
     "analyzing": "Se analizează…",
     "analyzing_hint": "Poți părăsi pagina; rezultatul se salvează în istoric.",
     "new_scan": "Scanare nouă"
+  },
+  "bubble": {
+    "title": "Bulă peste alte aplicații",
+    "description": "Afișează o bulă VerifEye plutitoare peste Facebook, WhatsApp sau orice aplicație. Apasă pe ea ca să capturezi ce e pe ecran și să verifici.",
+    "step_overlay": "Permite VerifEye să apară peste alte aplicații",
+    "step_capture": "Permite captura de ecran când Android te întreabă (la fiecare pornire a bulei)",
+    "step_use": "Deschide orice aplicație, apasă bula peste o poză sau un video și primești verdictul",
+    "grant_overlay": "Permite afișarea peste aplicații",
+    "start": "Pornește bula",
+    "stop": "Oprește bula",
+    "running_hint": "Bula e activă. Apas-o lung sau folosește notificarea ca să o oprești.",
+    "capture_denied": "Captura de ecran nu a fost permisă. Pornește bula din nou și acceptă.",
+    "error": "Bula nu a putut fi pornită."
   }
 }

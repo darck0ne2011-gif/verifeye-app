@@ -1,0 +1,13 @@
+{
+  "appId": "app.verifeye",
+  "appName": "VerifEye",
+  "webDir": "dist",
+  "server": {
+    "url": "https://verifeye-app.vercel.app",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0b1220"
+  }
+}

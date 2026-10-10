@@ -100,7 +100,12 @@ export function extractModelResults(response, models) {
   if (!response || !models?.length) return out
   if (response.type) {
     if (models.includes('genai') && response.type.ai_generated != null) {
-      out.genai = { ai_generated: response.type.ai_generated }
+      out.genai = {
+        ai_generated: response.type.ai_generated,
+        ...(response.type.ai_generators && typeof response.type.ai_generators === 'object'
+          ? { ai_generators: response.type.ai_generators }
+          : {}),
+      }
     }
     if (models.includes('deepfake') && response.type.deepfake != null) {
       out.deepfake = { deepfake: response.type.deepfake }

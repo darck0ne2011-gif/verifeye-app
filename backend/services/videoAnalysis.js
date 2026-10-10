@@ -68,6 +68,7 @@ export async function analyzeVideo(
         positionSec: frames[i].positionSec,
         ...(frameModels.includes('genai') && { ai_generated: num(res.type?.ai_generated) }),
         ...(frameModels.includes('deepfake') && { deepfake: num(res.type?.deepfake) }),
+        ...(res.type?.ai_generators && { ai_generators: res.type.ai_generators }),
       })
     }
     frameTimeline = perFrame
@@ -79,6 +80,7 @@ export async function analyzeVideo(
         max: scores.length ? Math.max(...scores) : null,
         mean: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : null,
         frames: perFrame.map((f) => ({ positionSec: f.positionSec, [key]: f[key] })),
+        ...(m === 'genai' && { ai_generators: meanGenerators(perFrame) }),
       }
     }
   }
@@ -148,6 +150,8 @@ export async function analyzeVideo(
       deepfake,
       ai_speech: aiSpeech,
       quality: null,
+      generators: generatorsFromRaw(merged.genai?.ai_generators),
+      imageType: null,
     },
     timeline: frameTimeline,
     warnings,
@@ -160,6 +164,30 @@ export async function analyzeVideo(
     mergedResults: merged,
     fileName,
   }
+}
+
+/** Mean per-generator score across the sampled frames. */
+function meanGenerators(perFrame) {
+  const sums = {}
+  let n = 0
+  for (const f of perFrame) {
+    if (!f.ai_generators) continue
+    n++
+    for (const [k, v] of Object.entries(f.ai_generators)) {
+      const x = Number(v)
+      if (Number.isFinite(x)) sums[k] = (sums[k] ?? 0) + x
+    }
+  }
+  if (!n) return null
+  return Object.fromEntries(Object.entries(sums).map(([k, v]) => [k, v / n]))
+}
+
+function generatorsFromRaw(raw) {
+  if (!raw || typeof raw !== 'object') return []
+  return Object.entries(raw)
+    .map(([id, v]) => ({ id, score: Number(v) }))
+    .filter((g) => Number.isFinite(g.score))
+    .sort((a, b) => b.score - a.score)
 }
 
 function num(v) {

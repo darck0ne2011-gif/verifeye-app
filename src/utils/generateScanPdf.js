@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { generatorLabel } from '../components/GeneratorsCard'
 
 const DARK_BLUE = '#1e3a5f'
 const ACCENT_BLUE = '#2563eb'
@@ -137,6 +138,10 @@ export function generateScanPdf(opts) {
     mediaCategory = null,
     verdict = null,
     confidence = null,
+    source = 'file',
+    scannedAt = null,
+    warnings = [],
+    timeline = null,
     t,
     language,
   } = opts
@@ -172,7 +177,7 @@ export function generateScanPdf(opts) {
         ? 'en-US'
         : language
     : undefined
-  const dateFormatted = new Date().toLocaleString(locale, {
+  const dateFormatted = new Date(scannedAt || Date.now()).toLocaleString(locale, {
     dateStyle: 'long',
     timeStyle: 'medium',
   })
@@ -204,6 +209,8 @@ export function generateScanPdf(opts) {
   doc.text(dateFormatted, margin + 90, y)
   y += 28
 
+  const tval = (k, d) => toPdfSafe(t?.(k) || d)
+
   // Verdict section
   doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
@@ -233,7 +240,24 @@ export function generateScanPdf(opts) {
     .filter(Boolean)
     .join('   |   ')
   doc.text(verdictLine, margin, y)
-  y += 30
+  y += 16
+  const notes = []
+  if (source === 'screenshot')
+    notes.push(tval('pdf.source_screenshot', 'Analyzed from a screenshot, not the original file (confidence reduced)'))
+  if (Array.isArray(scannedModels) && scannedModels.length) {
+    notes.push(`${tval('pdf.models_run', 'Models run')}: ${scannedModels.join(', ')}`)
+  }
+  for (const w of warnings || []) {
+    notes.push(toPdfSafe(t?.(`verdict.warning_${w}`) || w))
+  }
+  doc.setFontSize(9)
+  doc.setTextColor(LIGHT_GRAY)
+  for (const note of notes) {
+    const lines = doc.splitTextToSize(note, pageWidth - margin * 2)
+    doc.text(lines, margin, y)
+    y += lines.length * 12
+  }
+  y += 14
 
   // AI Expert Interpretation (DeepSeek) - directly under Verdict line
   const summary = expertSummary || metadata?.expertSummary
@@ -281,7 +305,6 @@ export function generateScanPdf(opts) {
   doc.text(toPdfSafe(t?.('pdf.analysis_breakdown') || 'Analysis Breakdown'), margin, y)
   y += 20
 
-  const tval = (k, d) => toPdfSafe(t?.(k) || d)
   const category = mediaCategory || metadata?.mediaCategory || 'image'
   const rowDefs =
     category === 'video'
@@ -318,6 +341,70 @@ export function generateScanPdf(opts) {
   })
   y = doc.lastAutoTable.finalY + 20
 
+  // Probable generator families (statistical attribution)
+  const generators = Array.isArray(modelScores?.generators)
+    ? modelScores.generators.filter((g) => g.score > 0.02).slice(0, 5)
+    : []
+  if (generators.length > 0) {
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(DARK_BLUE)
+    doc.text(tval('pdf.generators', 'Probable generator (statistical attribution)'), margin, y)
+    y += 14
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(LIGHT_GRAY)
+    const hint = doc.splitTextToSize(
+      tval('pdf.generators_hint', 'Resemblance to known generator families; a guess, not proof.'),
+      pageWidth - margin * 2
+    )
+    doc.text(hint, margin, y)
+    y += hint.length * 11 + 6
+    autoTable(doc, {
+      startY: y,
+      head: [[tval('pdf.generator', 'Generator family'), tval('pdf.score', 'Score')]],
+      body: generators.map((g) => [toPdfSafe(generatorLabel(g.id)), `${Math.round(g.score * 100)}%`]),
+      theme: 'striped',
+      headStyles: { fillColor: DARK_BLUE, textColor: '#fff', fontStyle: 'bold' },
+      bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
+      columnStyles: { 0: { cellWidth: pageWidth - margin * 2 - 80 }, 1: { cellWidth: 80 } },
+      margin: { left: margin },
+      tableWidth: pageWidth - margin * 2,
+    })
+    y = doc.lastAutoTable.finalY + 20
+  }
+
+  // Video frame timeline
+  if (Array.isArray(timeline) && timeline.length > 0) {
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(DARK_BLUE)
+    doc.text(tval('pdf.timeline', 'Frame timeline'), margin, y)
+    y += 20
+    const fmt = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec) % 60).padStart(2, '0')}`
+    autoTable(doc, {
+      startY: y,
+      head: [
+        [
+          tval('pdf.timeline_position', 'Position'),
+          tval('pdf.analysis_video_genai', 'AI frame analysis'),
+          tval('pdf.analysis_video_deepfake', 'Face swap detection'),
+        ],
+      ],
+      body: timeline.map((f) => [
+        fmt(f.positionSec ?? 0),
+        toDisplayScore(f.ai_generated) ?? '—',
+        toDisplayScore(f.deepfake) ?? '—',
+      ]),
+      theme: 'striped',
+      headStyles: { fillColor: DARK_BLUE, textColor: '#fff', fontStyle: 'bold' },
+      bodyStyles: { textColor: DARK_GRAY, fontSize: 9 },
+      margin: { left: margin },
+      tableWidth: pageWidth - margin * 2,
+    })
+    y = doc.lastAutoTable.finalY + 20
+  }
+
   // Metadata snippet (image only)
   const hasMetadata = metadata && (metadata.fileType || metadata.sizeFormatted || metadata.extension)
   if (hasMetadata) {
@@ -348,8 +435,30 @@ export function generateScanPdf(opts) {
     if (metadata?.framesAnalyzed != null) {
       metaRows.push([mt('pdf.meta_frames', 'Frames analyzed'), String(metadata.framesAnalyzed)])
     }
+    if (modelScores?.imageType?.photo != null) {
+      const photo = Math.round(modelScores.imageType.photo * 100)
+      metaRows.push([
+        mt('pdf.meta_image_type', 'Image type'),
+        `${mt('pdf.photo', 'Photo')} ${photo}% / ${mt('pdf.illustration', 'Illustration')} ${100 - photo}%`,
+      ])
+    }
+    if (metadata?.camera) {
+      metaRows.push([mt('pdf.meta_camera', 'Camera'), toPdfSafe(String(metadata.camera))])
+    }
+    if (metadata?.software) {
+      metaRows.push([mt('pdf.meta_software', 'Software'), toPdfSafe(String(metadata.software))])
+    }
+    if (metadata?.hasAudio != null) {
+      metaRows.push([
+        mt('pdf.meta_audio', 'Audio track'),
+        metadata.hasAudio ? mt('common.yes', 'Yes') : mt('common.no', 'No'),
+      ])
+    }
     if (metadata?.createdAt) {
       metaRows.push([mt('pdf.meta_created', 'Created'), String(metadata.createdAt)])
+    }
+    if (metadata?.hasExif === false) {
+      metaRows.push([mt('pdf.meta_exif', 'EXIF'), mt('pdf.meta_exif_none', 'None (stripped or never present)')])
     }
     if (metaRows.length > 0) {
       autoTable(doc, {
@@ -372,10 +481,18 @@ export function generateScanPdf(opts) {
   doc.setFontSize(8)
   doc.setTextColor(LIGHT_GRAY)
   doc.setFont('helvetica', 'normal')
+  const disclaimer = doc.splitTextToSize(
+    tval(
+      'pdf.disclaimer',
+      'Verdict bands: likely authentic (AI probability <= 30%), inconclusive (31-69%), likely AI-generated (>= 70%). Detectors can miss new generators and lose accuracy on compressed or re-shared files; treat this report as evidence, not proof.'
+    ),
+    pageWidth - margin * 2
+  )
+  doc.text(disclaimer, margin, doc.internal.pageSize.getHeight() - 30 - disclaimer.length * 10)
   doc.text(
-    'Generated by VerifEye — Truth Layer. This report is for informational purposes only.',
+    `VerifEye v${typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : 'dev'} - ${tval('pdf.footer', 'This report is for informational purposes only.')}`,
     margin,
-    doc.internal.pageSize.getHeight() - 30
+    doc.internal.pageSize.getHeight() - 20
   )
 
   return doc
