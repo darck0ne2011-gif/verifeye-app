@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '../context/AuthContext'
@@ -7,7 +7,7 @@ import { createScan } from '../api/scans'
 import { fetchHistory } from '../api/history'
 import { rememberFile } from '../lib/fileStore'
 import { takeSharedFile } from '../lib/sharedFile'
-import { takePendingNativeFile, watchPendingNativeFile } from '../native/verifeye'
+import { takeStoredPendingFile } from '../native/pendingFileStore'
 import { getActiveModels } from '../utils/scanSettings'
 import { getMediaCategory } from '../utils/fileType'
 import PageHeader from '../components/PageHeader'
@@ -30,6 +30,7 @@ const BAND_CLASS = { likely_ai: 'text-ai', inconclusive: 'text-unclear', likely_
 export default function HomePage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
   const { user, getAuthHeaders, refreshUser, logout } = useAuth()
   const credits = user?.scanCredits ?? 0
@@ -40,6 +41,7 @@ export default function HomePage() {
   const [error, setError] = useState(null)
   const [starting, setStarting] = useState(false)
   const [sharedNote, setSharedNote] = useState(null)
+  const [autoStart, setAutoStart] = useState(false)
   const fileInputRef = useRef(null)
   const cameraInputRef = useRef(null)
 
@@ -57,19 +59,19 @@ export default function HomePage() {
     }
   }, [searchParams, setSearchParams, t])
 
-  // Android app: files shared from other apps and bubble screenshots.
+  // Android app: NativeFileBridge parks a shared file or a bubble capture and
+  // sends us here with a ticket in the router state. Captures scan right away.
   useEffect(() => {
-    const accept = (pending) => {
-      if (!pending?.file) return
-      setFile(pending.file)
-      setSource(pending.source)
-      setError(null)
-    }
-    takePendingNativeFile()
-      .then(accept)
-      .catch(() => {})
-    return watchPendingNativeFile(accept)
-  }, [])
+    if (!location.state?.nativeFile) return
+    const pending = takeStoredPendingFile()
+    navigate(location.pathname, { replace: true, state: null })
+    if (!pending?.file) return
+    setError(null)
+    setSharedNote(null)
+    setSource(pending.source)
+    setFile(pending.file)
+    setAutoStart(pending.source === 'screenshot')
+  }, [location.state, location.pathname, navigate])
 
   const recent = useQuery({
     queryKey: ['history'],
@@ -102,7 +104,7 @@ export default function HomePage() {
   const cost = models.length
   const canAnalyze = !!file && !starting && (unlimited || credits >= cost)
 
-  const analyze = async () => {
+  const analyze = useCallback(async () => {
     if (!canAnalyze) return
     setStarting(true)
     setError(null)
@@ -116,7 +118,13 @@ export default function HomePage() {
       setError(err.message || t('scan.network_error'))
       setStarting(false)
     }
-  }
+  }, [canAnalyze, file, models, i18n.language, source, getAuthHeaders, refreshUser, navigate, logout, t])
+
+  useEffect(() => {
+    if (!autoStart || !file) return
+    setAutoStart(false)
+    if (canAnalyze) analyze()
+  }, [autoStart, file, canAnalyze, analyze])
 
   return (
     <div className="animate-fade-in">
