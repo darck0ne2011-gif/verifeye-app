@@ -28,7 +28,8 @@ export default function OverlayButton({ onClick, disabled = false, faded = false
     }
     if (isNewScanMode) {
       return {
-        background: 'radial-gradient(ellipse 80% 80% at 35% 35%, rgba(52,211,153,0.9) 0%, rgba(20,184,166,0.85) 45%, rgba(13,148,136,0.8) 75%, rgba(6,95,70,0.85) 100%)',
+        background:
+          'radial-gradient(ellipse 80% 80% at 35% 35%, rgba(52,211,153,0.9) 0%, rgba(20,184,166,0.85) 45%, rgba(13,148,136,0.8) 75%, rgba(6,95,70,0.85) 100%)',
         boxShadow: `
           inset 0 0 80px rgba(255,255,255,0.1),
           inset 0 -25px 50px rgba(0,0,0,0.25),
@@ -41,7 +42,8 @@ export default function OverlayButton({ onClick, disabled = false, faded = false
       }
     }
     return {
-      background: 'radial-gradient(ellipse 80% 80% at 35% 35%, rgba(34,211,238,0.9) 0%, rgba(168,85,247,0.85) 50%, rgba(88,28,135,0.85) 100%)',
+      background:
+        'radial-gradient(ellipse 80% 80% at 35% 35%, rgba(34,211,238,0.9) 0%, rgba(168,85,247,0.85) 50%, rgba(88,28,135,0.85) 100%)',
       boxShadow: `
         inset 0 0 80px rgba(255,255,255,0.08),
         inset 0 -25px 50px rgba(0,0,0,0.3),
@@ -75,7 +77,9 @@ export default function OverlayButton({ onClick, disabled = false, faded = false
         ${isInteractive ? 'hover:scale-105 active:scale-[1.02]' : 'hover:scale-100'}
       `}
     >
-      <span className={`font-extrabold text-xs md:text-sm tracking-widest uppercase px-6 text-center leading-tight ${getTextStyles()}`}>
+      <span
+        className={`font-extrabold text-xs md:text-sm tracking-widest uppercase px-6 text-center leading-tight ${getTextStyles()}`}
+      >
         {getButtonContent()}
       </span>
     </button>

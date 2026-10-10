@@ -71,9 +71,7 @@ export function getActiveModelsForCategory(category) {
 export function setActiveModelsForCategory(category, models, ensureOne = true) {
   const data = loadRaw() || { photo: DEFAULTS.photo }
   const valid = Array.isArray(models) ? models.filter(Boolean) : []
-  const arr = ensureOne && valid.length === 0
-    ? ['genai']
-    : valid.length > 0 ? valid : data.photo ?? DEFAULTS.photo
+  const arr = ensureOne && valid.length === 0 ? ['genai'] : valid.length > 0 ? valid : (data.photo ?? DEFAULTS.photo)
   data.photo = arr
   saveRaw(data)
 }
@@ -85,9 +83,8 @@ export function setActiveModels(models) {
 
 /** Max credits needed across all categories (for display before file selection) */
 export function getMaxCreditsPerScan() {
-  const p = getForCategory('photo').map((id) => TO_API_MAP[id]).filter(Boolean)
-  return Math.max(
-    [...new Set(p)].length,
-    1
-  )
+  const p = getForCategory('photo')
+    .map((id) => TO_API_MAP[id])
+    .filter(Boolean)
+  return Math.max([...new Set(p)].length, 1)
 }

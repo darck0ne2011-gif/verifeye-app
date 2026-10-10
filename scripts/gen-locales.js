@@ -7,7 +7,48 @@ const localesDir = path.join(__dirname, '../public/locales')
 const enPath = path.join(localesDir, 'en/translation.json')
 const en = JSON.parse(fs.readFileSync(enPath, 'utf8'))
 
-const ALL_LANGS = ['hi','bn','pa','jv','te','mr','ta','ur','ko','vi','tr','it','th','gu','kn','ml','or','my','am','fa','yo','ig','ha','sw','az','bg','cs','da','el','fi','he','hu','ms','nl','no','pl','sk','sv','uk','ja']
+const ALL_LANGS = [
+  'hi',
+  'bn',
+  'pa',
+  'jv',
+  'te',
+  'mr',
+  'ta',
+  'ur',
+  'ko',
+  'vi',
+  'tr',
+  'it',
+  'th',
+  'gu',
+  'kn',
+  'ml',
+  'or',
+  'my',
+  'am',
+  'fa',
+  'yo',
+  'ig',
+  'ha',
+  'sw',
+  'az',
+  'bg',
+  'cs',
+  'da',
+  'el',
+  'fi',
+  'he',
+  'hu',
+  'ms',
+  'nl',
+  'no',
+  'pl',
+  'sk',
+  'sv',
+  'uk',
+  'ja',
+]
 
 for (const lng of ALL_LANGS) {
   const dir = path.join(localesDir, lng)

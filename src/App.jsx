@@ -92,23 +92,13 @@ function App() {
       <FloatingScanner />
       <div className="pb-[100px] min-h-[100dvh]">
         {activeTab === 'home' && (
-          <ScanPage
-            onSettingsClick={() => setShowSettings(true)}
-            onUpgradeClick={() => setActiveTab('upgrade')}
-          />
+          <ScanPage onSettingsClick={() => setShowSettings(true)} onUpgradeClick={() => setActiveTab('upgrade')} />
         )}
-        {activeTab === 'upgrade' && (
-          <UpgradePage onSettingsClick={() => setShowSettings(true)} />
-        )}
+        {activeTab === 'upgrade' && <UpgradePage onSettingsClick={() => setShowSettings(true)} />}
         {activeTab === 'history' && (
-          <HistoryPage
-            onSettingsClick={() => setShowSettings(true)}
-            onUpgradeClick={() => setActiveTab('upgrade')}
-          />
+          <HistoryPage onSettingsClick={() => setShowSettings(true)} onUpgradeClick={() => setActiveTab('upgrade')} />
         )}
-        {activeTab === 'scan_settings' && (
-          <ScanSettingsPage onSettingsClick={() => setShowSettings(true)} />
-        )}
+        {activeTab === 'scan_settings' && <ScanSettingsPage onSettingsClick={() => setShowSettings(true)} />}
       </div>
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </>

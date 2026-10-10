@@ -20,9 +20,7 @@ export default function ModelCheckboxes({ selected, onChange, disabled }) {
 
   const toggle = (id) => {
     if (disabled) return
-    const next = selected.includes(id)
-      ? selected.filter((m) => m !== id)
-      : [...selected, id]
+    const next = selected.includes(id) ? selected.filter((m) => m !== id) : [...selected, id]
     if (next.length > 0) onChange(next)
   }
 

@@ -35,7 +35,9 @@ function ToggleSwitch({ checked, onChange }) {
 
 function SectionToggle({ id, labelKey, isOn, onToggle, t, disabled, eliteBadge }) {
   return (
-    <li className={`w-full flex justify-between items-center p-4 rounded-xl border ${disabled ? 'bg-slate-800/30 border-slate-700/30 opacity-75' : 'bg-slate-800/50 border-slate-700/50'}`}>
+    <li
+      className={`w-full flex justify-between items-center p-4 rounded-xl border ${disabled ? 'bg-slate-800/30 border-slate-700/30 opacity-75' : 'bg-slate-800/50 border-slate-700/50'}`}
+    >
       <span className="text-white font-medium flex-1 min-w-0 flex items-center gap-2">
         {t(labelKey)}
         {eliteBadge && (
@@ -70,9 +72,7 @@ export default function ScanSettingsPage({ onSettingsClick }) {
     setPhotoModels(arr)
   }
 
-  const tabs = [
-    { id: 'photo', labelKey: 'scan_settings.tab_photo', icon: '📷' },
-  ]
+  const tabs = [{ id: 'photo', labelKey: 'scan_settings.tab_photo', icon: '📷' }]
 
   return (
     <div className="min-h-screen bg-[#0d0d0d] flex flex-col pb-20">

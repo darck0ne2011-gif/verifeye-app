@@ -17,9 +17,7 @@ export default function VerifiedBadge({ probability = 15 }) {
         </span>
         <p className="text-white font-bold text-lg">{t('verified.verified')}</p>
       </div>
-      <p className="text-slate-400 text-sm mt-3">
-        {t('verified.authenticity', { value: probability })}
-      </p>
+      <p className="text-slate-400 text-sm mt-3">{t('verified.authenticity', { value: probability })}</p>
     </section>
   )
 }
