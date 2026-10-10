@@ -2,6 +2,13 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { createUser, findByEmail, findById, findByIdWithPassword, updateCredits, updatePassword, deleteUser, ensureAdminElite, findOrCreateAdminUser } from './db.js'
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || !!process.env.RENDER
+if (!process.env.JWT_SECRET) {
+  if (IS_PRODUCTION) {
+    throw new Error('JWT_SECRET is not set. Refusing to start in production without it.')
+  }
+  console.warn('WARNING: JWT_SECRET is not set; using an insecure development secret.')
+}
 const JWT_SECRET = process.env.JWT_SECRET || 'verifeye-dev-secret-change-in-production'
 const JWT_EXPIRY = '7d'
 

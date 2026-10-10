@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
 import DashboardHeader from '../components/DashboardHeader'
-import { generateScanPdf } from '../utils/generateScanPdf'
 
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,6 +109,7 @@ export default function HistoryPage({ onSettingsClick, onUpgradeClick }) {
     }
     setDownloadingId(item.id)
     try {
+      const { generateScanPdf } = await import('../utils/generateScanPdf')
       const doc = generateScanPdf({
         score: item.score ?? 0,
         status: item.status ?? 'REAL',

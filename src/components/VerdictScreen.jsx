@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import RealTimeAnalysis from './RealTimeAnalysis'
 import DeepfakeAlert from './DeepfakeAlert'
 import VerifiedBadge from './VerifiedBadge'
-import { generateScanPdf } from '../utils/generateScanPdf'
 
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,7 +55,7 @@ export default function VerdictScreen({
 
   const deepfakeReason = reasonFromSignatures ?? (summary ? summary : null)
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!canDownloadPdf && onUpgradeClick) {
       onUpgradeClick()
       return
@@ -64,6 +63,7 @@ export default function VerdictScreen({
     if (!canDownloadPdf) return
     setDownloading(true)
     try {
+      const { generateScanPdf } = await import('../utils/generateScanPdf')
       const doc = generateScanPdf({
         score,
         status: status ?? (score >= 50 ? 'FAKE' : 'REAL'),
