@@ -5,6 +5,7 @@ import VerdictBanner, { deriveVerdict } from './VerdictBanner'
 import FrameTimeline from './FrameTimeline'
 import MediaPreview from './MediaPreview'
 import GeneratorsCard from './GeneratorsCard'
+import ProvenanceCard from './ProvenanceCard'
 
 const DownloadIcon = () => (
   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -61,7 +62,9 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
   const metadata = r.metadata ?? null
   const mediaCategory = r.mediaCategory ?? metadata?.mediaCategory ?? 'image'
   const summary = r.expertSummary ?? metadata?.expertSummary ?? null
-  const warnings = r.warnings ?? []
+  const warnings = r.warnings?.length ? r.warnings : (metadata?.warnings ?? [])
+  const provenance = r.provenance ?? metadata?.provenance ?? null
+  const evidence = r.evidence ?? metadata?.evidence ?? []
 
   const handleDownloadPdf = async () => {
     if (!canDownloadPdf) {
@@ -88,6 +91,8 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
         scannedAt: r.scannedAt ?? r.date ?? null,
         warnings,
         timeline: r.timeline ?? null,
+        provenance,
+        evidence,
         t,
         language: i18n.language,
       })
@@ -142,6 +147,8 @@ export default function VerdictScreen({ result, error, file = null, canDownloadP
           ))}
         </ul>
       )}
+
+      <ProvenanceCard provenance={provenance} evidence={evidence} source={r.source ?? 'file'} />
 
       <RealTimeAnalysis
         fileType={mediaCategory}

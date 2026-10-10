@@ -142,6 +142,8 @@ export function generateScanPdf(opts) {
     scannedAt = null,
     warnings = [],
     timeline = null,
+    provenance = null,
+    evidence = [],
     t,
     language,
   } = opts
@@ -242,6 +244,13 @@ export function generateScanPdf(opts) {
   doc.text(verdictLine, margin, y)
   y += 16
   const notes = []
+  if (Array.isArray(evidence) && evidence.length) {
+    notes.push(
+      `${tval('pdf.evidence', 'Decisive evidence')}: ${evidence
+        .map((e) => toPdfSafe(t?.(`provenance.evidence_${e}`) || e))
+        .join('; ')}`
+    )
+  }
   if (source === 'screenshot')
     notes.push(tval('pdf.source_screenshot', 'Analyzed from a screenshot, not the original file (confidence reduced)'))
   if (Array.isArray(scannedModels) && scannedModels.length) {
@@ -368,6 +377,81 @@ export function generateScanPdf(opts) {
       headStyles: { fillColor: DARK_BLUE, textColor: '#fff', fontStyle: 'bold' },
       bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
       columnStyles: { 0: { cellWidth: pageWidth - margin * 2 - 80 }, 1: { cellWidth: 80 } },
+      margin: { left: margin },
+      tableWidth: pageWidth - margin * 2,
+    })
+    y = doc.lastAutoTable.finalY + 20
+  }
+
+  // Content Credentials and generator metadata
+  if (provenance) {
+    const c2pa = provenance.c2pa ?? {}
+    const statusKey = !c2pa.present
+      ? c2pa.supported === false
+        ? 'unsupported'
+        : 'none'
+      : c2pa.validation === 'valid'
+        ? 'valid'
+        : c2pa.validation === 'tampered'
+          ? 'tampered'
+          : c2pa.validation === 'untrusted'
+            ? 'untrusted'
+            : 'invalid'
+    const rows = [[tval('pdf.provenance_status', 'Status'), tval(`provenance.status_${statusKey}`, statusKey)]]
+    if (provenance.generator?.label) {
+      const gen = provenance.generator
+      rows.push([
+        tval('pdf.provenance_generator', 'Generator'),
+        toPdfSafe(
+          `${gen.label} (${gen.signed ? tval('provenance.status_valid', 'signed') : tval('provenance.metadata_hints', 'unsigned metadata')})`
+        ),
+      ])
+    }
+    if (c2pa.present) {
+      if (c2pa.claimGenerator)
+        rows.push([tval('provenance.claim_generator', 'Created with'), toPdfSafe(c2pa.claimGenerator)])
+      const signer = c2pa.signer?.issuer || c2pa.signer?.commonName
+      if (signer) rows.push([tval('pdf.provenance_signed_by', 'Signed by'), toPdfSafe(signer)])
+      if (c2pa.signedAt)
+        rows.push([tval('pdf.provenance_signed_on', 'Signed on'), new Date(c2pa.signedAt).toLocaleString(locale)])
+      if (c2pa.sourceType) {
+        rows.push([
+          tval('pdf.provenance_source_type', 'Source type'),
+          tval(`provenance.source_${c2pa.sourceType}`, c2pa.sourceType),
+        ])
+      }
+      if (c2pa.actions?.length) {
+        rows.push([
+          tval('pdf.provenance_actions', 'Recorded actions'),
+          toPdfSafe(
+            c2pa.actions
+              .map(
+                (a) =>
+                  `${t?.(`provenance.action_${a.action}`) || a.action}${a.softwareAgent ? ` (${a.softwareAgent})` : ''}`
+              )
+              .join('; ')
+          ),
+        ])
+      }
+    }
+    const hints = provenance.metadata?.hints ?? []
+    if (hints.length) {
+      rows.push([
+        tval('pdf.provenance_metadata_hints', 'Unsigned metadata traces'),
+        toPdfSafe(hints.map((h) => `${h.generatorLabel} (${h.field})`).join('; ')),
+      ])
+    }
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(DARK_BLUE)
+    doc.text(tval('pdf.provenance', 'Content Credentials & provenance'), margin, y)
+    y += 20
+    autoTable(doc, {
+      startY: y,
+      body: rows,
+      theme: 'plain',
+      bodyStyles: { textColor: DARK_GRAY, fontSize: 10 },
+      columnStyles: { 0: { cellWidth: 110, fontStyle: 'bold' }, 1: { cellWidth: pageWidth - margin * 2 - 130 } },
       margin: { left: margin },
       tableWidth: pageWidth - margin * 2,
     })

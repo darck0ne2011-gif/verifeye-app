@@ -59,7 +59,21 @@ export async function probe(filePath) {
     audioCodec: audio?.codec_name ?? null,
     bitrate: info.format?.bit_rate ? Number(info.format.bit_rate) : null,
     sampleRate: audio?.sample_rate ? Number(audio.sample_rate) : null,
+    // Container and stream tags (encoder, comment, title...): generators sometimes sign here.
+    tags: collectTags(info),
   }
+}
+
+function collectTags(info) {
+  const out = {}
+  const add = (tags) => {
+    for (const [k, v] of Object.entries(tags ?? {})) {
+      if (typeof v === 'string' && v.trim() && !(k in out)) out[k] = v.slice(0, 500)
+    }
+  }
+  add(info.format?.tags)
+  for (const s of info.streams ?? []) add(s.tags)
+  return out
 }
 
 // Cover art embedded in audio files shows up as a video stream.
