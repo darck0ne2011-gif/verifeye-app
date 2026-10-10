@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import BubbleSettings from '../components/BubbleSettings'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { API_BASE } from '../config.js'
@@ -265,6 +266,7 @@ export default function SettingsPage() {
                 </div>
               </section>
             )}
+            {activeTab === 'profile' && <BubbleSettings />}
 
             {/* Security */}
             {activeTab === 'security' && (

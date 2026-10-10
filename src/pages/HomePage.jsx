@@ -7,6 +7,7 @@ import { createScan } from '../api/scans'
 import { fetchHistory } from '../api/history'
 import { rememberFile } from '../lib/fileStore'
 import { takeSharedFile } from '../lib/sharedFile'
+import { takePendingNativeFile, watchPendingNativeFile } from '../native/verifeye'
 import { getActiveModels } from '../utils/scanSettings'
 import { getMediaCategory } from '../utils/fileType'
 import PageHeader from '../components/PageHeader'
@@ -35,6 +36,7 @@ export default function HomePage() {
   const unlimited = !!user?.unlimitedScans || credits >= 999999
 
   const [file, setFile] = useState(null)
+  const [source, setSource] = useState('file')
   const [error, setError] = useState(null)
   const [starting, setStarting] = useState(false)
   const [sharedNote, setSharedNote] = useState(null)
@@ -55,6 +57,20 @@ export default function HomePage() {
     }
   }, [searchParams, setSearchParams, t])
 
+  // Android app: files shared from other apps and bubble screenshots.
+  useEffect(() => {
+    const accept = (pending) => {
+      if (!pending?.file) return
+      setFile(pending.file)
+      setSource(pending.source)
+      setError(null)
+    }
+    takePendingNativeFile()
+      .then(accept)
+      .catch(() => {})
+    return watchPendingNativeFile(accept)
+  }, [])
+
   const recent = useQuery({
     queryKey: ['history'],
     queryFn: () => fetchHistory(getAuthHeaders()),
@@ -70,6 +86,7 @@ export default function HomePage() {
         return
       }
       setError(null)
+      setSource('file')
       setFile(f)
     },
     [t]
@@ -90,7 +107,7 @@ export default function HomePage() {
     setStarting(true)
     setError(null)
     try {
-      const job = await createScan(file, { models, language: i18n.language || 'en' }, getAuthHeaders())
+      const job = await createScan(file, { models, language: i18n.language || 'en', source }, getAuthHeaders())
       rememberFile(job.id, file)
       refreshUser()
       navigate(`/scan/${job.id}`)
@@ -136,6 +153,7 @@ export default function HomePage() {
                 {t('home.change_models')}
               </Link>
             </div>
+            {source === 'screenshot' && <p className="text-xs text-unclear">{t('home.captured_hint')}</p>}
             {!unlimited && (
               <p className="text-xs text-muted">
                 {t('home.cost', { count: cost })} · {t('home.balance', { count: credits })}

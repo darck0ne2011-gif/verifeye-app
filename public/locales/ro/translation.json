@@ -400,12 +400,26 @@
     "see_all": "Vezi tot",
     "category_image": "Poză",
     "category_video": "Video",
-    "category_audio": "Audio"
+    "category_audio": "Audio",
+    "captured_hint": "Captură de ecran din bulă — fișierul original dă un rezultat mai sigur."
   },
   "result": {
     "title": "Rezultatul verificării",
     "analyzing": "Se analizează…",
     "analyzing_hint": "Poți părăsi pagina; rezultatul se salvează în istoric.",
     "new_scan": "Scanare nouă"
+  },
+  "bubble": {
+    "title": "Bulă peste alte aplicații",
+    "description": "Afișează o bulă VerifEye plutitoare peste Facebook, WhatsApp sau orice aplicație. Apasă pe ea ca să capturezi ce e pe ecran și să verifici.",
+    "step_overlay": "Permite VerifEye să apară peste alte aplicații",
+    "step_capture": "Permite captura de ecran când Android te întreabă (la fiecare pornire a bulei)",
+    "step_use": "Deschide orice aplicație, apasă bula peste o poză sau un video și primești verdictul",
+    "grant_overlay": "Permite afișarea peste aplicații",
+    "start": "Pornește bula",
+    "stop": "Oprește bula",
+    "running_hint": "Bula e activă. Apas-o lung sau folosește notificarea ca să o oprești.",
+    "capture_denied": "Captura de ecran nu a fost permisă. Pornește bula din nou și acceptă.",
+    "error": "Bula nu a putut fi pornită."
   }
 }

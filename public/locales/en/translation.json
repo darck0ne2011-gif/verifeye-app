@@ -452,12 +452,26 @@
     "see_all": "See all",
     "category_image": "Photo",
     "category_video": "Video",
-    "category_audio": "Audio"
+    "category_audio": "Audio",
+    "captured_hint": "Screenshot from the bubble — the original file gives a more reliable result."
   },
   "result": {
     "title": "Verification result",
     "analyzing": "Analyzing…",
     "analyzing_hint": "You can leave this page; the result is saved in your history.",
     "new_scan": "New scan"
+  },
+  "bubble": {
+    "title": "Bubble over other apps",
+    "description": "Show a floating VerifEye bubble on top of Facebook, WhatsApp or any app. Tap it to capture what is on screen and check it.",
+    "step_overlay": "Allow VerifEye to appear on top of other apps",
+    "step_capture": "Allow screen capture when Android asks (each time you start the bubble)",
+    "step_use": "Open any app, tap the bubble on a photo or video, and get the verdict",
+    "grant_overlay": "Allow overlay",
+    "start": "Start bubble",
+    "stop": "Stop bubble",
+    "running_hint": "The bubble is on. Long-press it or use the notification to stop.",
+    "capture_denied": "Screen capture was not allowed. Start the bubble again and accept the prompt.",
+    "error": "The bubble could not be started."
   }
 }

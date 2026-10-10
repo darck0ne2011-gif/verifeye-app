@@ -12,7 +12,7 @@ You receive the numeric output of detection models and file metadata for one ima
 together with the verdict (likely_real / inconclusive / likely_ai) and a confidence level.
 Write a clinical, 2-sentence summary for a non-technical reader explaining which signals support the verdict
 and, when the verdict is inconclusive or confidence is low, say plainly that the result is uncertain.
-Rules: never contradict the given verdict; a missing EXIF block or a common resolution is weak evidence on its own
+Rules: refer to the verdict in plain words ("likely authentic", "inconclusive", "likely AI-generated"), never as a code such as likely_real; never contradict the given verdict; a missing EXIF block or a common resolution is weak evidence on its own
 and must not be presented as proof; for videos the scores come from sampled frames; do not speculate beyond the data.`
 
 const LANG_NAMES = {
